@@ -1,0 +1,23 @@
+{
+  "name": "poc-google-maps-scraper",
+  "version": "1.0.0",
+  "description": "POC para demonstrar extração de dados do Google Maps",
+  "main": "poc-google-maps.js",
+  "scripts": {
+    "poc": "node poc-google-maps.js",
+    "install-deps": "npm install puppeteer",
+    "test": "echo \"POC ready to run with: npm run poc\" && exit 0"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "keywords": [
+    "google-maps",
+    "scraping",
+    "poc",
+    "leads",
+    "puppeteer"
+  ],
+  "author": "LeadsRapido",
+  "license": "MIT"
+}

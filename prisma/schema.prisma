@@ -1,0 +1,644 @@
+// LeadsRapido Database Schema - Prisma Configuration
+// Multi-tenant CRM system for lead generation
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "postgresqlExtensions", "views", "multiSchema"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [uuid_ossp, pg_stat_statements, pg_trgm, btree_gin, postgis]
+}
+
+// Enums
+enum UserRole {
+  admin
+  org_admin
+  agent
+  viewer
+}
+
+enum OrganizationPlan {
+  basic
+  professional
+  enterprise
+  white_label
+}
+
+enum ActivityType {
+  call
+  email
+  meeting
+  note
+}
+
+enum LeadSource {
+  linkedin_scraping
+  web_scraping
+  crunchbase_api
+  manual_import
+  api_integration
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  ACCESS
+  EXPORT
+}
+
+// Core Models
+
+model Organization {
+  id        String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name      String           @db.VarChar(255)
+  cnpj      String?          @unique @db.VarChar(18)
+  subdomain String?          @unique @db.VarChar(63)
+  plan      OrganizationPlan @default(basic)
+
+  // Quota management
+  quotaTotal     Int      @default(1000) @map("quota_total")
+  quotaUsed      Int      @default(0) @map("quota_used")
+  quotaResetDate DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + INTERVAL '1 month')")) @map("quota_reset_date")
+
+  // Billing
+  billingEmail     String? @map("billing_email") @db.VarChar(255)
+  billingAddress   Json?   @map("billing_address")
+  stripeCustomerId String? @map("stripe_customer_id") @db.VarChar(255)
+
+  // Settings
+  settings Json @default("{}")
+
+  // Status
+  status String @default("active") @db.VarChar(20)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users           User[]
+  leadSegments    LeadSegment[]
+  leads           Lead[]
+  leadAccesses    LeadAccess[]
+  pipelineStages  PipelineStage[]
+  pipelineLeads   PipelineLead[]
+  activities      Activity[]
+  apiKeys         ApiKey[]
+  webhooks        Webhook[]
+  dailyUsageStats DailyUsageStat[]
+  auditLogs       AuditLog[]
+  Search          Search[]
+  RawLead         RawLead[]
+  EnrichedData    EnrichedData[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  email          String   @db.VarChar(255)
+  name           String   @db.VarChar(255)
+  passwordHash   String   @map("password_hash") @db.VarChar(255)
+  role           UserRole @default(agent)
+  avatarUrl      String?  @map("avatar_url") @db.VarChar(512)
+
+  // Account management
+  isActive          Boolean   @default(true) @map("is_active")
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  lastLoginAt       DateTime? @map("last_login_at")
+  passwordChangedAt DateTime? @map("password_changed_at")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization            Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leadAccesses            LeadAccess[]
+  pipelineLeads           PipelineLead[]
+  activities              Activity[]
+  apiKeys                 ApiKey[]
+  auditLogs               AuditLog[]
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  accessedLeads           Lead[]                   @relation("LeadAccessedBy")
+
+  @@unique([organizationId, email])
+  @@map("users")
+}
+
+model LeadSegment {
+  id             String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  name           String  @db.VarChar(100)
+  description    String?
+  color          String  @default("#3b82f6") @db.VarChar(7)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leads        Lead[]
+  Search       Search[]
+
+  @@unique([organizationId, name])
+  @@map("lead_segments")
+}
+
+model Lead {
+  id             String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+
+  // Personal information
+  name        String  @db.VarChar(255)
+  email       String? @db.VarChar(255)
+  phone       String? @db.VarChar(50)
+  company     String? @db.VarChar(255)
+  position    String? @db.VarChar(255)
+  website     String? @db.VarChar(512)
+  linkedinUrl String? @map("linkedin_url") @db.VarChar(512)
+
+  // Address information
+  addressStreet      String? @map("address_street") @db.VarChar(255)
+  addressCity        String? @map("address_city") @db.VarChar(100)
+  addressState       String? @map("address_state") @db.VarChar(50)
+  addressZipCode     String? @map("address_zip_code") @db.VarChar(20)
+  addressCountry     String? @default("Brasil") @map("address_country") @db.VarChar(50)
+  addressCoordinates String? @map("address_coordinates") // PostGIS Point type
+
+  // Segmentation and quality
+  segmentId    String   @map("segment_id") @db.Uuid
+  qualityScore Int      @default(0) @map("quality_score")
+  tags         String[] @default([])
+
+  // Custom fields
+  customFields Json @default("{}") @map("custom_fields")
+
+  // Data collection metadata
+  source         LeadSource @default(manual_import)
+  collectedAt    DateTime   @default(now()) @map("collected_at")
+  lastEnrichedAt DateTime?  @map("last_enriched_at")
+  dataConfidence Decimal    @default(0.50) @map("data_confidence") @db.Decimal(3, 2)
+
+  // Access control and pricing
+  accessCost       Decimal   @default(2.50) @map("access_cost") @db.Decimal(10, 2)
+  isAccessed       Boolean   @default(false) @map("is_accessed")
+  accessedAt       DateTime? @map("accessed_at")
+  accessedByUserId String?   @map("accessed_by_user_id") @db.Uuid
+
+  // Duplicate detection
+  duplicateHash String? @map("duplicate_hash") @db.VarChar(64)
+
+  // Full-text search (managed by triggers)
+  searchVector String? @map("search_vector") // tsvector type
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  segment        LeadSegment    @relation(fields: [segmentId], references: [id])
+  accessedByUser User?          @relation("LeadAccessedBy", fields: [accessedByUserId], references: [id])
+  accesses       LeadAccess[]
+  pipelineLeads  PipelineLead[]
+
+  @@map("leads")
+}
+
+model LeadAccess {
+  id             String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  leadId         String  @map("lead_id") @db.Uuid
+  userId         String  @map("user_id") @db.Uuid
+  cost           Decimal @db.Decimal(10, 2)
+  billingPeriod  String  @map("billing_period") @db.VarChar(7) // YYYY-MM format
+
+  // Metadata
+  ipAddress String? @map("ip_address") @db.Inet
+  userAgent String? @map("user_agent")
+
+  // Timestamp
+  accessedAt DateTime @default(now()) @map("accessed_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@map("lead_accesses")
+}
+
+model PipelineStage {
+  id             String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  name           String  @db.VarChar(100)
+  color          String  @default("#6366f1") @db.VarChar(7)
+  stageOrder     Int     @map("stage_order")
+  isActive       Boolean @default(true) @map("is_active")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pipelineLeads PipelineLead[]
+
+  @@unique([organizationId, stageOrder])
+  @@unique([organizationId, name])
+  @@map("pipeline_stages")
+}
+
+model PipelineLead {
+  id             String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  leadId         String  @map("lead_id") @db.Uuid
+  stageId        String  @map("stage_id") @db.Uuid
+  assignedUserId String? @map("assigned_user_id") @db.Uuid
+
+  // Deal information
+  estimatedValue Decimal?  @map("estimated_value") @db.Decimal(12, 2)
+  probability    Decimal   @default(0.00) @db.Decimal(3, 2)
+  closeDate      DateTime? @map("close_date") @db.Date
+  notes          String?
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead         Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  stage        PipelineStage @relation(fields: [stageId], references: [id])
+  assignedUser User?         @relation(fields: [assignedUserId], references: [id])
+  activities   Activity[]
+
+  @@unique([organizationId, leadId])
+  @@map("pipeline_leads")
+}
+
+model Activity {
+  id             String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  pipelineLeadId String @map("pipeline_lead_id") @db.Uuid
+  userId         String @map("user_id") @db.Uuid
+
+  type        ActivityType
+  title       String       @db.VarChar(255)
+  description String?
+
+  // Scheduling
+  scheduledAt     DateTime? @map("scheduled_at")
+  completedAt     DateTime? @map("completed_at")
+  durationMinutes Int?      @map("duration_minutes")
+
+  // Additional metadata
+  metadata Json @default("{}")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pipelineLead PipelineLead @relation(fields: [pipelineLeadId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@map("activities")
+}
+
+model ApiKey {
+  id             String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  userId         String @map("user_id") @db.Uuid
+
+  name        String   @db.VarChar(100)
+  keyHash     String   @unique @map("key_hash") @db.VarChar(255)
+  keyPrefix   String   @map("key_prefix") @db.VarChar(10)
+  permissions String[] @default([])
+
+  // Usage tracking
+  lastUsedAt       DateTime? @map("last_used_at")
+  usageCount       BigInt    @default(0) @map("usage_count")
+  rateLimitPerHour Int       @default(1000) @map("rate_limit_per_hour")
+
+  // Expiration
+  expiresAt DateTime? @map("expires_at")
+  isActive  Boolean   @default(true) @map("is_active")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@map("api_keys")
+}
+
+model Webhook {
+  id             String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+
+  name      String   @db.VarChar(100)
+  url       String   @db.VarChar(512)
+  events    String[]
+  secretKey String   @map("secret_key") @db.VarChar(255)
+
+  // Status and reliability
+  isActive      Boolean   @default(true) @map("is_active")
+  lastSuccessAt DateTime? @map("last_success_at")
+  lastFailureAt DateTime? @map("last_failure_at")
+  failureCount  Int       @default(0) @map("failure_count")
+
+  // Rate limiting
+  rateLimitPerMinute Int @default(60) @map("rate_limit_per_minute")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("webhooks")
+}
+
+model DailyUsageStat {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  date           DateTime @db.Date
+
+  // Usage metrics
+  leadsCollected Int @default(0) @map("leads_collected")
+  leadsAccessed  Int @default(0) @map("leads_accessed")
+  apiRequests    Int @default(0) @map("api_requests")
+  uniqueUsers    Int @default(0) @map("unique_users")
+
+  // Quality metrics
+  avgQualityScore Decimal @default(0.00) @map("avg_quality_score") @db.Decimal(5, 2)
+
+  // Financial metrics
+  totalAccessCost Decimal @default(0.00) @map("total_access_cost") @db.Decimal(12, 2)
+
+  // Performance metrics
+  avgResponseTimeMs Int @default(0) @map("avg_response_time_ms")
+
+  // Timestamp
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, date])
+  @@map("daily_usage_stats")
+}
+
+model AuditLog {
+  id             String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String? @map("organization_id") @db.Uuid
+  userId         String? @map("user_id") @db.Uuid
+
+  // Action details
+  action       AuditAction
+  resourceType String      @map("resource_type") @db.VarChar(50)
+  resourceId   String?     @map("resource_id") @db.Uuid
+  resourceData Json?       @map("resource_data")
+
+  // Context
+  ipAddress String? @map("ip_address") @db.Inet
+  userAgent String? @map("user_agent")
+  sessionId String? @map("session_id") @db.VarChar(255)
+
+  // Additional metadata
+  metadata Json @default("{}")
+
+  // Timestamp
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+// Authentication and Session Management
+
+model RefreshToken {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+
+  // Track token usage
+  lastUsedAt DateTime? @map("last_used_at")
+  isRevoked  Boolean   @default(false) @map("is_revoked")
+
+  // Timestamp
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  isUsed    Boolean  @default(false) @map("is_used")
+
+  // Timestamp
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  isUsed    Boolean  @default(false) @map("is_used")
+
+  // Timestamp
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verification_tokens")
+}
+
+// Views for Analytics (Read-only)
+
+/// Lead quality distribution by organization (Materialized View)
+view LeadQualityDistribution {
+  organizationId   String   @map("organization_id") @db.Uuid
+  organizationName String   @map("organization_name")
+  qualityTier      String   @map("quality_tier")
+  leadCount        BigInt   @map("lead_count")
+  avgQualityScore  Decimal? @map("avg_quality_score")
+
+  @@map("mv_lead_quality_distribution")
+}
+
+/// Lead geographic distribution (Materialized View)
+view LeadGeographicDistribution {
+  organizationId  String   @map("organization_id") @db.Uuid
+  addressState    String?  @map("address_state")
+  addressCity     String?  @map("address_city")
+  leadCount       BigInt   @map("lead_count")
+  avgQualityScore Decimal? @map("avg_quality_score")
+  accessedCount   BigInt   @map("accessed_count")
+
+  @@map("mv_lead_geographic_distribution")
+}
+
+/// Monthly organization metrics (Materialized View)
+view MonthlyOrgMetrics {
+  organizationId      String   @map("organization_id") @db.Uuid
+  organizationName    String   @map("organization_name")
+  month               DateTime @map("month")
+  totalLeadsCollected BigInt?  @map("total_leads_collected")
+  totalLeadsAccessed  BigInt?  @map("total_leads_accessed")
+  totalApiRequests    BigInt?  @map("total_api_requests")
+  avgQualityScore     Decimal? @map("avg_quality_score")
+  totalRevenue        Decimal? @map("total_revenue")
+
+  @@map("mv_monthly_org_metrics")
+}
+
+// --------------------------------------------------
+// Models for Task Worker System
+// --------------------------------------------------
+
+enum SearchStatus {
+  pending
+  running
+  completed
+  failed
+}
+
+enum ProcessingStatus {
+  raw
+  enriching
+  enriched
+  validated
+  imported
+  failed
+}
+
+enum LogLevel {
+  debug
+  info
+  warn
+  error
+}
+
+model Search {
+  id             String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  query          String       @db.VarChar(255)
+  location       String       @db.VarChar(255)
+  segmentId      String?      @map("segment_id") @db.Uuid
+  status         SearchStatus @default(pending)
+  startedAt      DateTime?    @map("started_at")
+  completedAt    DateTime?    @map("completed_at")
+  resultsCount   Int          @default(0) @map("results_count")
+  errorMessage   String?      @map("error_message")
+  workerId       String?      @map("worker_id") @db.VarChar(100)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  segment      LeadSegment? @relation(fields: [segmentId], references: [id])
+  rawLeads     RawLead[]
+  workerLogs   WorkerLog[]
+
+  @@map("searches")
+}
+
+model RawLead {
+  id               String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  searchId         String           @map("search_id") @db.Uuid
+  organizationId   String           @map("organization_id") @db.Uuid
+  name             String           @db.VarChar(255)
+  address          String?
+  phone            String?          @db.VarChar(20)
+  website          String?          @db.VarChar(500)
+  rating           Decimal?         @db.Decimal(2, 1)
+  reviewsCount     Int?             @map("reviews_count")
+  category         String?          @db.VarChar(100)
+  businessHours    Json?            @map("business_hours")
+  photos           Json?
+  googlePlaceId    String?          @unique @map("google_place_id") @db.VarChar(255)
+  googleUrl        String?          @map("google_url")
+  processingStatus ProcessingStatus @default(raw) @map("processing_status")
+  qualityScore     Int              @default(0) @map("quality_score")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  search       Search         @relation(fields: [searchId], references: [id], onDelete: Cascade)
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  enrichedData EnrichedData[]
+
+  @@map("raw_leads")
+}
+
+model EnrichedData {
+  id                   String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  rawLeadId            String    @unique @map("raw_lead_id") @db.Uuid
+  organizationId       String    @map("organization_id") @db.Uuid
+  cnpj                 String?   @db.VarChar(18)
+  companySize          String?   @map("company_size") @db.VarChar(50)
+  sector               String?   @db.VarChar(100)
+  annualRevenue        BigInt?   @map("annual_revenue")
+  employeesCount       Int?      @map("employees_count")
+  foundationDate       DateTime? @map("foundation_date") @db.Date
+  legalNature          String?   @map("legal_nature") @db.VarChar(100)
+  verifiedPhone        String?   @map("verified_phone") @db.VarChar(20)
+  verifiedEmail        String?   @map("verified_email") @db.VarChar(255)
+  socialNetworks       Json?     @map("social_networks")
+  technologies         Json?
+  enrichmentSource     String?   @map("enrichment_source") @db.VarChar(100)
+  enrichmentConfidence Decimal?  @default(0.50) @map("enrichment_confidence") @db.Decimal(3, 2)
+  enrichmentCost       Decimal?  @default(0.00) @map("enrichment_cost") @db.Decimal(10, 4)
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  rawLead      RawLead      @relation(fields: [rawLeadId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("enriched_data")
+}
+
+model WorkerLog {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  workerId  String   @map("worker_id") @db.VarChar(100)
+  searchId  String?  @map("search_id") @db.Uuid
+  level     LogLevel
+  message   String
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  search Search? @relation(fields: [searchId], references: [id])
+
+  @@map("worker_logs")
+}
