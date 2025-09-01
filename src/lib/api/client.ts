@@ -1,9 +1,20 @@
 import { z } from 'zod';
-
-import { 
-  AuthResponseSchema, 
-  OrganizationSchema, 
-  LeadSchema, 
+import type {
+  LoginRequest,
+  AuthResponse,
+  Organization,
+  Lead,
+  CreateLeadDTO,
+  UpdateLeadDTO,
+  PaginatedResponse,
+  UsageMetrics,
+  AnalyticsData,
+  ApiKey
+} from './schemas';
+import {
+  AuthResponseSchema,
+  OrganizationSchema,
+  LeadSchema,
   PaginatedResponseSchema,
   UsageMetricsSchema,
   AnalyticsDataSchema,
@@ -47,14 +58,39 @@ class ApiClient {
     schema?: z.ZodSchema<T>
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Ensure proper headers for JSON requests
+    const headers = {
+      'Content-Type': 'application/json',
+      ...config.headers,
+    };
+
+    const requestConfig = {
+      ...config,
+      headers,
+    };
+
+    console.log('API Request:', {
+      url,
+      method: requestConfig.method || 'GET',
+      headers: requestConfig.headers,
+      body: requestConfig.body ? JSON.parse(requestConfig.body as string) : undefined
+    });
 
     try {
-      const response = await fetch(url, config);
+      const response = await fetch(url, requestConfig);
+      
+      console.log('API Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
       
       if (!response.ok) {
         let errorData;
         try {
           errorData = await response.json();
+          console.log('API Error Response:', errorData);
         } catch {
           errorData = { message: response.statusText };
         }
@@ -68,6 +104,7 @@ class ApiClient {
       }
 
       const data = await response.json();
+      console.log('API Success Response:', data);
       
       // Validate response with schema if provided
       if (schema) {
@@ -76,12 +113,20 @@ class ApiClient {
       
       return data;
     } catch (error) {
+      console.error('API Request Failed:', {
+        url,
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError(0, 'Network Error', 'Failed to make request', error);
+      throw new ApiError(0, 'Network Error', 'Falha no Login', error);
     }
-  }  // Auth methods
+  }
+
+  // Auth methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     return this.request('/api/v1/auth/login', {
       method: 'POST',
@@ -90,33 +135,33 @@ class ApiClient {
   }
 
   async refresh(refreshToken: string): Promise<AuthResponse> {
-    return this.request('/auth/refresh', {
+    return this.request('/api/v1/auth/refresh', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     }, AuthResponseSchema);
   }
 
   async logout(): Promise<void> {
-    return this.request('/auth/logout', {
+    return this.request('/api/v1/auth/logout', {
       method: 'POST',
     });
   }
 
-  // Organizations
-  async getOrganizations(): Promise<Organization[]> {
-    return this.request('/api/v1/empresas', {}, z.array(OrganizationSchema));
-  }
+  // // Organizations
+  // async getOrganizations(): Promise<Organization[]> {
+  //   return this.request('/api/v1/empresas', {}, z.array(OrganizationSchema));
+  // }
 
-  async getOrganization(id: string): Promise<Organization> {
-    return this.request(`/api/v1/empresas/${id}`, {}, OrganizationSchema);
-  }
+  // async getOrganization(id: string): Promise<Organization> {
+  //   return this.request(`/api/v1/empresas/${id}`, {}, OrganizationSchema);
+  // }
 
-  async updateOrganization(id: string, data: Partial<Organization>): Promise<Organization> {
-    return this.request(`/api/v1/empresas/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }, OrganizationSchema);
-  }
+  // async updateOrganization(id: string, data: Partial<Organization>): Promise<Organization> {
+  //   return this.request(`/api/v1/empresas/${id}`, {
+  //     method: 'PUT',
+  //     body: JSON.stringify(data),
+  //   }, OrganizationSchema);
+  // }
 
   async getUsageMetrics(orgId: string, period?: { from: string; to: string }): Promise<UsageMetrics> {
     const params = new URLSearchParams();

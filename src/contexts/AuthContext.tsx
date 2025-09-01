@@ -14,8 +14,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+const TOKEN_KEY = 'access_token';
 const USER_KEY = 'user';
 
 interface AuthProviderProps {
@@ -33,29 +32,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       try {
         const token = localStorage.getItem(TOKEN_KEY);
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
         const userData = localStorage.getItem(USER_KEY);
 
         if (token && userData) {
           const parsedUser = JSON.parse(userData);
           setUser(parsedUser);
           apiClient.setAccessToken(token);
-          
-          // Try to refresh the token if it's close to expiry
-          if (refreshToken) {
-            try {
-              await refreshAuth();
-            } catch (error) {
-              console.warn('Failed to refresh token:', error);
-              // Token might still be valid, continue with current token
-            }
-          }
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
         // Clear invalid stored data
         localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
       } finally {
         setIsLoading(false);
@@ -67,21 +54,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('AuthContext: Starting login process', { email, password });
       setIsLoading(true);
-      const response: AuthResponse = await apiClient.login({ 
-        email, 
-        password,
-        senha: password // Backend precisa de ambos os campos
-      });
+      
+      const credentials = { email, password };
+      console.log('AuthContext: Sending credentials', credentials);
+      
+      const response: AuthResponse = await apiClient.login(credentials);
+      console.log('AuthContext: Login response received', response);
       
       // Store tokens and user data
-      localStorage.setItem(TOKEN_KEY, response.accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+      localStorage.setItem(TOKEN_KEY, response.data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
       
       // Update API client and state
-      apiClient.setAccessToken(response.accessToken);
-      setUser(response.user);
+      apiClient.setAccessToken(response.data.token);
+      setUser(response.data.user);
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -99,7 +87,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       // Clear all stored data
       localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       
       // Reset API client and state
@@ -112,28 +99,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const refreshAuth = async () => {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    try {
-      const response: AuthResponse = await apiClient.refresh(refreshToken);
-      
-      // Update stored tokens and user data
-      localStorage.setItem(TOKEN_KEY, response.accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-      
-      // Update API client and state
-      apiClient.setAccessToken(response.accessToken);
-      setUser(response.user);
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      // If refresh fails, log out the user
-      await logout();
-      throw error;
-    }
+    // Refresh tokens not implemented in current backend
+    console.log('Token refresh not available');
   };
 
   // Set up automatic token refresh before expiry

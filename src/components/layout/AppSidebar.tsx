@@ -35,7 +35,7 @@ const navigationItems = [
   },
   {
     title: 'Leads',
-    url: '/leads',
+    url: '/app/leads',
     icon: Users,
     description: 'Gerenciar base de leads'
   },
@@ -43,7 +43,7 @@ const navigationItems = [
     title: 'Segmentos',
     url: '/segments',
     icon: BarChart3,
-    description: 'Análise por segmento'
+    description: 'Análise por segmento' 
   },
   {
     title: 'Pipeline',

@@ -16,21 +16,43 @@ export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =
     totalPages: z.number(),
     hasNext: z.boolean(),
     hasPrev: z.boolean(),
-  }).required();
+  });
 
 export type CreateLeadDTO = z.infer<typeof CreateLeadDTOSchema>;
 export type UpdateLeadDTO = z.infer<typeof UpdateLeadDTOSchema>;
+export type User = z.infer<typeof UserSchema>;
+export type LoginRequest = z.infer<typeof LoginSchema>;
+export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+export type Organization = z.infer<typeof OrganizationSchema>;
+export type Lead = z.infer<typeof LeadSchema>;
+export type PaginatedResponse<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+};
+export type UsageMetrics = z.infer<typeof UsageMetricsSchema>;
+export type AnalyticsData = z.infer<typeof AnalyticsDataSchema>;
+export type ApiKey = z.infer<typeof ApiKeySchema>;
 
 // User and Auth schemas
 export const UserSchema = z.object({
   id: z.string(),
+  sub: z.string().optional(),
   email: z.string().email(),
-  name: z.string(),
-  role: z.enum(['admin', 'org_admin', 'agent', 'viewer']),
-  organizationId: z.string(),
+  name: z.string().optional(),
+  roles: z.array(z.string()).optional(),
+  role: z.enum(['admin', 'org_admin', 'agent', 'viewer', 'user']).optional(),
+  user_metadata: z.object({
+    role: z.string().optional(),
+  }).optional(),
+  organizationId: z.string().optional(),
   avatar: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 export const LoginSchema = z.object({
@@ -39,10 +61,15 @@ export const LoginSchema = z.object({
 });
 
 export const AuthResponseSchema = z.object({
-  user: UserSchema,
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  expiresIn: z.number(),
+  success: z.boolean(),
+  data: z.object({
+    user: UserSchema,
+    token: z.string(),
+    expiresIn: z.string().optional(), // Pode ser string ou não existir
+  }),
+  message: z.string(),
+  timestamp: z.string(),
+  trace: z.any().optional(),
 });
 
 // Organization schemas

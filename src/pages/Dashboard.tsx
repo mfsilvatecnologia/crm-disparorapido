@@ -1,225 +1,243 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   TrendingUp,
   Users,
-  CreditCard,
   Target,
-  ArrowUpRight,
-  ArrowDownRight,
-  MoreVertical
+  DollarSign,
+  Rocket,
+  BarChart3,
+  FileDown
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Progress } from '@/components/ui/progress';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLeads } from '@/hooks/useLeads';
-import { formatCurrency, formatNumber } from '@/lib/utils';
 import { KpiCard } from '@/components/dashboard/KpiCard';
-import { LeadsChart } from '@/components/dashboard/LeadsChart';
-import { QualityChart } from '@/components/dashboard/QualityChart';
-import { RegionMap } from '@/components/dashboard/RegionMap';
+import { ActiveCampaignsWidget } from '@/components/dashboard/ActiveCampaignsWidget';
+import { RecentLeadsWidget } from '@/components/dashboard/RecentLeadsWidget';
+import { UsageMonitorWidget } from '@/components/dashboard/UsageMonitorWidget';
 
-export default function Dashboard() {
+const Dashboard: React.FC = () => {
   const { currentOrganization } = useOrganization();
+  const { user } = useAuth();
 
   // Fetch real leads data
   const { data: leadsData, isLoading: leadsLoading } = useLeads({
-    limit: 1000, // Get more data for analytics
+    limit: 10,
   });
 
-  // Mock analytics data for now - will be replaced with real analytics endpoint
-  const { data: analytics } = useQuery({
-    queryKey: ['analytics', currentOrganization?.id],
-    queryFn: () => {
-      // Mock analytics data - replace with real API call
-      return Promise.resolve([
-        { date: '2024-01-01', leadsCollected: 1250, leadsAccessed: 890, qualityAverage: 85, cost: 2340, conversions: 45 },
-        { date: '2024-01-02', leadsCollected: 1180, leadsAccessed: 920, qualityAverage: 82, cost: 2450, conversions: 52 },
-        { date: '2024-01-03', leadsCollected: 1320, leadsAccessed: 1100, qualityAverage: 88, cost: 2890, conversions: 61 },
-        { date: '2024-01-04', leadsCollected: 1450, leadsAccessed: 1200, qualityAverage: 91, cost: 3200, conversions: 68 },
-        { date: '2024-01-05', leadsCollected: 1380, leadsAccessed: 1050, qualityAverage: 86, cost: 2980, conversions: 55 },
-        { date: '2024-01-06', leadsCollected: 1290, leadsAccessed: 980, qualityAverage: 84, cost: 2650, conversions: 49 },
-        { date: '2024-01-07', leadsCollected: 1410, leadsAccessed: 1150, qualityAverage: 89, cost: 3100, conversions: 63 },
-      ]);
+  // Mock data
+  const mockCampaigns = [
+    {
+      id: '1',
+      name: 'B2B Software - São Paulo',
+      status: 'active' as const,
+      leadsGenerated: 1247,
+      qualityScore: 87,
+      invested: 3118,
+      progress: 78,
+      remainingDays: 2,
+      targetLeads: 1500
     },
-    enabled: !!currentOrganization,
-  });
+    {
+      id: '2', 
+      name: 'Agências Marketing - RJ',
+      status: 'active' as const,
+      leadsGenerated: 892,
+      qualityScore: 91,
+      invested: 2230,
+      progress: 65,
+      remainingDays: 5,
+      targetLeads: 1000
+    }
+  ];
 
-  const { data: usageMetrics } = useQuery({
-    queryKey: ['usage', currentOrganization?.id],
-    queryFn: () => {
-      // Mock usage data - replace with real API call
-      return Promise.resolve({
-        period: { from: '2024-01-01', to: '2024-01-31' },
-        leadsAccessed: 8234,
-        apiRequests: 15420,
-        totalCost: 4117.50,
-        quotaUsed: 8234,
-        quotaTotal: 10000,
-        conversionRate: 0.067,
-      });
-    },
-    enabled: !!currentOrganization,
-  });
-
-  // Calculate metrics from real leads data
-  const totalLeads = leadsData?.total || 0;
-  const leadsItems = leadsData?.items || [];
-  const avgQuality = leadsItems.length > 0
-    ? leadsItems.reduce((sum, lead) => sum + (lead.qualityScore || 0), 0) / leadsItems.length
-    : 0;
-
-  // Mock data for charts (will be replaced with real analytics)
-  const totalAccessed = analytics?.reduce((sum, day) => sum + day.leadsAccessed, 0) || 0;
-  const totalConversions = analytics?.reduce((sum, day) => sum + day.conversions, 0) || 0;
-
-  const quotaPercent = usageMetrics ? (usageMetrics.quotaUsed / usageMetrics.quotaTotal) * 100 : 0;
-  const getQuotaStatus = () => {
-    if (quotaPercent >= 90) return { color: 'destructive', label: 'Crítico' };
-    if (quotaPercent >= 75) return { color: 'secondary', label: 'Atenção' };
-    return { color: 'secondary', label: 'Normal' };
+  const mockUsage = {
+    plan: 'Professional',
+    leadsUsed: 2847,
+    leadsLimit: 4000,
+    daysRemaining: 12,
+    activeCampaigns: 4,
+    maxCampaigns: 10,
+    integrations: 2,
+    maxIntegrations: 5,
+    exports: 18,
+    maxExports: 50,
+    apiCalls: 1247,
+    maxApiCalls: 5000,
+    estimatedDaysUntilLimit: 8
   };
 
-  const quotaStatus = getQuotaStatus();
+  const mockRecentLeads = [
+    {
+      id: '1',
+      companyName: 'TechStart Solutions',
+      contactName: 'Maria Silva',
+      contactRole: 'CEO',
+      email: 'maria@techstart.com.br',
+      phone: '(11) 99999-9999',
+      sector: 'Software',
+      location: 'São Paulo',
+      employees: 25,
+      qualityScore: 94,
+      createdAt: new Date(Date.now() - 5 * 60 * 1000),
+      campaign: 'B2B Software - SP',
+      linkedinUrl: 'https://linkedin.com/in/maria-silva'
+    }
+  ];
+
+  const totalLeads = leadsData?.items?.length || 2847;
+  const qualityAverage = 89;
+  const monthGrowth = 247;
+  const estimatedROI = 8340;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+  };
+
+  const getUserFirstName = () => {
+    if (user?.name) {
+      return user.name.split(' ')[0];
+    }
+    return user?.email?.split('@')[0] || 'Usuário';
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Visão geral das suas métricas e performance
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline">
-            Exportar Relatório
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Configurar Dashboard</DropdownMenuItem>
-              <DropdownMenuItem>Agendar Relatório</DropdownMenuItem>
-              <DropdownMenuItem>Compartilhar</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          title="Total de Leads"
-          value={leadsLoading ? '...' : formatNumber(totalLeads)}
-          description="Leads na base de dados"
-          icon={Users}
-          trend="up"
-        />
-        <KpiCard
-          title="Qualidade Média"
-          value={leadsLoading ? '...' : `${avgQuality.toFixed(0)}%`}
-          description="Score médio dos leads"
-          icon={Target}
-          trend="up"
-        />
-        <KpiCard
-          title="Leads Acessados"
-          value={formatNumber(totalAccessed)}
-          description="Leads visualizados este mês"
-          icon={TrendingUp}
-          trend="up"
-        />
-        <KpiCard
-          title="Custo do Mês"
-          value={formatCurrency(usageMetrics?.totalCost || 0)}
-          description="R$ 0,50 por lead"
-          icon={CreditCard}
-          trend="stable"
-        />
-      </div>
-
-      {/* Quota Status */}
-      <Card className="bg-gradient-card">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Uso da Quota</CardTitle>
-              <CardDescription>
-                {formatNumber(usageMetrics?.quotaUsed || 0)} de {formatNumber(usageMetrics?.quotaTotal || 0)} leads
-              </CardDescription>
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Hero Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {getGreeting()}, {getUserFirstName()}
+            </h1>
+            <div className="flex items-center space-x-4 text-sm">
+              <span className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full font-medium">
+                Professional
+              </span>
+              <span className="text-gray-600">
+                {mockUsage.daysRemaining} dias restantes
+              </span>
             </div>
-            <Badge variant={quotaStatus.color as "default" | "secondary" | "destructive" | "outline"}>
-              {quotaStatus.label}
-            </Badge>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Progress 
-            value={quotaPercent} 
-            className="h-3 mb-2"
+        </div>
+
+        {/* KPI Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <KpiCard
+            title="Leads"
+            value={totalLeads.toLocaleString()}
+            description="Este mês"
+            icon={Users}
+            trend="up"
+            trendValue="↗"
           />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{quotaPercent.toFixed(1)}% utilizado</span>
-            <Button variant="link" className="h-auto p-0 text-primary">
-              Comprar mais créditos
+          <KpiCard
+            title="Qualidade"
+            value={`${qualityAverage}%`}
+            description="Média"
+            icon={Target}
+            trend="stable"
+            trendValue="✓"
+          />
+          <KpiCard
+            title="Crescimento"
+            value={`${monthGrowth}%`}
+            description="vs mês ant."
+            icon={TrendingUp}
+            trend="up"
+            trendValue="📈"
+          />
+          <KpiCard
+            title="ROI Est."
+            value={`R$ ${estimatedROI.toLocaleString()}`}
+            description="Este mês"
+            icon={DollarSign}
+            trend="up"
+            trendValue="💰"
+          />
+        </div>
+
+        {/* Ações Rápidas */}
+        <div className="flex flex-wrap gap-3">
+          <Button className="bg-primary-600 hover:bg-primary-700">
+            <Rocket className="h-4 w-4 mr-2" />
+            Nova Campanha
+          </Button>
+          <Button variant="outline">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Ver Relatório
+          </Button>
+          <Button variant="outline">
+            <FileDown className="h-4 w-4 mr-2" />
+            Exportar Leads
+          </Button>
+        </div>
+      </div>
+
+      {/* Widgets Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* Campanhas Ativas */}
+        <div className="xl:col-span-2">
+          <ActiveCampaignsWidget campaigns={mockCampaigns} />
+        </div>
+
+        {/* Usage Monitor */}
+        <div>
+          <UsageMonitorWidget usage={mockUsage} />
+        </div>
+
+        {/* Leads Recentes */}
+        <div className="lg:col-span-2">
+          <RecentLeadsWidget leads={mockRecentLeads} />
+        </div>
+
+        {/* Performance Analytics Widget */}
+        <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-2">
+              <BarChart3 className="h-5 w-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Performance (30 dias)</h3>
+            </div>
+            <Button variant="ghost" size="sm" className="text-primary-600">
+              Personalizar
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Charts Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <LeadsChart data={analytics || []} />
-        <QualityChart data={analytics || []} />
-      </div>
-
-      {/* Bottom Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RegionMap />
-        </div>
-        
-        <Card className="bg-gradient-card">
-          <CardHeader>
-            <CardTitle>Conversões Recentes</CardTitle>
-            <CardDescription>Últimas conversões de leads</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { company: 'Tech Solutions LTDA', value: 'R$ 25.000', time: '2h atrás' },
-                { company: 'Inovação Digital', value: 'R$ 18.500', time: '4h atrás' },
-                { company: 'StartupXYZ', value: 'R$ 12.300', time: '6h atrás' },
-                { company: 'Consultoria ABC', value: 'R$ 31.200', time: '8h atrás' },
-              ].map((conversion, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <div>
-                    <p className="font-medium text-sm">{conversion.company}</p>
-                    <p className="text-xs text-muted-foreground">{conversion.time}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-sm text-success">{conversion.value}</p>
-                    <ArrowUpRight className="h-3 w-3 text-success ml-auto" />
-                  </div>
-                </div>
-              ))}
+          
+          <div className="space-y-6">
+            <div className="h-48 bg-gray-50 rounded-lg flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">Gráfico de Performance</p>
+                <p className="text-xs">Em desenvolvimento</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Top Fontes</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">🕷 Web Scraping</span>
+                  <span className="font-medium">68%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">📥 Listas Importadas</span>
+                  <span className="font-medium">22%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">🔗 Integrações API</span>
+                  <span className="font-medium">10%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

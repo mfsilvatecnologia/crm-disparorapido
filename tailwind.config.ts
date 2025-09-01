@@ -20,7 +20,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif'],
+				sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+				mono: ['JetBrains Mono', 'Consolas', 'Monaco', 'monospace'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -28,8 +29,15 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				// Design System Colors - LeadsRápido B2B
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
+					50: '#EEF2FF',
+					100: '#E0E7FF', 
+					DEFAULT: '#6366F1',
+					500: '#6366F1',
+					600: '#4F46E5',
+					700: '#4338CA',
+					900: '#312E81',
 					foreground: 'hsl(var(--primary-foreground))',
 					glow: 'hsl(var(--primary-glow))',
 					dark: 'hsl(var(--primary-dark))'
@@ -44,12 +52,33 @@ export default {
 					light: 'hsl(var(--accent-light))'
 				},
 				success: {
-					DEFAULT: 'hsl(var(--success))',
+					DEFAULT: '#10B981',
+					500: '#10B981',
 					foreground: 'hsl(var(--success-foreground))'
 				},
 				warning: {
-					DEFAULT: 'hsl(var(--warning))',
+					500: '#F59E0B',
+					DEFAULT: '#F59E0B',
 					foreground: 'hsl(var(--warning-foreground))'
+				},
+				danger: {
+					500: '#EF4444',
+					DEFAULT: '#EF4444',
+					foreground: 'white'
+				},
+				info: {
+					500: '#0EA5E9',
+					DEFAULT: '#0EA5E9',
+					foreground: 'white'
+				},
+				// Neutral Scale
+				gray: {
+					50: '#F9FAFB',
+					100: '#F3F4F6',
+					200: '#E5E7EB',
+					400: '#9CA3AF',
+					600: '#4B5563',
+					900: '#111827',
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -76,6 +105,27 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				}
+			},
+			// Spacing Scale (8px base)
+			spacing: {
+				'1': '0.25rem',  // 4px
+				'2': '0.5rem',   // 8px
+				'3': '0.75rem',  // 12px
+				'4': '1rem',     // 16px
+				'6': '1.5rem',   // 24px
+				'8': '2rem',     // 32px
+				'12': '3rem',    // 48px
+				'16': '4rem',    // 64px
+			},
+			// Container Sizes
+			container: {
+				screens: {
+					'sm': '640px',
+					'md': '768px', 
+					'lg': '1024px',
+					'xl': '1280px',
+					'2xl': '1536px',
 				}
 			},
 			backgroundImage: {
