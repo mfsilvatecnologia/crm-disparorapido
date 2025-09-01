@@ -9,9 +9,17 @@ export const PaginationSchema = z.object({
 
 export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
-    data: z.array(dataSchema),
-    pagination: PaginationSchema,
-  });
+    items: z.array(dataSchema),
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+    hasNext: z.boolean(),
+    hasPrev: z.boolean(),
+  }).required();
+
+export type CreateLeadDTO = z.infer<typeof CreateLeadDTOSchema>;
+export type UpdateLeadDTO = z.infer<typeof UpdateLeadDTOSchema>;
 
 // User and Auth schemas
 export const UserSchema = z.object({
@@ -49,7 +57,7 @@ export const OrganizationSchema = z.object({
     total: z.number(),
     used: z.number(),
     resetDate: z.string(),
-  }),
+  }).optional(),
   settings: z.object({
     theme: z.object({
       primaryColor: z.string().optional(),
@@ -64,6 +72,7 @@ export const OrganizationSchema = z.object({
       active: z.boolean(),
     })).optional(),
   }).optional(),
+  isActive: z.boolean().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -194,23 +203,62 @@ export const ApiKeySchema = z.object({
   createdAt: z.string(),
 });
 
-// Export types
-export type User = z.infer<typeof UserSchema>;
-export type LoginRequest = z.infer<typeof LoginSchema>;
-export type AuthResponse = z.infer<typeof AuthResponseSchema>;
-export type Organization = z.infer<typeof OrganizationSchema>;
-export type OrganizationPlan = z.infer<typeof OrganizationPlanSchema>;
-export type Lead = z.infer<typeof LeadSchema>;
-export type LeadSegment = z.infer<typeof LeadSegmentSchema>;
-export type LeadAccess = z.infer<typeof LeadAccessSchema>;
-export type LeadFilter = z.infer<typeof LeadFilterSchema>;
-export type PipelineStage = z.infer<typeof PipelineStageSchema>;
-export type PipelineLead = z.infer<typeof PipelineLeadSchema>;
-export type UsageMetrics = z.infer<typeof UsageMetricsSchema>;
-export type AnalyticsData = z.infer<typeof AnalyticsDataSchema>;
-export type ApiKey = z.infer<typeof ApiKeySchema>;
-export type Pagination = z.infer<typeof PaginationSchema>;
-export type PaginatedResponse<T> = {
-  data: T[];
-  pagination: Pagination;
-};
+// Lead DTOs
+export const CreateLeadDTOSchema = z.object({
+  organizationId: z.string(),
+  nomeEmpresa: z.string(),
+  nomeContato: z.string().optional(),
+  cargoContato: z.string().optional(),
+  email: z.string().email().optional(),
+  telefone: z.string().optional(),
+  linkedinUrl: z.string().url().optional(),
+  siteEmpresa: z.string().url().optional(),
+  cnpj: z.string().optional(),
+  segmento: z.string().optional(),
+  porteEmpresa: z.enum(['MEI', 'Micro', 'Pequena', 'Média', 'Grande']).optional(),
+  numFuncionarios: z.number().optional(),
+  receitaAnualEstimada: z.number().optional(),
+  endereco: z.object({
+    rua: z.string().optional(),
+    numero: z.string().optional(),
+    cidade: z.string().optional(),
+    estado: z.string().optional(),
+    cep: z.string().optional(),
+    pais: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+  }).optional(),
+  tags: z.array(z.string()).optional(),
+  observacoes: z.string().optional(),
+  fonte: z.enum(['MANUAL', 'WEBSITE', 'LINKEDIN', 'INDICACAO', 'EVENTO', 'OUTROS']).optional(),
+  dadosOriginais: z.record(z.any()).optional(),
+  custoAquisicao: z.number().optional(),
+});
+
+export const UpdateLeadDTOSchema = z.object({
+  nomeContato: z.string().optional(),
+  cargoContato: z.string().optional(),
+  email: z.string().email().optional(),
+  telefone: z.string().optional(),
+  linkedinUrl: z.string().url().optional(),
+  siteEmpresa: z.string().url().optional(),
+  cnpj: z.string().optional(),
+  segmento: z.string().optional(),
+  porteEmpresa: z.enum(['MEI', 'Micro', 'Pequena', 'Média', 'Grande']).optional(),
+  numFuncionarios: z.number().optional(),
+  receitaAnualEstimada: z.number().optional(),
+  endereco: z.object({
+    rua: z.string().optional(),
+    numero: z.string().optional(),
+    cidade: z.string().optional(),
+    estado: z.string().optional(),
+    cep: z.string().optional(),
+    pais: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+  }).optional(),
+  tags: z.array(z.string()).optional(),
+  observacoes: z.string().optional(),
+  dadosOriginais: z.record(z.any()).optional(),
+  custoAquisicao: z.number().optional(),
+});

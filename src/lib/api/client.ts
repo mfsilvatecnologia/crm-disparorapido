@@ -1,16 +1,5 @@
 import { z } from 'zod';
-import type { 
-  LoginRequest, 
-  AuthResponse, 
-  Organization, 
-  Lead, 
-  LeadFilter, 
-  LeadAccess,
-  PaginatedResponse,
-  UsageMetrics,
-  AnalyticsData,
-  ApiKey
-} from './schemas';
+
 import { 
   AuthResponseSchema, 
   OrganizationSchema, 
@@ -21,14 +10,14 @@ import {
   ApiKeySchema
 } from './schemas';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 class ApiError extends Error {
   constructor(
     public status: number,
     public statusText: string,
     message: string,
-    public data?: any
+    public data?: unknown
   ) {
     super(message);
     this.name = 'ApiError';
@@ -52,30 +41,12 @@ class ApiClient {
     this.organizationId = orgId;
   }
 
-  private async request<T>(
+  async request<T>(
     endpoint: string,
-    options: RequestInit = {},
+    config: RequestInit = {},
     schema?: z.ZodSchema<T>
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string> || {}),
-    };
-
-    if (this.accessToken) {
-      headers.Authorization = `Bearer ${this.accessToken}`;
-    }
-
-    if (this.organizationId) {
-      headers['X-Org-Id'] = this.organizationId;
-    }
-
-    const config: RequestInit = {
-      ...options,
-      headers,
-    };
 
     try {
       const response = await fetch(url, config);
@@ -110,31 +81,12 @@ class ApiClient {
       }
       throw new ApiError(0, 'Network Error', 'Failed to make request', error);
     }
-  }
-
-  // Auth methods
+  }  // Auth methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    // Mock login for testing - remove when backend is ready
-    if (credentials.email === 'test@example.com' && credentials.password === 'password') {
-      return {
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
-        user: {
-          id: '1',
-          email: 'test@example.com',
-          name: 'Test User',
-          organizationId: 'org-1',
-          role: 'admin'
-        }
-      };
-    }
-    throw new ApiError(401, 'Unauthorized', 'Invalid credentials');
-    
-    // Original implementation - uncomment when backend is ready
-    // return this.request('/auth/login', {
-    //   method: 'POST',
-    //   body: JSON.stringify(credentials),
-    // }, AuthResponseSchema);
+    return this.request('/api/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    }, AuthResponseSchema);
   }
 
   async refresh(refreshToken: string): Promise<AuthResponse> {
@@ -152,37 +104,15 @@ class ApiClient {
 
   // Organizations
   async getOrganizations(): Promise<Organization[]> {
-    // Mock organizations for testing
-    return [
-      {
-        id: 'org-1',
-        name: 'Test Organization',
-        description: 'Organization for testing',
-        plan: 'professional',
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
-    // return this.request('/api/v1/organizations', {}, z.array(OrganizationSchema));
+    return this.request('/api/v1/empresas', {}, z.array(OrganizationSchema));
   }
 
   async getOrganization(id: string): Promise<Organization> {
-    // Mock single organization for testing
-    return {
-      id: 'org-1',
-      name: 'Test Organization',
-      description: 'Organization for testing',
-      plan: 'professional',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    // return this.request(`/api/v1/organizations/${id}`, {}, OrganizationSchema);
+    return this.request(`/api/v1/empresas/${id}`, {}, OrganizationSchema);
   }
 
   async updateOrganization(id: string, data: Partial<Organization>): Promise<Organization> {
-    return this.request(`/api/v1/organizations/${id}`, {
+    return this.request(`/api/v1/empresas/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }, OrganizationSchema);
@@ -202,74 +132,60 @@ class ApiClient {
   // Leads
   async getLeads(params?: {
     page?: number;
-    pageSize?: number;
-    filter?: LeadFilter;
-    sort?: string;
+    limit?: number;
+    status?: string;
+    scoreMin?: number;
+    scoreMax?: number;
+    segmento?: string;
+    porteEmpresa?: string;
+    fonte?: string;
+    search?: string;
+    tags?: string[];
+    createdAfter?: string;
+    createdBefore?: string;
   }): Promise<PaginatedResponse<Lead>> {
     const searchParams = new URLSearchParams();
     
     if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.pageSize) searchParams.append('pageSize', params.pageSize.toString());
-    if (params?.sort) searchParams.append('sort', params.sort);
-    if (params?.filter) {
-      Object.entries(params.filter).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          searchParams.append(key, typeof value === 'string' ? value : JSON.stringify(value));
-        }
-      });
-    }
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.scoreMin) searchParams.append('scoreMin', params.scoreMin.toString());
+    if (params?.scoreMax) searchParams.append('scoreMax', params.scoreMax.toString());
+    if (params?.segmento) searchParams.append('segmento', params.segmento);
+    if (params?.porteEmpresa) searchParams.append('porteEmpresa', params.porteEmpresa);
+    if (params?.fonte) searchParams.append('fonte', params.fonte);
+    if (params?.search) searchParams.append('search', params.search);
+    if (params?.tags && params.tags.length > 0) searchParams.append('tags', params.tags.join(','));
+    if (params?.createdAfter) searchParams.append('createdAfter', params.createdAfter);
+    if (params?.createdBefore) searchParams.append('createdBefore', params.createdBefore);
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
-    const response = await this.request(`/api/v1/leads${query}`);
-    
-    // Validate the structure manually since the generic schema is causing issues
-    if (!response || typeof response !== 'object' || !('data' in response) || !('pagination' in response)) {
-      throw new Error('Invalid response format from leads endpoint');
-    }
-    
-    return response as PaginatedResponse<Lead>;
+    const response = await this.request(`/api/v1/leads${query}`, {}, PaginatedResponseSchema(LeadSchema));
+    return response;
   }
 
   async getLead(id: string): Promise<Lead> {
     return this.request(`/api/v1/leads/${id}`, {}, LeadSchema);
   }
 
-  async accessLead(id: string): Promise<LeadAccess> {
-    return this.request(`/api/v1/leads/${id}/access`, {
+  async createLead(data: CreateLeadDTO): Promise<Lead> {
+    return this.request('/api/v1/leads', {
       method: 'POST',
-    });
+      body: JSON.stringify(data),
+    }, LeadSchema);
   }
 
-  async bulkAccessLeads(ids: string[]): Promise<LeadAccess[]> {
-    return this.request('/api/v1/leads/bulk-access', {
-      method: 'POST',
-      body: JSON.stringify({ leadIds: ids }),
-    });
+  async updateLead(id: string, data: UpdateLeadDTO): Promise<Lead> {
+    return this.request(`/api/v1/leads/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }, LeadSchema);
   }
 
-  async exportLeads(filter?: LeadFilter): Promise<Blob> {
-    const searchParams = new URLSearchParams();
-    if (filter) {
-      Object.entries(filter).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          searchParams.append(key, typeof value === 'string' ? value : JSON.stringify(value));
-        }
-      });
-    }
-
-    const query = searchParams.toString() ? `?${searchParams}` : '';
-    const response = await fetch(`${this.baseURL}/api/v1/leads/export${query}`, {
-      headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
-        'X-Org-Id': this.organizationId || '',
-      },
+  async deleteLead(id: string): Promise<void> {
+    return this.request(`/api/v1/leads/${id}`, {
+      method: 'DELETE',
     });
-
-    if (!response.ok) {
-      throw new ApiError(response.status, response.statusText, 'Export failed');
-    }
-
-    return response.blob();
   }
 
   // Analytics

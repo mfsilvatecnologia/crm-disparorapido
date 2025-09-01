@@ -30,45 +30,49 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    initializeAuth();
-  }, []);
+    const initializeAuth = async () => {
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+        const userData = localStorage.getItem(USER_KEY);
 
-  const initializeAuth = async () => {
-    try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-      const userData = localStorage.getItem(USER_KEY);
-
-      if (token && userData) {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        apiClient.setAccessToken(token);
-        
-        // Try to refresh the token if it's close to expiry
-        if (refreshToken) {
-          try {
-            await refreshAuth();
-          } catch (error) {
-            console.warn('Failed to refresh token:', error);
-            // Token might still be valid, continue with current token
+        if (token && userData) {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+          apiClient.setAccessToken(token);
+          
+          // Try to refresh the token if it's close to expiry
+          if (refreshToken) {
+            try {
+              await refreshAuth();
+            } catch (error) {
+              console.warn('Failed to refresh token:', error);
+              // Token might still be valid, continue with current token
+            }
           }
         }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        // Clear invalid stored data
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to initialize auth:', error);
-      // Clear invalid stored data
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    initializeAuth();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response: AuthResponse = await apiClient.login({ email, password });
+      const response: AuthResponse = await apiClient.login({ 
+        email, 
+        password,
+        senha: password // Backend precisa de ambos os campos
+      });
       
       // Store tokens and user data
       localStorage.setItem(TOKEN_KEY, response.accessToken);
@@ -145,7 +149,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, 15 * 60 * 1000); // Refresh every 15 minutes
 
     return () => clearInterval(refreshInterval);
-  }, [user]);
+  }, [user, refreshAuth]);
 
   const value: AuthContextType = {
     user,

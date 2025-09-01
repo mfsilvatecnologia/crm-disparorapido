@@ -55,8 +55,8 @@ export default function LoginPage() {
         title: "Login realizado com sucesso",
         description: "Bem-vindo ao LeadCRM!",
       });
-    } catch (error: any) {
-      const errorMessage = error?.message || 'Erro ao fazer login. Tente novamente.';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login. Tente novamente.';
       setLoginError(errorMessage);
       toast({
         title: "Erro no login",

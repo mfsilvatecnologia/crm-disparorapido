@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Plus, 
+import {
+  Search,
+  Filter,
+  Download,
+  Plus,
   MoreVertical,
   Eye,
   Phone,
@@ -16,13 +15,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -35,144 +34,22 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import apiClient from '@/lib/api/client';
+import { useLeads } from '@/hooks/useLeads';
 import { formatCurrency } from '@/lib/utils';
 import type { Lead } from '@/lib/api/schemas';
-
-// Mock leads data
-const mockLeads: Lead[] = [
-  {
-    id: '1',
-    name: 'João Silva',
-    email: 'joao@techsolutions.com.br',
-    phone: '+55 11 99999-0001',
-    company: 'Tech Solutions LTDA',
-    position: 'CTO',
-    website: 'https://techsolutions.com.br',
-    linkedin: 'https://linkedin.com/in/joaosilva',
-    address: {
-      street: 'Av. Paulista, 1000',
-      city: 'São Paulo',
-      state: 'SP',
-      zipCode: '01310-100',
-      country: 'Brasil'
-    },
-    segment: {
-      id: 'tech',
-      name: 'Tecnologia',
-      description: 'Empresas de tecnologia e software',
-      color: '#3b82f6'
-    },
-    qualityScore: 92,
-    tags: ['high-intent', 'enterprise', 'qualified'],
-    customFields: {
-      employees: '50-200',
-      revenue: '$1M-$5M'
-    },
-    metadata: {
-      source: 'linkedin-scraping',
-      collectedAt: '2024-01-15T10:30:00Z',
-      lastEnrichedAt: '2024-01-15T11:00:00Z',
-      confidence: 0.95
-    },
-    accessCost: 2.50,
-    isAccessed: false,
-    createdAt: '2024-01-15T10:30:00Z',
-    updatedAt: '2024-01-15T11:00:00Z'
-  },
-  {
-    id: '2',
-    name: 'Maria Santos',
-    email: 'maria@inovacaodigital.com.br',
-    phone: '+55 11 99999-0002',
-    company: 'Inovação Digital',
-    position: 'CEO',
-    website: 'https://inovacaodigital.com.br',
-    address: {
-      city: 'Rio de Janeiro',
-      state: 'RJ',
-      country: 'Brasil'
-    },
-    segment: {
-      id: 'marketing',
-      name: 'Marketing Digital',
-      description: 'Agências e consultorias de marketing',
-      color: '#10b981'
-    },
-    qualityScore: 87,
-    tags: ['decision-maker', 'smb'],
-    metadata: {
-      source: 'web-scraping',
-      collectedAt: '2024-01-15T14:20:00Z',
-      confidence: 0.88
-    },
-    accessCost: 2.50,
-    isAccessed: true,
-    accessedAt: '2024-01-16T09:15:00Z',
-    createdAt: '2024-01-15T14:20:00Z',
-    updatedAt: '2024-01-16T09:15:00Z'
-  },
-  {
-    id: '3',
-    name: 'Pedro Costa',
-    email: 'pedro@startupxyz.com',
-    phone: '+55 11 99999-0003',
-    company: 'StartupXYZ',
-    position: 'Founder',
-    address: {
-      city: 'Belo Horizonte',
-      state: 'MG',
-      country: 'Brasil'
-    },
-    segment: {
-      id: 'fintech',
-      name: 'Fintech',
-      description: 'Startups de tecnologia financeira',
-      color: '#f59e0b'
-    },
-    qualityScore: 76,
-    tags: ['startup', 'early-stage'],
-    metadata: {
-      source: 'crunchbase-api',
-      collectedAt: '2024-01-15T16:45:00Z',
-      confidence: 0.82
-    },
-    accessCost: 2.50,
-    isAccessed: false,
-    createdAt: '2024-01-15T16:45:00Z',
-    updatedAt: '2024-01-15T16:45:00Z'
-  }
-];
 
 export default function LeadsPage() {
   const { currentOrganization } = useOrganization();
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Mock query for leads
-  const { data: leadsData, isLoading } = useQuery({
-    queryKey: ['leads', currentOrganization?.id, searchTerm],
-    queryFn: () => {
-      // Simulate API call with filtering
-      const filteredLeads = mockLeads.filter(lead => 
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      
-      return Promise.resolve({
-        data: filteredLeads,
-        pagination: {
-          page: 1,
-          pageSize: 10,
-          total: filteredLeads.length
-        }
-      });
-    },
-    enabled: !!currentOrganization,
+  // Use real leads hook
+  const { data: leadsData, isLoading } = useLeads({
+    search: searchTerm,
+    limit: 50,
   });
 
-  const leads = leadsData?.data || [];
+  const leads = leadsData?.items || [];
 
   const handleSelectLead = (leadId: string, checked: boolean) => {
     if (checked) {
@@ -257,7 +134,7 @@ export default function LeadsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{leads.length}</p>
+                <p className="text-2xl font-bold">{leadsData?.total || 0}</p>
               </div>
               <Target className="h-8 w-8 text-primary" />
             </div>
@@ -268,8 +145,26 @@ export default function LeadsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Selecionados</p>
-                <p className="text-2xl font-bold">{selectedLeads.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Qualificados</p>
+                <p className="text-2xl font-bold">
+                  {leads.filter(lead => lead.status === 'QUALIFICADO').length}
+                </p>
+              </div>
+              <Star className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Qualidade Média</p>
+                <p className="text-2xl font-bold">
+                  {leads.length > 0 
+                    ? Math.round(leads.reduce((sum, lead) => sum + (lead.scoreQualificacao || 0), 0) / leads.length)
+                    : 0}%
+                </p>
               </div>
               <Eye className="h-8 w-8 text-accent" />
             </div>
@@ -314,7 +209,7 @@ export default function LeadsPage() {
         <CardHeader>
           <CardTitle>Lista de Leads</CardTitle>
           <CardDescription>
-            {leads.length} leads encontrados
+            {leadsData?.total || 0} leads encontrados
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -348,55 +243,52 @@ export default function LeadsPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={`https://avatar.vercel.sh/${lead.name}`} />
+                        <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato}`} />
                         <AvatarFallback>
-                          {lead.name.split(' ').map(n => n[0]).join('')}
+                          {lead.nomeContato?.split(' ').map(n => n[0]).join('') || 'NN'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{lead.name}</p>
-                        <p className="text-sm text-muted-foreground">{lead.position}</p>
-                        <p className="text-xs text-muted-foreground">{lead.email}</p>
+                        <p className="font-medium">{lead.nomeContato || 'N/A'}</p>
+                        <p className="text-sm text-muted-foreground">{lead.cargoContato || 'N/A'}</p>
+                        <p className="text-xs text-muted-foreground">{lead.email || 'N/A'}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{lead.company}</p>
+                      <p className="font-medium">{lead.nomeEmpresa || 'N/A'}</p>
                       <p className="text-sm text-muted-foreground">
-                        {lead.address?.city}, {lead.address?.state}
+                        {lead.endereco?.cidade || 'N/A'}, {lead.endereco?.estado || 'N/A'}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      style={{ borderColor: lead.segment.color, color: lead.segment.color }}
-                    >
-                      {lead.segment.name}
+                    <Badge variant="outline">
+                      {lead.segmento || 'N/A'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className={`text-sm font-medium ${getQualityColor(lead.qualityScore)}`}>
-                          {lead.qualityScore}%
+                        <span className={`text-sm font-medium ${getQualityColor(lead.scoreQualificacao || 0)}`}>
+                          {lead.scoreQualificacao || 0}%
                         </span>
-                        <Badge variant={getQualityBadgeVariant(lead.qualityScore)} className="text-xs">
-                          {lead.qualityScore >= 85 ? 'Alta' : lead.qualityScore >= 70 ? 'Média' : 'Baixa'}
+                        <Badge variant={getQualityBadgeVariant(lead.scoreQualificacao || 0)} className="text-xs">
+                          {(lead.scoreQualificacao || 0) >= 85 ? 'Alta' : (lead.scoreQualificacao || 0) >= 70 ? 'Média' : 'Baixa'}
                         </Badge>
                       </div>
-                      <Progress value={lead.qualityScore} className="h-1" />
+                      <Progress value={lead.scoreQualificacao || 0} className="h-1" />
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={lead.isAccessed ? 'default' : 'secondary'}>
-                      {lead.isAccessed ? 'Acessado' : 'Disponível'}
+                    <Badge variant={lead.status === 'QUALIFICADO' ? 'default' : 'secondary'}>
+                      {lead.status || 'NOVO'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm font-medium">
-                      {formatCurrency(lead.accessCost)}
+                      {formatCurrency(lead.custoAquisicao || 0)}
                     </span>
                   </TableCell>
                   <TableCell>

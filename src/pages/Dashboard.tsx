@@ -1,11 +1,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  TrendingUp, 
-  Users, 
-  CreditCard, 
-  Target, 
-  ArrowUpRight, 
+import {
+  TrendingUp,
+  Users,
+  CreditCard,
+  Target,
+  ArrowUpRight,
   ArrowDownRight,
   MoreVertical
 } from 'lucide-react';
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import apiClient from '@/lib/api/client';
+import { useLeads } from '@/hooks/useLeads';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 import { KpiCard } from '@/components/dashboard/KpiCard';
 import { LeadsChart } from '@/components/dashboard/LeadsChart';
@@ -30,11 +30,16 @@ import { RegionMap } from '@/components/dashboard/RegionMap';
 export default function Dashboard() {
   const { currentOrganization } = useOrganization();
 
-  // Mock data for development - replace with real API calls
+  // Fetch real leads data
+  const { data: leadsData, isLoading: leadsLoading } = useLeads({
+    limit: 1000, // Get more data for analytics
+  });
+
+  // Mock analytics data for now - will be replaced with real analytics endpoint
   const { data: analytics } = useQuery({
     queryKey: ['analytics', currentOrganization?.id],
     queryFn: () => {
-      // Mock analytics data
+      // Mock analytics data - replace with real API call
       return Promise.resolve([
         { date: '2024-01-01', leadsCollected: 1250, leadsAccessed: 890, qualityAverage: 85, cost: 2340, conversions: 45 },
         { date: '2024-01-02', leadsCollected: 1180, leadsAccessed: 920, qualityAverage: 82, cost: 2450, conversions: 52 },
@@ -51,7 +56,7 @@ export default function Dashboard() {
   const { data: usageMetrics } = useQuery({
     queryKey: ['usage', currentOrganization?.id],
     queryFn: () => {
-      // Mock usage data
+      // Mock usage data - replace with real API call
       return Promise.resolve({
         period: { from: '2024-01-01', to: '2024-01-31' },
         leadsAccessed: 8234,
@@ -65,9 +70,15 @@ export default function Dashboard() {
     enabled: !!currentOrganization,
   });
 
-  const totalLeads = analytics?.reduce((sum, day) => sum + day.leadsCollected, 0) || 0;
+  // Calculate metrics from real leads data
+  const totalLeads = leadsData?.total || 0;
+  const leadsItems = leadsData?.items || [];
+  const avgQuality = leadsItems.length > 0
+    ? leadsItems.reduce((sum, lead) => sum + (lead.qualityScore || 0), 0) / leadsItems.length
+    : 0;
+
+  // Mock data for charts (will be replaced with real analytics)
   const totalAccessed = analytics?.reduce((sum, day) => sum + day.leadsAccessed, 0) || 0;
-  const avgQuality = analytics?.reduce((sum, day) => sum + day.qualityAverage, 0) / (analytics?.length || 1) || 0;
   const totalConversions = analytics?.reduce((sum, day) => sum + day.conversions, 0) || 0;
 
   const quotaPercent = usageMetrics ? (usageMetrics.quotaUsed / usageMetrics.quotaTotal) * 100 : 0;
@@ -111,23 +122,23 @@ export default function Dashboard() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          title="Leads Disponíveis"
-          value={formatNumber(totalLeads)}
-          description="+12% vs mês anterior"
+          title="Total de Leads"
+          value={leadsLoading ? '...' : formatNumber(totalLeads)}
+          description="Leads na base de dados"
           icon={Users}
+          trend="up"
+        />
+        <KpiCard
+          title="Qualidade Média"
+          value={leadsLoading ? '...' : `${avgQuality.toFixed(0)}%`}
+          description="Score médio dos leads"
+          icon={Target}
           trend="up"
         />
         <KpiCard
           title="Leads Acessados"
           value={formatNumber(totalAccessed)}
-          description={`${((totalAccessed / totalLeads) * 100).toFixed(1)}% do total`}
-          icon={Target}
-          trend="up"
-        />
-        <KpiCard
-          title="Qualidade Média"
-          value={`${avgQuality.toFixed(0)}%`}
-          description="+3% vs mês anterior"
+          description="Leads visualizados este mês"
           icon={TrendingUp}
           trend="up"
         />
@@ -150,7 +161,7 @@ export default function Dashboard() {
                 {formatNumber(usageMetrics?.quotaUsed || 0)} de {formatNumber(usageMetrics?.quotaTotal || 0)} leads
               </CardDescription>
             </div>
-            <Badge variant={quotaStatus.color as any}>
+            <Badge variant={quotaStatus.color as "default" | "secondary" | "destructive" | "outline"}>
               {quotaStatus.label}
             </Badge>
           </div>
