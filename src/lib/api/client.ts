@@ -16,6 +16,7 @@ import {
   OrganizationSchema,
   LeadSchema,
   PaginatedResponseSchema,
+  PaginatedApiResponseSchema,
   UsageMetricsSchema,
   AnalyticsDataSchema,
   ApiKeySchema
@@ -60,10 +61,16 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
     
     // Ensure proper headers for JSON requests
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...config.headers,
+      'accept': 'application/json',
+      ...(config.headers as Record<string, string> || {}),
     };
+
+    // Add authorization header if token is available
+    if (this.accessToken) {
+      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    }
 
     const requestConfig = {
       ...config,
@@ -108,7 +115,16 @@ class ApiClient {
       
       // Validate response with schema if provided
       if (schema) {
-        return schema.parse(data);
+        try {
+          console.log('Validating response with schema:', data);
+          return schema.parse(data);
+        } catch (validationError) {
+          console.error('Schema validation failed:', {
+            error: validationError,
+            receivedData: data
+          });
+          throw validationError;
+        }
       }
       
       return data;
@@ -122,7 +138,7 @@ class ApiClient {
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError(0, 'Network Error', 'Falha no Login', error);
+      throw new ApiError(0, 'Network Error', 'Request failed', error);
     }
   }
 
@@ -188,6 +204,8 @@ class ApiClient {
     tags?: string[];
     createdAfter?: string;
     createdBefore?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }): Promise<PaginatedResponse<Lead>> {
     const searchParams = new URLSearchParams();
     
@@ -203,10 +221,24 @@ class ApiClient {
     if (params?.tags && params.tags.length > 0) searchParams.append('tags', params.tags.join(','));
     if (params?.createdAfter) searchParams.append('createdAfter', params.createdAfter);
     if (params?.createdBefore) searchParams.append('createdBefore', params.createdBefore);
+    if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
+    if (params?.sortOrder) searchParams.append('sortOrder', params.sortOrder);
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
-    const response = await this.request(`/api/v1/leads${query}`, {}, PaginatedResponseSchema(LeadSchema));
-    return response;
+    
+    const response = await this.request(`/api/v1/leads${query}`, {}, PaginatedApiResponseSchema(LeadSchema));
+    
+    // Extract and ensure the data matches our expected type
+    const data = response.data;
+    return {
+      items: data.items || [],
+      total: data.total || 0,
+      page: data.page || 1,
+      limit: data.limit || 20,
+      totalPages: data.totalPages || 0,
+      hasNext: data.hasNext || false,
+      hasPrev: data.hasPrev || false,
+    };
   }
 
   async getLead(id: string): Promise<Lead> {

@@ -29,7 +29,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const navigationItems = [
   {
     title: 'Dashboard',
-    url: '/',
+    url: '/app',
     icon: Home,
     description: 'Visão geral e métricas'
   },

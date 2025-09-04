@@ -324,7 +324,7 @@ export default function Leads2Page() {
       }))
     : demoLeads;
 
-  console.log('LeadsPage - Dados carregados:', { realLeads, demoLeads, allLeads, isLoading, error });
+  console.log('Leads2Page - Dados carregados:', { realLeads, demoLeads, allLeads, isLoading, error });
 
   // Para dados da API, use os metadados de paginação retornados
   const isUsingApiData = realLeads.length > 0;
@@ -420,12 +420,10 @@ export default function Leads2Page() {
     ? allLeads // API já retorna dados paginados
     : sortedLeads.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Reset página quando filtros mudam (apenas para dados demo)
+  // Reset página quando filtros mudam
   useEffect(() => {
-    if (!isUsingApiData) {
-      setCurrentPage(1);
-    }
-  }, [filterStatus, searchTerm, selectedSegments, selectedSources, qualityRange, isUsingApiData]);
+    setCurrentPage(1);
+  }, [filterStatus, searchTerm, selectedSegments, selectedSources, qualityRange]);
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -546,15 +544,15 @@ export default function Leads2Page() {
 
   // Estatísticas
   const stats = {
-    total: isUsingApiData ? totalItems : allLeads.length,
-    filtered: isUsingApiData ? totalItems : sortedLeads.length,
-    avgQuality: paginatedLeads.length > 0 ? Math.round(paginatedLeads.reduce((sum, lead) => sum + lead.qualityScore, 0) / paginatedLeads.length) : 0,
+    total: allLeads.length,
+    filtered: sortedLeads.length,
+    avgQuality: sortedLeads.length > 0 ? Math.round(sortedLeads.reduce((sum, lead) => sum + lead.qualityScore, 0) / sortedLeads.length) : 0,
     statusCounts: {
-      new: paginatedLeads.filter(l => l.status === 'new').length,
-      qualified: paginatedLeads.filter(l => l.status === 'qualified').length,
-      contacted: paginatedLeads.filter(l => l.status === 'contacted').length,
-      converted: paginatedLeads.filter(l => l.status === 'converted').length,
-      discarded: paginatedLeads.filter(l => l.status === 'discarded').length,
+      new: allLeads.filter(l => l.status === 'new').length,
+      qualified: allLeads.filter(l => l.status === 'qualified').length,
+      contacted: allLeads.filter(l => l.status === 'contacted').length,
+      converted: allLeads.filter(l => l.status === 'converted').length,
+      discarded: allLeads.filter(l => l.status === 'discarded').length,
     }
   };
 
@@ -593,12 +591,7 @@ export default function Leads2Page() {
               )}
               {realLeads.length > 0 && (
                 <Badge className="text-xs bg-green-100 text-green-800 border-green-200">
-                  Dados Reais - Paginação API
-                </Badge>
-              )}
-              {isUsingApiData && (
-                <Badge className="text-xs bg-blue-100 text-blue-800 border-blue-200">
-                  Página {currentPage}/{totalPages}
+                  Dados Reais ({realLeads.length} da API)
                 </Badge>
               )}
             </div>

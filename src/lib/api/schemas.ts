@@ -104,46 +104,60 @@ export const OrganizationSchema = z.object({
   updatedAt: z.string(),
 });
 
-// Lead schemas
-export const LeadSegmentSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-  color: z.string().optional(),
+// Lead schemas baseados na API real
+export const LeadAddressSchema = z.object({
+  rua: z.string().optional(),
+  numero: z.string().optional(),
+  cidade: z.string().optional(),
+  estado: z.string().optional(),
+  cep: z.string().optional(),
+  pais: z.string().optional(),
 });
 
 export const LeadSchema = z.object({
   id: z.string(),
-  name: z.string(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  company: z.string().optional(),
-  position: z.string().optional(),
-  website: z.string().optional(),
-  linkedin: z.string().optional(),
-  address: z.object({
-    street: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    zipCode: z.string().optional(),
-    country: z.string().optional(),
-  }).optional(),
-  segment: LeadSegmentSchema,
-  qualityScore: z.number().min(0).max(100),
-  tags: z.array(z.string()),
-  customFields: z.record(z.any()).optional(),
-  metadata: z.object({
-    source: z.string(),
-    collectedAt: z.string(),
-    lastEnrichedAt: z.string().optional(),
-    confidence: z.number().min(0).max(1),
-  }),
-  accessCost: z.number().nonnegative(),
-  isAccessed: z.boolean(),
-  accessedAt: z.string().optional(),
+  empresaId: z.string(),
+  nomeEmpresa: z.string(),
+  nomeContato: z.string(),
+  cargoContato: z.string().optional(),
+  email: z.string().optional(),
+  telefone: z.string().optional(),
+  linkedinUrl: z.string().optional(),
+  siteEmpresa: z.string().optional(),
+  cnpj: z.string().optional(),
+  segmento: z.string().optional(),
+  porteEmpresa: z.string().optional(),
+  numFuncionarios: z.number().optional(),
+  receitaAnualEstimada: z.number().optional(),
+  endereco: LeadAddressSchema.optional(),
+  status: z.enum(['novo', 'qualificado', 'contatado', 'convertido', 'descartado']).optional(),
+  scoreQualificacao: z.number().min(0).max(100).optional(),
+  tags: z.array(z.string()).optional(),
+  observacoes: z.string().optional(),
+  fonte: z.string().optional(),
+  dadosOriginais: z.record(z.any()).optional(),
+  custoAquisicao: z.number().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+
+// Schema de resposta da API real
+export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.boolean(),
+    data: dataSchema,
+  });
+
+export const PaginatedApiResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+  ApiResponseSchema(z.object({
+    items: z.array(itemSchema),
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+    hasNext: z.boolean(),
+    hasPrev: z.boolean(),
+  }));
 
 export const LeadAccessSchema = z.object({
   id: z.string(),

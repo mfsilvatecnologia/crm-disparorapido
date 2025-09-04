@@ -10,6 +10,7 @@ import { Index } from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import LeadsPage from "./pages/LeadsPage";
+import Leads2Page from "./pages/Leads2Page";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -54,6 +55,7 @@ function AppRoutes() {
       }>
         <Route index element={<Dashboard />} />
         <Route path="leads" element={<LeadsPage />} />
+        <Route path="leads2" element={<Leads2Page />} />
         <Route path="segments" element={<div className="p-6">Segmentos - Em desenvolvimento</div>} />
         <Route path="pipeline" element={<div className="p-6">Pipeline - Em desenvolvimento</div>} />
         <Route path="sales-tools" element={<div className="p-6">Ferramentas de Vendas - Em desenvolvimento</div>} />
