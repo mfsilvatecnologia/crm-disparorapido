@@ -11,7 +11,9 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import LeadsPage from "./pages/LeadsPage";
 import Leads2Page from "./pages/Leads2Page";
+import WorkerMonitorPage from "./pages/WorkerMonitorPage";
 import NotFound from "./pages/NotFound";
+import CadastroEmpresaPage from "./pages/CadastroEmpresaPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,12 +58,14 @@ function AppRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="leads" element={<LeadsPage />} />
         <Route path="leads2" element={<Leads2Page />} />
+        <Route path="workers" element={<WorkerMonitorPage />} />
         <Route path="segments" element={<div className="p-6">Segmentos - Em desenvolvimento</div>} />
         <Route path="pipeline" element={<div className="p-6">Pipeline - Em desenvolvimento</div>} />
         <Route path="sales-tools" element={<div className="p-6">Ferramentas de Vendas - Em desenvolvimento</div>} />
         <Route path="billing" element={<div className="p-6">Cobrança - Em desenvolvimento</div>} />
         <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
         <Route path="admin/organizations" element={<div className="p-6">Admin - Organizações - Em desenvolvimento</div>} />
+        <Route path="empresas/cadastro" element={<CadastroEmpresaPage />} />
       </Route>
       
       <Route path="*" element={<NotFound />} />

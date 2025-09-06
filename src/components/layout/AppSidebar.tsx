@@ -10,7 +10,9 @@ import {
   Shield,
   Building2,
   Home,
-  Zap
+  Zap,
+  Plus,
+  Activity
 } from 'lucide-react';
 import {
   Sidebar,
@@ -38,6 +40,12 @@ const navigationItems = [
     url: '/app/leads',
     icon: Users,
     description: 'Gerenciar base de leads'
+  },
+  {
+    title: 'Workers',
+    url: '/app/workers',
+    icon: Activity,
+    description: 'Monitorar workers e jobs'
   },
   {
     title: 'Segmentos',

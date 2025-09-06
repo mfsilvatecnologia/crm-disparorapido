@@ -244,6 +244,43 @@ export const ApiKeySchema = z.object({
   createdAt: z.string(),
 });
 
+// Empresa schemas
+export const EmpresaSchema = z.object({
+  id: z.string(),
+  nome: z.string(),
+  cnpj: z.string(),
+  email: z.string().email(),
+  segmento: z.string().optional(),
+  volume_auditorias_mensal: z.string().optional(),
+  recursos_interesse: z.array(z.string()).optional(),
+  rua: z.string().optional(),
+  numero: z.string().optional(),
+  bairro: z.string().optional(),
+  cidade: z.string().optional(),
+  estado: z.string().optional(),
+  cep: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const CreateEmpresaDTOSchema = z.object({
+  nome: z.string(),
+  cnpj: z.string(),
+  email: z.string().email(),
+  segmento: z.string().optional(),
+  volume_auditorias_mensal: z.string().optional(),
+  recursos_interesse: z.array(z.string()).optional(),
+  rua: z.string().optional(),
+  numero: z.string().optional(),
+  bairro: z.string().optional(),
+  cidade: z.string().optional(),
+  estado: z.string().optional(),
+  cep: z.string().optional(),
+});
+
+export type Empresa = z.infer<typeof EmpresaSchema>;
+export type CreateEmpresaDTO = z.infer<typeof CreateEmpresaDTOSchema>;
+
 // Lead DTOs
 export const CreateLeadDTOSchema = z.object({
   organizationId: z.string(),

@@ -292,6 +292,14 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Empresas
+  async createEmpresa(data: CreateEmpresaDTO): Promise<Empresa> {
+    return this.request('/api/v1/empresas', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, EmpresaSchema);
+  }
 }
 
 export const apiClient = new ApiClient();
