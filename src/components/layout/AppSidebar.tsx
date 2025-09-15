@@ -12,7 +12,10 @@ import {
   Home,
   Zap,
   Plus,
-  Activity
+  Activity,
+  Search,
+  Map,
+  User
 } from 'lucide-react';
 import {
   Sidebar,
@@ -42,26 +45,44 @@ const navigationItems = [
     description: 'Gerenciar base de leads'
   },
   {
+    title: 'Empresas',
+    url: '/app/empresas',
+    icon: Building2,
+    description: 'Gestão de empresas'
+  },
+  {
     title: 'Workers',
     url: '/app/workers',
     icon: Activity,
     description: 'Monitorar workers e jobs'
   },
   {
+    title: 'Termos de Busca',
+    url: '/app/search-terms',
+    icon: Search,
+    description: 'Gerenciar termos para scraping'
+  },
+  {
+    title: 'Scraping',
+    url: '/app/scraping',
+    icon: Map,
+    description: 'Jobs de coleta Google Maps'
+  },
+  {
     title: 'Segmentos',
-    url: '/segments',
+    url: '/app/segments',
     icon: BarChart3,
     description: 'Análise por segmento' 
   },
   {
     title: 'Pipeline',
-    url: '/pipeline',
+    url: '/app/pipeline',
     icon: Kanban,
     description: 'Funil de vendas'
   },
   {
     title: 'Ferramentas',
-    url: '/sales-tools',
+    url: '/app/sales-tools',
     icon: Phone,
     description: 'Call center e e-mails'
   },
@@ -69,23 +90,35 @@ const navigationItems = [
 
 const settingsItems = [
   {
+    title: 'Perfil',
+    url: '/app/profile',
+    icon: User,
+    description: 'Configurações do perfil'
+  },
+  {
     title: 'Cobrança',
-    url: '/billing',
+    url: '/app/billing',
     icon: CreditCard,
     description: 'Uso e faturas'
   },
   {
     title: 'Configurações',
-    url: '/settings',
+    url: '/app/settings',
     icon: Settings,
-    description: 'Perfil e integrações'
+    description: 'Integrações e sistema'
   },
 ];
 
 const adminItems = [
   {
+    title: 'Usuários',
+    url: '/app/users',
+    icon: Users,
+    description: 'Gerenciar usuários do sistema'
+  },
+  {
     title: 'Organizações',
-    url: '/admin/organizations',
+    url: '/app/admin/organizations',
     icon: Building2,
     description: 'Gerenciar organizações'
   },

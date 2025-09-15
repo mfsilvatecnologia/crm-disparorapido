@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -190,9 +190,9 @@ export default function LoginPage() {
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground">
                   Esqueceu sua senha?{' '}
-                  <a href="#" className="text-primary hover:underline">
+                  <Link to="/reset-password" className="text-primary hover:underline">
                     Recuperar senha
-                  </a>
+                  </Link>
                 </p>
               </div>
             </CardContent>
