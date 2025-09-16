@@ -387,6 +387,11 @@ export const AuthResponseSchema = z.object({
     user: UserSchema,
     token: z.string(),
     expiresIn: z.string().optional(), // Pode ser string ou não existir
+    empresa: z.object({
+      id: z.string(),
+      nome: z.string(),
+      cnpj: z.string(),
+    }).optional(), // Empresa is optional in auth response
   }),
   message: z.string(),
   timestamp: z.string(),
@@ -563,6 +568,8 @@ export const EmpresaSchema = z.object({
   nome: z.string(),
   cnpj: z.string(),
   email: z.string().email(),
+  saldo_creditos: z.number(),
+  api_key: z.string(),
   segmento: z.string().optional(),
   volume_auditorias_mensal: z.string().optional(),
   recursos_interesse: z.array(z.string()).optional(),
@@ -572,8 +579,8 @@ export const EmpresaSchema = z.object({
   cidade: z.string().optional(),
   estado: z.string().optional(),
   cep: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  created_at: z.string(),
+  updated_at: z.string().optional(),
 });
 
 export const CreateEmpresaDTOSchema = z.object({

@@ -79,6 +79,9 @@ class ApiClient {
   private baseURL: string;
   private accessToken: string | null = null;
   private organizationId: string | null = null;
+  private refreshCallback: (() => Promise<void>) | null = null;
+  private isRefreshing = false;
+  private failedQueue: Array<{ resolve: Function; reject: Function }> = [];
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
@@ -90,6 +93,22 @@ class ApiClient {
 
   setOrganizationId(orgId: string | null) {
     this.organizationId = orgId;
+  }
+
+  setRefreshCallback(callback: (() => Promise<void>) | null) {
+    this.refreshCallback = callback;
+  }
+
+  private processQueue(error: Error | null) {
+    this.failedQueue.forEach(({ resolve, reject }) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+
+    this.failedQueue = [];
   }
 
   async request<T>(
@@ -140,7 +159,35 @@ class ApiClient {
         } catch {
           errorData = { message: response.statusText };
         }
-        
+
+        // Handle 401 Unauthorized - attempt token refresh
+        if (response.status === 401 && this.refreshCallback && !endpoint.includes('/auth/')) {
+          if (this.isRefreshing) {
+            // If already refreshing, queue this request
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            }).then(() => {
+              // Retry the request after refresh
+              return this.request(endpoint, config, schema);
+            });
+          }
+
+          this.isRefreshing = true;
+
+          try {
+            await this.refreshCallback();
+            this.processQueue(null);
+            this.isRefreshing = false;
+
+            // Retry the original request with new token
+            return this.request(endpoint, config, schema);
+          } catch (refreshError) {
+            this.processQueue(refreshError as Error);
+            this.isRefreshing = false;
+            throw refreshError;
+          }
+        }
+
         throw new ApiError(
           response.status,
           response.statusText,
@@ -183,21 +230,21 @@ class ApiClient {
 
   // Auth methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return this.request('/api/v1/auth/login', {
+    return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     }, AuthResponseSchema);
   }
 
   async refresh(refreshToken: string): Promise<AuthResponse> {
-    return this.request('/api/v1/auth/refresh', {
+    return this.request('/auth/refresh', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     }, AuthResponseSchema);
   }
 
   async logout(): Promise<void> {
-    return this.request('/api/v1/auth/logout', {
+    return this.request('/auth/logout', {
       method: 'POST',
     });
   }
@@ -218,18 +265,18 @@ class ApiClient {
 
   // User Profile
   async getCurrentUser(): Promise<User> {
-    return this.request('/api/v1/users/me', {}, UserSchema);
+    return this.request('/users/me', {}, UserSchema);
   }
 
   async updateProfile(data: UpdateProfileRequest): Promise<User> {
-    return this.request('/api/v1/users/me', {
+    return this.request('/users/me', {
       method: 'PUT',
       body: JSON.stringify(data),
     }, UserSchema);
   }
 
   async changePassword(data: ChangePasswordRequest): Promise<{ success: boolean; message: string }> {
-    return this.request('/api/v1/users/me/change-password', {
+    return this.request('/users/me/change-password', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -253,7 +300,7 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    const response = await this.request(`/api/v1/users${query}`, {}, PaginatedApiResponseSchema(UserSchema));
+    const response = await this.request(`/users${query}`, {}, PaginatedApiResponseSchema(UserSchema));
     
     const data = response.data;
     return {
@@ -268,58 +315,58 @@ class ApiClient {
   }
 
   async getUser(id: string): Promise<User> {
-    return this.request(`/api/v1/users/${id}`, {}, UserSchema);
+    return this.request(`/users/${id}`, {}, UserSchema);
   }
 
   async createUser(data: CreateUserRequest): Promise<User> {
-    return this.request('/api/v1/users', {
+    return this.request('/users', {
       method: 'POST',
       body: JSON.stringify(data),
     }, UserSchema);
   }
 
   async updateUser(id: string, data: UpdateUserRequest): Promise<User> {
-    return this.request(`/api/v1/users/${id}`, {
+    return this.request(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }, UserSchema);
   }
 
   async deleteUser(id: string): Promise<void> {
-    return this.request(`/api/v1/users/${id}`, {
+    return this.request(`/users/${id}`, {
       method: 'DELETE',
     });
   }
 
   async activateUser(id: string): Promise<User> {
-    return this.request(`/api/v1/users/${id}/activate`, {
+    return this.request(`/users/${id}/activate`, {
       method: 'PUT',
     }, UserSchema);
   }
 
   async deactivateUser(id: string): Promise<User> {
-    return this.request(`/api/v1/users/${id}/deactivate`, {
+    return this.request(`/users/${id}/deactivate`, {
       method: 'PUT',
     }, UserSchema);
   }
 
   async resetUserPassword(id: string): Promise<{ success: boolean; message: string; temporaryPassword: string }> {
-    return this.request(`/api/v1/users/${id}/reset-password`, {
+    return this.request(`/users/${id}/reset-password`, {
       method: 'POST',
     });
   }
 
   // // Organizations
   // async getOrganizations(): Promise<Organization[]> {
-  //   return this.request('/api/v1/empresas', {}, z.array(OrganizationSchema));
+  //   return this.request('/empresas', {}, z.array(OrganizationSchema));
   // }
 
   // async getOrganization(id: string): Promise<Organization> {
-  //   return this.request(`/api/v1/empresas/${id}`, {}, OrganizationSchema);
+  //   return this.request(`/empresas/${id}`, {}, OrganizationSchema);
   // }
 
   // async updateOrganization(id: string, data: Partial<Organization>): Promise<Organization> {
-  //   return this.request(`/api/v1/empresas/${id}`, {
+  //   return this.request(`/empresas/${id}`, {
   //     method: 'PUT',
   //     body: JSON.stringify(data),
   //   }, OrganizationSchema);
@@ -333,7 +380,7 @@ class ApiClient {
     }
     const query = params.toString() ? `?${params}` : '';
     
-    return this.request(`/api/v1/organizations/${orgId}/usage${query}`, {}, UsageMetricsSchema);
+    return this.request(`/organizations/${orgId}/usage${query}`, {}, UsageMetricsSchema);
   }
 
   // Leads
@@ -372,7 +419,7 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    const response = await this.request(`/api/v1/leads${query}`, {}, PaginatedApiResponseSchema(LeadSchema));
+    const response = await this.request(`/leads${query}`, {}, PaginatedApiResponseSchema(LeadSchema));
     
     // Extract and ensure the data matches our expected type
     const data = response.data;
@@ -388,25 +435,25 @@ class ApiClient {
   }
 
   async getLead(id: string): Promise<Lead> {
-    return this.request(`/api/v1/leads/${id}`, {}, LeadSchema);
+    return this.request(`/leads/${id}`, {}, LeadSchema);
   }
 
   async createLead(data: CreateLeadDTO): Promise<Lead> {
-    return this.request('/api/v1/leads', {
+    return this.request('/leads', {
       method: 'POST',
       body: JSON.stringify(data),
     }, LeadSchema);
   }
 
   async updateLead(id: string, data: UpdateLeadDTO): Promise<Lead> {
-    return this.request(`/api/v1/leads/${id}`, {
+    return this.request(`/leads/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }, LeadSchema);
   }
 
   async deleteLead(id: string): Promise<void> {
-    return this.request(`/api/v1/leads/${id}`, {
+    return this.request(`/leads/${id}`, {
       method: 'DELETE',
     });
   }
@@ -418,23 +465,23 @@ class ApiClient {
       to: period.to,
     });
     
-    return this.request(`/api/v1/analytics?${params}`, {}, z.array(AnalyticsDataSchema));
+    return this.request(`/analytics?${params}`, {}, z.array(AnalyticsDataSchema));
   }
 
   // API Keys
   async getApiKeys(): Promise<ApiKey[]> {
-    return this.request('/api/v1/api-keys', {}, z.array(ApiKeySchema));
+    return this.request('/api-keys', {}, z.array(ApiKeySchema));
   }
 
   async createApiKey(data: { name: string; permissions: string[] }): Promise<ApiKey> {
-    return this.request('/api/v1/api-keys', {
+    return this.request('/api-keys', {
       method: 'POST',
       body: JSON.stringify(data),
     }, ApiKeySchema);
   }
 
   async revokeApiKey(id: string): Promise<void> {
-    return this.request(`/api/v1/api-keys/${id}`, {
+    return this.request(`/api-keys/${id}`, {
       method: 'DELETE',
     });
   }
@@ -447,30 +494,34 @@ class ApiClient {
     segmento?: string;
   }): Promise<PaginatedResponse<Empresa>> {
     const searchParams = new URLSearchParams();
-    
+
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.search) searchParams.append('search', params.search);
     if (params?.segmento) searchParams.append('segmento', params.segmento);
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
-    
-    const response = await this.request(`/api/v1/empresas${query}`, {}, PaginatedApiResponseSchema(EmpresaSchema));
-    
-    const data = response.data;
+
+    // The API returns { success: true, data: Empresa[] } instead of paginated response
+    const response = await this.request(`/empresas${query}`, {}, z.object({
+      success: z.boolean(),
+      data: z.array(EmpresaSchema)
+    }));
+
+    const empresas = response.data;
     return {
-      items: data.items || [],
-      total: data.total || 0,
-      page: data.page || 1,
-      limit: data.limit || 20,
-      totalPages: data.totalPages || 0,
-      hasNext: data.hasNext || false,
-      hasPrev: data.hasPrev || false,
+      items: empresas || [],
+      total: empresas?.length || 0,
+      page: params?.page || 1,
+      limit: params?.limit || 20,
+      totalPages: Math.ceil((empresas?.length || 0) / (params?.limit || 20)),
+      hasNext: false,
+      hasPrev: false,
     };
   }
 
   async getEmpresa(id: string): Promise<Empresa> {
-    return this.request(`/api/v1/empresas/${id}`, {}, EmpresaSchema);
+    return this.request(`/empresas/${id}`, {}, EmpresaSchema);
   }
 
   async getEmpresasStats(): Promise<{
@@ -479,25 +530,25 @@ class ApiClient {
     conversionRate: number;
     today: number;
   }> {
-    return this.request('/api/v1/empresas/stats', {});
+    return this.request('/empresas/stats', {});
   }
 
   async createEmpresa(data: CreateEmpresaDTO): Promise<Empresa> {
-    return this.request('/api/v1/empresas', {
+    return this.request('/empresas', {
       method: 'POST',
       body: JSON.stringify(data),
     }, EmpresaSchema);
   }
 
   async updateEmpresa(id: string, data: CreateEmpresaDTO): Promise<Empresa> {
-    return this.request(`/api/v1/empresas/${id}`, {
+    return this.request(`/empresas/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }, EmpresaSchema);
   }
 
   async deleteEmpresa(id: string): Promise<void> {
-    return this.request(`/api/v1/empresas/${id}`, {
+    return this.request(`/empresas/${id}`, {
       method: 'DELETE',
     });
   }
@@ -512,11 +563,11 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    return this.request(`/api/v1/segments${query}`, {}, z.array(SegmentSchema));
+    return this.request(`/segments${query}`, {}, z.array(SegmentSchema));
   }
 
   async getSegment(id: string): Promise<Segment> {
-    return this.request(`/api/v1/segments/${id}`, {}, SegmentSchema);
+    return this.request(`/segments/${id}`, {}, SegmentSchema);
   }
 
   async getSegmentStats(params?: {
@@ -528,32 +579,32 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    return this.request(`/api/v1/segments/stats${query}`, {}, SegmentStatsSchema);
+    return this.request(`/segments/stats${query}`, {}, SegmentStatsSchema);
   }
 
   async createSegment(data: CreateSegment): Promise<Segment> {
-    return this.request('/api/v1/segments', {
+    return this.request('/segments', {
       method: 'POST',
       body: JSON.stringify(data),
     }, SegmentSchema);
   }
 
   async updateSegment(id: string, data: UpdateSegment): Promise<Segment> {
-    return this.request(`/api/v1/segments/${id}`, {
+    return this.request(`/segments/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }, SegmentSchema);
   }
 
   async deleteSegment(id: string): Promise<void> {
-    return this.request(`/api/v1/segments/${id}`, {
+    return this.request(`/segments/${id}`, {
       method: 'DELETE',
     });
   }
 
   // Pipeline
   async getPipelineStages(): Promise<PipelineStage[]> {
-    return this.request('/api/v1/pipeline/stages', {}, z.array(PipelineStageSchema));
+    return this.request('/pipeline/stages', {}, z.array(PipelineStageSchema));
   }
 
   async getPipelineItems(params?: {
@@ -569,7 +620,7 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    return this.request(`/api/v1/pipeline/items${query}`, {}, z.array(PipelineItemSchema));
+    return this.request(`/pipeline/items${query}`, {}, z.array(PipelineItemSchema));
   }
 
   async getPipelineStats(params?: {
@@ -581,32 +632,32 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    return this.request(`/api/v1/pipeline/stats${query}`, {}, PipelineStatsSchema);
+    return this.request(`/pipeline/stats${query}`, {}, PipelineStatsSchema);
   }
 
   async createPipelineItem(data: CreatePipelineItem): Promise<PipelineItem> {
-    return this.request('/api/v1/pipeline/items', {
+    return this.request('/pipeline/items', {
       method: 'POST',
       body: JSON.stringify(data),
     }, PipelineItemSchema);
   }
 
   async updatePipelineItem(id: string, data: UpdatePipelineItem): Promise<PipelineItem> {
-    return this.request(`/api/v1/pipeline/items/${id}`, {
+    return this.request(`/pipeline/items/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }, PipelineItemSchema);
   }
 
   async movePipelineItem(id: string, newStageId: string): Promise<PipelineItem> {
-    return this.request(`/api/v1/pipeline/items/${id}/move`, {
+    return this.request(`/pipeline/items/${id}/move`, {
       method: 'PUT',
       body: JSON.stringify({ stageId: newStageId }),
     }, PipelineItemSchema);
   }
 
   async deletePipelineItem(id: string): Promise<void> {
-    return this.request(`/api/v1/pipeline/items/${id}`, {
+    return this.request(`/pipeline/items/${id}`, {
       method: 'DELETE',
     });
   }
@@ -629,7 +680,7 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    const response = await this.request(`/api/v1/search-terms${query}`, {}, PaginatedApiResponseSchema(SearchTermSchema));
+    const response = await this.request(`/search-terms${query}`, {}, PaginatedApiResponseSchema(SearchTermSchema));
     
     const data = response.data;
     return {
@@ -644,50 +695,50 @@ class ApiClient {
   }
 
   async getSearchTerm(id: string): Promise<SearchTerm> {
-    return this.request(`/api/v1/search-terms/${id}`, {}, SearchTermSchema);
+    return this.request(`/search-terms/${id}`, {}, SearchTermSchema);
   }
 
   async createSearchTerm(data: CreateSearchTerm): Promise<SearchTerm> {
-    return this.request('/api/v1/search-terms', {
+    return this.request('/search-terms', {
       method: 'POST',
       body: JSON.stringify(data),
     }, SearchTermSchema);
   }
 
   async updateSearchTerm(id: string, data: UpdateSearchTerm): Promise<SearchTerm> {
-    return this.request(`/api/v1/search-terms/${id}`, {
+    return this.request(`/search-terms/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }, SearchTermSchema);
   }
 
   async deleteSearchTerm(id: string): Promise<void> {
-    return this.request(`/api/v1/search-terms/${id}`, {
+    return this.request(`/search-terms/${id}`, {
       method: 'DELETE',
     });
   }
 
   async getSearchTermCategories(): Promise<string[]> {
-    return this.request('/api/v1/search-terms/categories', {}, z.array(z.string()));
+    return this.request('/search-terms/categories', {}, z.array(z.string()));
   }
 
   async getSearchTermStats(): Promise<SearchTermStats[]> {
-    return this.request('/api/v1/search-terms/stats', {}, z.array(SearchTermStatsSchema));
+    return this.request('/search-terms/stats', {}, z.array(SearchTermStatsSchema));
   }
 
   // Google Maps Scraping
   async getScrapingStatus(): Promise<WorkerStatus> {
-    return this.request('/api/v1/scraping/status', {}, WorkerStatusSchema);
+    return this.request('/scraping/status', {}, WorkerStatusSchema);
   }
 
   async startScraping(): Promise<{ success: boolean; message: string }> {
-    return this.request('/api/v1/scraping/start', {
+    return this.request('/scraping/start', {
       method: 'POST',
     });
   }
 
   async stopScraping(): Promise<{ success: boolean; message: string }> {
-    return this.request('/api/v1/scraping/stop', {
+    return this.request('/scraping/stop', {
       method: 'POST',
     });
   }
@@ -712,41 +763,41 @@ class ApiClient {
   }
 
   async createScrapingJob(data: CreateScrapingJob): Promise<ScrapingJob> {
-    return this.request('/api/v1/scraping/jobs', {
+    return this.request('/scraping/jobs', {
       method: 'POST',
       body: JSON.stringify(data),
     }, ScrapingJobSchema);
   }
 
   async createBulkScrapingJobs(jobs: CreateScrapingJob[]): Promise<ScrapingJob[]> {
-    return this.request('/api/v1/scraping/jobs/bulk', {
+    return this.request('/scraping/jobs/bulk', {
       method: 'POST',
       body: JSON.stringify({ jobs }),
     }, z.array(ScrapingJobSchema));
   }
 
   async createSegmentedScrapingJob(segmento: string, localizacoes: string[]): Promise<ScrapingJob[]> {
-    return this.request('/api/v1/scraping/jobs/segmented', {
+    return this.request('/scraping/jobs/segmented', {
       method: 'POST',
       body: JSON.stringify({ segmento, localizacoes }),
     }, z.array(ScrapingJobSchema));
   }
 
   async getScrapingStats(): Promise<ScrapingStats> {
-    return this.request('/api/v1/scraping/stats', {}, ScrapingStatsSchema);
+    return this.request('/scraping/stats', {}, ScrapingStatsSchema);
   }
 
   async getScrapingTemplates(): Promise<ScrapingTemplate[]> {
-    return this.request('/api/v1/scraping/templates', {}, z.array(ScrapingTemplateSchema));
+    return this.request('/scraping/templates', {}, z.array(ScrapingTemplateSchema));
   }
 
   // Worker Status
   async getWorkerStatus(workerName: string): Promise<WorkerStatus> {
-    return this.request(`/api/v1/workers/${workerName}/status`, {}, WorkerStatusSchema);
+    return this.request(`/workers/${workerName}/status`, {}, WorkerStatusSchema);
   }
 
   async getWorkerStats(workerName: string): Promise<WorkerStats> {
-    return this.request(`/api/v1/workers/${workerName}/stats`, {}, WorkerStatsSchema);
+    return this.request(`/workers/${workerName}/stats`, {}, WorkerStatsSchema);
   }
 }
 

@@ -2033,6 +2033,441 @@
         }
       }
     },
+    "/admin/session-limits": {
+      "get": {
+        "summary": "Obter limites de sessão da empresa",
+        "description": "Endpoint administrativo para recuperar configuração de limites de sessão da empresa atual.\nRetorna limites atuais com contagem em tempo real de sessões ativas e estatísticas de uso.\n",
+        "tags": [
+          "Admin - Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Limites de sessão recuperados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SessionLimitsResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "403": {
+            "description": "Permissões insuficientes - Administrador necessário"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualizar limites de sessão da empresa",
+        "description": "Endpoint administrativo para atualizar configuração de limites de sessão da empresa atual.\nAs alterações são auditadas e podem incluir avisos se os novos limites estiverem abaixo do uso atual.\n",
+        "tags": [
+          "Admin - Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "max_concurrent_sessions": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "description": "Máximo de sessões simultâneas permitidas",
+                    "example": 15
+                  },
+                  "enforcement_mode": {
+                    "type": "string",
+                    "enum": [
+                      "block",
+                      "warn",
+                      "allow_with_audit"
+                    ],
+                    "description": "Como aplicar os limites de sessão",
+                    "example": "block"
+                  }
+                },
+                "minProperties": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Limites de sessão atualizados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SessionLimitsResponse"
+                    },
+                    "warning": {
+                      "type": "string",
+                      "description": "Mensagem de aviso se aplicável",
+                      "example": "Novo limite (2) está abaixo das sessões ativas atuais (5)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados da requisição inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "403": {
+            "description": "Permissões insuficientes - Administrador necessário"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/admin/session-limits/all": {
+      "get": {
+        "summary": "Obter todos os limites de sessão das empresas",
+        "description": "Endpoint de super administrador para recuperar limites de sessão de todas as empresas.\nInclui paginação e estatísticas de uso.\n",
+        "tags": [
+          "Admin - Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "description": "Número de resultados por página"
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Número de resultados a pular"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Todos os limites de sessão recuperados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "limits": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SessionLimitsResponse"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 150
+                        },
+                        "statistics": {
+                          "type": "object",
+                          "properties": {
+                            "total_companies": {
+                              "type": "number",
+                              "example": 150
+                            },
+                            "companies_at_limit": {
+                              "type": "number",
+                              "example": 5
+                            },
+                            "companies_over_limit": {
+                              "type": "number",
+                              "example": 2
+                            },
+                            "companies_nearing_limit": {
+                              "type": "number",
+                              "example": 12
+                            },
+                            "average_usage": {
+                              "type": "number",
+                              "format": "float",
+                              "example": 67.5
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "403": {
+            "description": "Permissões insuficientes - Super administrador necessário"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/admin/sessions/companies/approaching-limits": {
+      "get": {
+        "summary": "Obter empresas se aproximando dos limites de sessão",
+        "description": "Endpoint administrativo para obter empresas que estão se aproximando dos seus limites de sessão.\nUsado para monitoramento proativo e planejamento de capacidade.\n",
+        "tags": [
+          "Admin - Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "threshold",
+            "schema": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 100,
+              "default": 80
+            },
+            "description": "Limite percentual de uso"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empresas se aproximando dos limites recuperadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SessionLimitsResponse"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "403": {
+            "description": "Permissões insuficientes - Administrador necessário"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/sessions/companies/at-or-over-limits": {
+      "get": {
+        "summary": "Obter empresas no limite ou acima dos limites de sessão",
+        "description": "Endpoint administrativo para obter empresas que estão no limite ou acima dos seus limites de sessão.\nRequer atenção imediata para continuidade do serviço.\n",
+        "tags": [
+          "Admin - Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empresas no limite ou acima recuperadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "at_limit": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SessionLimitsResponse"
+                          }
+                        },
+                        "over_limit": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SessionLimitsResponse"
+                          }
+                        },
+                        "total_affected": {
+                          "type": "number",
+                          "example": 7
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "403": {
+            "description": "Permissões insuficientes - Administrador necessário"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/sessions/revoke-company": {
+      "post": {
+        "summary": "Revogar todas as sessões da empresa",
+        "description": "Endpoint administrativo para revogar todas as sessões de uma empresa específica.\nUsado para incidentes de segurança ou desativação de empresa.\nEsta é uma operação destrutiva que afeta todos os usuários da empresa.\n",
+        "tags": [
+          "Admin - Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "empresa_id",
+                  "reason"
+                ],
+                "properties": {
+                  "empresa_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Company ID to revoke sessions for",
+                    "example": "empresa-uuid"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Reason for revoking all company sessions",
+                    "example": "security_incident"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sessões da empresa revogadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Successfully revoked 25 company session(s)"
+                        },
+                        "revoked_count": {
+                          "type": "number",
+                          "example": 25
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Insufficient permissions - Admin required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "summary": "Fazer login no sistema",
@@ -6340,6 +6775,307 @@
         }
       }
     },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Atualizar token de acesso",
+        "description": "Atualiza um token de acesso usando um token de refresh válido.\nSuporta compartilhamento de dispositivo entre frontend web e extensão Chrome.\nAmbos os clientes podem usar o mesmo device_id para atualizar tokens da mesma sessão.\n",
+        "tags": [
+          "Autenticação"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refresh_token",
+                  "device_id",
+                  "device_fingerprint",
+                  "client_type"
+                ],
+                "properties": {
+                  "refresh_token": {
+                    "type": "string",
+                    "description": "Token de refresh válido",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identificador de dispositivo compartilhado entre web e extensão",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "device_fingerprint": {
+                    "type": "string",
+                    "description": "Impressão digital do dispositivo para validação de segurança",
+                    "example": "fp_1234567890abcdef"
+                  },
+                  "client_type": {
+                    "type": "string",
+                    "enum": [
+                      "web",
+                      "extension"
+                    ],
+                    "description": "Tipo de cliente fazendo a requisição",
+                    "example": "web"
+                  },
+                  "ip_address": {
+                    "type": "string",
+                    "format": "ipv4",
+                    "description": "Endereço IP do cliente (opcional, extraído da requisição)",
+                    "example": "192.168.1.100"
+                  },
+                  "user_agent": {
+                    "type": "string",
+                    "description": "String do user agent (opcional, extraído da requisição)",
+                    "example": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "access_token": {
+                          "type": "string",
+                          "description": "Novo token de acesso",
+                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        },
+                        "refresh_token": {
+                          "type": "string",
+                          "description": "Novo token de refresh",
+                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        },
+                        "token_type": {
+                          "type": "string",
+                          "example": "Bearer"
+                        },
+                        "expires_in": {
+                          "type": "number",
+                          "description": "Expiração do token de acesso em segundos",
+                          "example": 900
+                        },
+                        "expires_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Timestamp de expiração do token de acesso",
+                          "example": "2025-09-16T10:45:00Z"
+                        },
+                        "session": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "example": "123e4567-e89b-12d3-a456-426614174000"
+                            },
+                            "device_id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "example": "550e8400-e29b-41d4-a716-446655440000"
+                            },
+                            "client_type": {
+                              "type": "string",
+                              "enum": [
+                                "web",
+                                "extension"
+                              ],
+                              "example": "web"
+                            },
+                            "last_activity_at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2025-09-16T10:30:00Z"
+                            },
+                            "expires_at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2025-09-16T11:15:00Z"
+                            },
+                            "time_to_expiration_minutes": {
+                              "type": "number",
+                              "example": 45
+                            }
+                          }
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "example": "user-uuid"
+                            },
+                            "email": {
+                              "type": "string",
+                              "example": "user@example.com"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "User Name"
+                            },
+                            "empresa_id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "example": "empresa-uuid"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "user"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados da requisição inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "example": "VALIDATION_ERROR"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Device ID is required"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falha na autenticação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_TOKEN",
+                            "EXPIRED_TOKEN",
+                            "DEVICE_MISMATCH",
+                            "FINGERPRINT_MISMATCH"
+                          ],
+                          "example": "INVALID_TOKEN"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Invalid or expired refresh token"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de taxa excedido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "example": "RATE_LIMIT_EXCEEDED"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Too many refresh attempts"
+                        },
+                        "retry_after": {
+                          "type": "number",
+                          "example": 60
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno do servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "example": "INTERNAL_ERROR"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Token refresh failed"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/search-terms": {
       "post": {
         "summary": "Criar novo termo de busca",
@@ -6729,6 +7465,399 @@
           },
           "500": {
             "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/sessions": {
+      "post": {
+        "summary": "Criar uma nova sessão",
+        "description": "Cria uma nova sessão de usuário para autenticação.\nSuporta compartilhamento de dispositivo onde clientes web e extensão podem compartilhar a mesma sessão via device_id.\nAplica limites de sessão da empresa baseados no plano de assinatura.\n",
+        "tags": [
+          "Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id",
+                  "empresa_id",
+                  "device_id",
+                  "refresh_token_hash",
+                  "device_fingerprint",
+                  "client_type",
+                  "expires_at"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "user-uuid"
+                  },
+                  "empresa_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "empresa-uuid"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "refresh_token_hash": {
+                    "type": "string",
+                    "example": "hashed_token_value"
+                  },
+                  "device_fingerprint": {
+                    "type": "string",
+                    "example": "fp_1234567890abcdef"
+                  },
+                  "client_type": {
+                    "type": "string",
+                    "enum": [
+                      "web",
+                      "extension"
+                    ],
+                    "example": "web"
+                  },
+                  "expires_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2025-09-16T11:15:00Z"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "Metadados adicionais da sessão"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sessão criada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SessionResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados da requisição inválidos"
+          },
+          "403": {
+            "description": "Limite de sessões atingido"
+          },
+          "409": {
+            "description": "Conflito de sessão (dispositivo já possui sessão ativa)"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/validate": {
+      "post": {
+        "summary": "Validar uma sessão",
+        "description": "Valida uma sessão existente com verificações de segurança abrangentes.\nAtualiza o timestamp da última atividade e realiza validação de impressão digital do dispositivo.\n",
+        "tags": [
+          "Sessões"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID da sessão para validar",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "device_id",
+                  "device_fingerprint",
+                  "client_type"
+                ],
+                "properties": {
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "device_fingerprint": {
+                    "type": "string",
+                    "example": "fp_1234567890abcdef"
+                  },
+                  "client_type": {
+                    "type": "string",
+                    "enum": [
+                      "web",
+                      "extension"
+                    ],
+                    "example": "web"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado da validação da sessão",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "valid": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "session": {
+                          "$ref": "#/components/schemas/SessionResponse"
+                        },
+                        "security_warning": {
+                          "type": "string",
+                          "description": "Aviso de segurança se aplicável",
+                          "example": "A impressão digital do dispositivo foi alterada"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados da requisição inválidos"
+          },
+          "404": {
+            "description": "Sessão não encontrada"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}": {
+      "delete": {
+        "summary": "Revogar uma sessão",
+        "description": "Revoga (encerra) uma sessão existente.\nApenas o proprietário da sessão ou administrador pode revogar uma sessão.\nA revogação afeta tanto o acesso web quanto da extensão para o dispositivo.\n",
+        "tags": [
+          "Sessões"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID da sessão para revogar",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "device_id",
+                  "reason",
+                  "revoked_by"
+                ],
+                "properties": {
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "user_logout"
+                  },
+                  "revoked_by": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "user-uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sessão revogada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Sessão revogada com sucesso"
+                        },
+                        "session_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "123e4567-e89b-12d3-a456-426614174000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados da requisição inválidos"
+          },
+          "403": {
+            "description": "Dispositivo incompatível - não é possível revogar sessão de dispositivo diferente"
+          },
+          "404": {
+            "description": "Sessão não encontrada"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/sessions/revoke-others": {
+      "post": {
+        "summary": "Revogar todas as outras sessões",
+        "description": "Revoga todas as sessões do usuário atual exceto o dispositivo atual.\nUsado para funcionalidade \"sair de outros dispositivos\".\n",
+        "tags": [
+          "Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id",
+                  "keep_device_id",
+                  "reason",
+                  "revoked_by"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "user-uuid"
+                  },
+                  "keep_device_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "logout_other_devices"
+                  },
+                  "revoked_by": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "user-uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Outras sessões revogadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "3 sessão(ões) revogada(s) com sucesso"
+                        },
+                        "revoked_count": {
+                          "type": "number",
+                          "example": 3
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
@@ -7635,9 +8764,9 @@
         }
       }
     },
-    "/workers/leads-temp/status": {
+    "/api/v1/workers/leads-temp/status": {
       "get": {
-        "summary": "Get LeadsTempImportWorker status",
+        "summary": "Obter status do worker de importação de leads temporários",
         "tags": [
           "Workers"
         ],
@@ -7648,7 +8777,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Worker status retrieved successfully",
+            "description": "Status do worker recuperado com sucesso",
             "content": {
               "application/json": {
                 "schema": {
@@ -7693,9 +8822,9 @@
         }
       }
     },
-    "/workers/leads-temp/start": {
+    "/api/v1/workers/leads-temp/start": {
       "post": {
-        "summary": "Start LeadsTempImportWorker",
+        "summary": "Iniciar worker de importação de leads temporários",
         "tags": [
           "Workers"
         ],
@@ -7706,7 +8835,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Worker started successfully",
+            "description": "Worker iniciado com sucesso",
             "content": {
               "application/json": {
                 "schema": {
@@ -7726,7 +8855,7 @@
             }
           },
           "400": {
-            "description": "Worker is already running"
+            "description": "Worker já está em execução"
           },
           "401": {
             "description": "Não autorizado"
@@ -7737,9 +8866,9 @@
         }
       }
     },
-    "/workers/leads-temp/stop": {
+    "/api/v1/workers/leads-temp/stop": {
       "post": {
-        "summary": "Stop LeadsTempImportWorker",
+        "summary": "Parar worker de importação de leads temporários",
         "tags": [
           "Workers"
         ],
@@ -7750,7 +8879,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Worker stopped successfully",
+            "description": "Worker parado com sucesso",
             "content": {
               "application/json": {
                 "schema": {
@@ -7762,7 +8891,7 @@
                     },
                     "message": {
                       "type": "string",
-                      "example": "Worker stopped successfully"
+                      "example": "Worker parado com sucesso"
                     }
                   }
                 }
@@ -7778,9 +8907,9 @@
         }
       }
     },
-    "/workers/leads-temp/consumer/start": {
+    "/api/v1/workers/leads-temp/consumer/start": {
       "post": {
-        "summary": "Start Message Consumer Service",
+        "summary": "Iniciar serviço de consumidor de mensagens",
         "tags": [
           "Workers"
         ],
@@ -7791,7 +8920,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Consumer started successfully",
+            "description": "Consumer iniciado com sucesso",
             "content": {
               "application/json": {
                 "schema": {
@@ -7803,7 +8932,7 @@
                     },
                     "message": {
                       "type": "string",
-                      "example": "Consumer started successfully"
+                      "example": "Consumer iniciado com sucesso"
                     }
                   }
                 }
@@ -7819,9 +8948,9 @@
         }
       }
     },
-    "/workers/leads-temp/consumer/stop": {
+    "/api/v1/workers/leads-temp/consumer/stop": {
       "post": {
-        "summary": "Stop Message Consumer Service",
+        "summary": "Parar serviço de consumidor de mensagens",
         "tags": [
           "Workers"
         ],
@@ -7832,7 +8961,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Consumer stopped successfully",
+            "description": "Consumer parado com sucesso",
             "content": {
               "application/json": {
                 "schema": {
@@ -7844,7 +8973,7 @@
                     },
                     "message": {
                       "type": "string",
-                      "example": "Consumer stopped successfully"
+                      "example": "Consumer parado com sucesso"
                     }
                   }
                 }
@@ -7860,9 +8989,9 @@
         }
       }
     },
-    "/workers/leads-temp/consumer/status": {
+    "/api/v1/workers/leads-temp/consumer/status": {
       "get": {
-        "summary": "Get Message Consumer Service status",
+        "summary": "Obter status do serviço de consumidor de mensagens",
         "tags": [
           "Workers"
         ],
@@ -7873,7 +9002,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Consumer status retrieved successfully",
+            "description": "Status do consumer recuperado com sucesso",
             "content": {
               "application/json": {
                 "schema": {

@@ -8,6 +8,7 @@ import { OrganizationProvider } from "./contexts/OrganizationContext";
 import { AppLayout } from "./components/layout/AppLayout";
 import { Index } from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
+import { RegisterPage } from "./components/auth/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 import LeadsPage from "./pages/LeadsPage";
 import Leads2Page from "./pages/Leads2Page";
@@ -22,6 +23,7 @@ import SegmentosPage from "./pages/SegmentosPage";
 import PipelinePage from "./pages/PipelinePage";
 import NotFound from "./pages/NotFound";
 import CadastroEmpresaPage from "./pages/CadastroEmpresaPage";
+import { AdminPage } from "./components/admin/AdminPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +56,7 @@ function AppRoutes() {
       
       {/* Auth */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       
       {/* Protected App Routes */}
@@ -78,6 +81,7 @@ function AppRoutes() {
         <Route path="profile" element={<UserProfilePage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
+        <Route path="admin" element={<AdminPage />} />
         <Route path="admin/organizations" element={<div className="p-6">Admin - Organizações - Em desenvolvimento</div>} />
         <Route path="empresas/cadastro" element={<CadastroEmpresaPage />} />
       </Route>

@@ -106,7 +106,7 @@ export default function EmpresasPage() {
       page: currentPage,
       limit: 20,
       search: searchTerm || undefined,
-      segmento: segmentoFilter || undefined,
+      segmento: segmentoFilter && segmentoFilter !== 'todos' ? segmentoFilter : undefined,
     }),
   });
 
@@ -589,7 +589,7 @@ export default function EmpresasPage() {
                 <SelectValue placeholder="Filtrar por segmento" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os segmentos</SelectItem>
+                <SelectItem value="todos">Todos os segmentos</SelectItem>
                 {segmentosDisponiveis.map((segmento) => (
                   <SelectItem key={segmento} value={segmento}>
                     {segmento}
