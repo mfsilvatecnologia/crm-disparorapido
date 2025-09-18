@@ -11,7 +11,6 @@ import LoginPage from "./pages/LoginPage";
 import { RegisterPage } from "./components/auth/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 import LeadsPage from "./pages/LeadsPage";
-import Leads2Page from "./pages/Leads2Page";
 import WorkerMonitorPage from "./pages/WorkerMonitorPage";
 import SearchTermsPage from "./pages/SearchTermsPage";
 import ScrapingPage from "./pages/ScrapingPage";
@@ -52,7 +51,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public Landing Page */}
-      <Route path="/" element={<Index />} />
+      <Route path="/" element={<LoginPage />} />
       
       {/* Auth */}
       <Route path="/login" element={<LoginPage />} />
@@ -69,7 +68,6 @@ function AppRoutes() {
       }>
         <Route index element={<Dashboard />} />
         <Route path="leads" element={<LeadsPage />} />
-        <Route path="leads2" element={<Leads2Page />} />
         <Route path="workers" element={<WorkerMonitorPage />} />
         <Route path="search-terms" element={<SearchTermsPage />} />
         <Route path="scraping" element={<ScrapingPage />} />
