@@ -1,6 +1,0 @@
-ID,Nome,Endereço,Telefone,Website,Categoria,Avaliação,Total_Avaliações,Horário,Latitude,Longitude,Fonte,Data_Coleta,Termo_Busca
-1,"Padaria Bella Vista","Rua Augusta, 1234 - Consolação, São Paulo - SP","(11) 3456-7890","https://padariabellavista.com.br","Padaria","4.5","234","Seg-Dom: 06:00-22:00","-23.5489","-46.6388","google-maps","2025-08-20T12:30:00.000Z","padarias São Paulo"
-2,"Panificadora Central","Av. Paulista, 567 - Bela Vista, São Paulo - SP","(11) 9876-5432","","Padaria","4.2","156","Seg-Sáb: 05:30-20:00","-23.5618","-46.6565","google-maps","2025-08-20T12:30:00.000Z","padarias São Paulo"
-3,"Pães & Cia","Rua dos Pinheiros, 890 - Pinheiros, São Paulo - SP","(11) 2345-6789","https://paesecia.com","Padaria","4.7","432","24 horas","-23.5629","-46.6994","google-maps","2025-08-20T12:30:00.000Z","padarias São Paulo"
-4,"Delícias do Pão","Rua Haddock Lobo, 123 - Cerqueira César, São Paulo - SP","(11) 8765-4321","","Padaria","4.1","87","Seg-Dom: 06:30-21:00","-23.5644","-46.6692","google-maps","2025-08-20T12:30:00.000Z","padarias São Paulo"
-5,"Padaria São Bento","Rua São Bento, 456 - Centro, São Paulo - SP","(11) 3344-5566","https://padariasaobento.com.br","Padaria","4.4","298","Seg-Sáb: 05:00-19:00","-23.5448","-46.6388","google-maps","2025-08-20T12:30:00.000Z","padarias São Paulo"
