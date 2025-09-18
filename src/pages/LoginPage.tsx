@@ -1,5 +1,29 @@
+// Variável global de ambiente
+const STAGE = true; // Altere para false em produção
+
+const stageWatermark = STAGE ? (
+  <div
+    style={{
+      position: 'absolute',
+      top: 0,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 1000,
+      pointerEvents: 'none',
+      opacity: 0.5,
+      fontWeight: 900,
+      fontSize: 32,
+      color: '#05628dff',
+      textShadow: '0 2px 8px #919191ff',
+      letterSpacing: 2,
+      userSelect: 'none',
+    }}
+  >
+    Ambiente Stage
+  </div>
+) : null;
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -50,7 +74,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     try {
       setLoginError(null);
-      await login(data.email, data.password);
+      await login({ email: data.email, password: data.password });
       toast({
         title: "Login realizado com sucesso",
         description: "Bem-vindo ao LeadCRM!",
@@ -78,7 +102,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex" style={{position: 'relative'}}>
+      {stageWatermark}
       {/* Left side - Hero */}
       <div className="hidden lg:flex flex-1 bg-gradient-hero items-center justify-center p-12 text-white">
         <div className="max-w-md text-center">
@@ -187,13 +212,32 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Esqueceu sua senha?{' '}
-                  <a href="#" className="text-primary hover:underline">
-                    Recuperar senha
-                  </a>
-                </p>
+              <div className="mt-6 space-y-4">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Não tem conta?
+                    </span>
+                  </div>
+                </div>
+
+                <Link to="/register">
+                  <Button variant="outline" className="w-full">
+                    Criar Nova Conta
+                  </Button>
+                </Link>
+
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Esqueceu sua senha?{' '}
+                    <Link to="/reset-password" className="text-primary hover:underline">
+                      Recuperar senha
+                    </Link>
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

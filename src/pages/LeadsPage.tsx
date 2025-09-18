@@ -66,28 +66,44 @@ import { formatCurrency } from '@/lib/utils';
 import { AdvancedPagination } from '@/components/shared/AdvancedPagination';
 
 type ViewMode = 'table' | 'cards' | 'kanban';
-type FilterStatus = 'all' | 'new' | 'qualified' | 'contacted' | 'converted' | 'discarded';
+type FilterStatus = 'all' | 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado';
 
 interface LeadData {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  position: string;
-  address: { city: string; state: string };
-  segment: { name: string };
-  qualityScore: number;
-  accessCost: number;
-  isAccessed: boolean;
-  createdAt: string;
-  status: 'new' | 'qualified' | 'contacted' | 'converted' | 'discarded';
-  source: string;
-  lastContact?: Date;
+  id?: string;
+  empresaId?: string;
+  nomeEmpresa?: string;
+  nomeContato?: string;
+  cargoContato?: string;
+  email?: string;
+  telefone?: string;
+  linkedinUrl?: string;
+  siteEmpresa?: string;
+  cnpj?: string;
+  segmento?: string;
+  porteEmpresa?: string;
+  numFuncionarios?: number;
+  receitaAnualEstimada?: number;
+  endereco?: {
+    rua?: string;
+    numero?: string;
+    cidade?: string;
+    estado?: string;
+    cep?: string;
+    pais?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  };
+  status?: 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado';
+  scoreQualificacao?: number;
   tags?: string[];
+  observacoes?: string | null;
+  fonte?: string;
+  dadosOriginais?: Record<string, unknown>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export default function Leads2Page() {
+export default function LeadsPage() {
   const { currentOrganization } = useOrganization();
   const { isAuthenticated } = useAuth();
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
@@ -118,213 +134,10 @@ export default function Leads2Page() {
 
   const realLeads = leadsData?.items || [];
 
-  // Função para mapear status da API para o formato da UI
-  const mapApiStatusToUI = (apiStatus: string): 'new' | 'qualified' | 'contacted' | 'converted' | 'discarded' => {
-    const statusMap: Record<string, 'new' | 'qualified' | 'contacted' | 'converted' | 'discarded'> = {
-      'novo': 'new',
-      'qualificado': 'qualified',
-      'contatado': 'contacted',
-      'convertido': 'converted',
-      'descartado': 'discarded'
-    };
-    return statusMap[apiStatus] || 'new';
-  };
+  // Use dados reais da API diretamente
+  const allLeads: LeadData[] = realLeads;
 
-  // Função para normalizar os dados dos leads (API + Demo)
-  const normalizeLeadData = (lead: Record<string, unknown>): LeadData => {
-    // Se já é um LeadData (dados demo), retorna como está
-    if ('name' in lead && 'company' in lead) {
-      return lead as unknown as LeadData;
-    }
-    
-    // Normaliza dados da API para o formato demo
-    const apiLead = lead as Record<string, unknown> & {
-      endereco?: { cidade?: string; estado?: string; rua?: string; numero?: string; cep?: string; pais?: string };
-      tags?: string[];
-    };
-    
-    return {
-      id: String(lead.id || ''),
-      name: String(lead.nomeContato || 'Nome não informado'),
-      email: String(lead.email || 'email@naoinformado.com'),
-      phone: String(lead.telefone || 'Não informado'),
-      company: String(lead.nomeEmpresa || 'Empresa não informada'),
-      position: String(lead.cargoContato || 'Cargo não informado'),
-      address: {
-        city: String(apiLead.endereco?.cidade || 'Cidade não informada'),
-        state: String(apiLead.endereco?.estado || 'Estado não informado')
-      },
-      segment: {
-        name: String(lead.segmento || 'Segmento não informado')
-      },
-      qualityScore: Number(lead.scoreQualificacao || 75),
-      accessCost: Number(lead.custoAquisicao || 2.50),
-      isAccessed: Boolean(lead.isAccessed || false),
-      createdAt: String(lead.createdAt || new Date().toISOString()),
-      status: mapApiStatusToUI(String(lead.status || 'novo')),
-      source: String(lead.fonte || 'api'),
-      lastContact: new Date(lead.updatedAt as string || new Date()),
-      tags: Array.isArray(apiLead.tags) ? apiLead.tags : []
-    };
-  };
-
-  // Dados de demonstração completos
-  const demoLeads: LeadData[] = [
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao.silva@techsolutions.com.br',
-      phone: '(11) 99999-9999',
-      company: 'Tech Solutions LTDA',
-      position: 'CEO & Founder',
-      address: { city: 'São Paulo', state: 'SP' },
-      segment: { name: 'Tecnologia' },
-      qualityScore: 95,
-      accessCost: 2.50,
-      isAccessed: false,
-      createdAt: new Date().toISOString(),
-      status: 'new',
-      source: 'scraping',
-      lastContact: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      tags: ['decisor', 'startup']
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'maria.santos@inovacorp.com',
-      phone: '(11) 88888-8888',
-      company: 'InovaCorp Startup',
-      position: 'CTO',
-      address: { city: 'Rio de Janeiro', state: 'RJ' },
-      segment: { name: 'Startup' },
-      qualityScore: 92,
-      accessCost: 2.50,
-      isAccessed: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      status: 'qualified',
-      source: 'imported',
-      lastContact: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      tags: ['tech-lead', 'inovação']
-    },
-    {
-      id: '3',
-      name: 'Pedro Costa',
-      email: 'pedro@consultingpro.com.br',
-      phone: '(11) 77777-7777',
-      company: 'Consulting Pro Group',
-      position: 'Diretor Executivo',
-      address: { city: 'Belo Horizonte', state: 'MG' },
-      segment: { name: 'Consultoria' },
-      qualityScore: 88,
-      accessCost: 2.50,
-      isAccessed: false,
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-      status: 'contacted',
-      source: 'manual',
-      lastContact: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      tags: ['enterprise', 'consultoria']
-    },
-    {
-      id: '4',
-      name: 'Ana Oliveira',
-      email: 'ana.oliveira@fintech.io',
-      phone: '(11) 66666-6666',
-      company: 'Fintech Brasil',
-      position: 'COO',
-      address: { city: 'Curitiba', state: 'PR' },
-      segment: { name: 'Fintech' },
-      qualityScore: 97,
-      accessCost: 2.50,
-      isAccessed: true,
-      createdAt: new Date(Date.now() - 259200000).toISOString(),
-      status: 'converted',
-      source: 'api',
-      lastContact: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      tags: ['fintech', 'decisor', 'convertido']
-    },
-    {
-      id: '5',
-      name: 'Carlos Pereira',
-      email: 'carlos.pereira@ecommerceplus.com',
-      phone: '(11) 55555-5555',
-      company: 'E-commerce Plus',
-      position: 'Founder & CEO',
-      address: { city: 'Porto Alegre', state: 'RS' },
-      segment: { name: 'E-commerce' },
-      qualityScore: 75,
-      accessCost: 2.50,
-      isAccessed: false,
-      createdAt: new Date(Date.now() - 345600000).toISOString(),
-      status: 'contacted',
-      source: 'webhook',
-      lastContact: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      tags: ['e-commerce', 'growth']
-    },
-    {
-      id: '6',
-      name: 'Luciana Rodrigues',
-      email: 'luciana@healthtech.com.br',
-      phone: '(21) 99999-1111',
-      company: 'HealthTech Solutions',
-      position: 'Diretora de Produtos',
-      address: { city: 'Rio de Janeiro', state: 'RJ' },
-      segment: { name: 'HealthTech' },
-      qualityScore: 91,
-      accessCost: 2.50,
-      isAccessed: true,
-      createdAt: new Date(Date.now() - 432000000).toISOString(),
-      status: 'qualified',
-      source: 'scraping',
-      lastContact: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      tags: ['healthtech', 'produto']
-    },
-    {
-      id: '7',
-      name: 'Rafael Mendes',
-      email: 'rafael@agritech.agr.br',
-      phone: '(16) 88888-2222',
-      company: 'AgriTech Inovação',
-      position: 'VP de Tecnologia',
-      address: { city: 'Ribeirão Preto', state: 'SP' },
-      segment: { name: 'AgriTech' },
-      qualityScore: 84,
-      accessCost: 2.50,
-      isAccessed: false,
-      createdAt: new Date(Date.now() - 518400000).toISOString(),
-      status: 'new',
-      source: 'imported',
-      tags: ['agritech', 'inovação']
-    },
-    {
-      id: '8',
-      name: 'Patricia Lima',
-      email: 'patricia.lima@edtech.edu.br',
-      phone: '(11) 77777-3333',
-      company: 'EdTech Learning',
-      position: 'Cofundadora',
-      address: { city: 'São Paulo', state: 'SP' },
-      segment: { name: 'EdTech' },
-      qualityScore: 89,
-      accessCost: 2.50,
-      isAccessed: false,
-      createdAt: new Date(Date.now() - 604800000).toISOString(),
-      status: 'qualified',
-      source: 'manual',
-      lastContact: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      tags: ['edtech', 'education', 'founder']
-    }
-  ];
-
-  // Use dados reais se disponíveis, senão use demo com paginação local
-  const allLeads: LeadData[] = realLeads.length > 0 
-    ? realLeads.map(lead => normalizeLeadData({
-        ...lead,
-        status: (['novo', 'qualificado', 'contatado', 'convertido', 'descartado'] as const)[Math.floor(Math.random() * 5)],
-        fonte: ['scraping', 'imported', 'manual', 'api', 'webhook'][Math.floor(Math.random() * 5)],
-      }))
-    : demoLeads;
-
-  console.log('LeadsPage - Dados carregados:', { realLeads, demoLeads, allLeads, isLoading, error });
+  console.log('LeadsPage - Dados carregados:', { realLeads, allLeads, isLoading, error });
 
   // Para dados da API, use os metadados de paginação retornados
   const isUsingApiData = realLeads.length > 0;
@@ -337,34 +150,33 @@ export default function Leads2Page() {
     hasPrev: leadsData.hasPrev || false,
   } : null;
 
-  // Para dados demo, aplique filtros e paginação local
+  // Para dados da API, aplique filtros e paginação local se necessário
   const filteredLeads = !isUsingApiData ? allLeads.filter(lead => {
     // Filtro por status
     if (filterStatus !== 'all' && lead.status !== filterStatus) return false;
     
-    // Filtro por qualidade
-    if (lead.qualityScore < qualityRange.min || lead.qualityScore > qualityRange.max) return false;
+    // Filtro por qualidade (usando scoreQualificacao da API)
+    if (lead.scoreQualificacao < qualityRange.min || lead.scoreQualificacao > qualityRange.max) return false;
     
-    // Filtro de busca
+    // Filtro de busca (usando campos da API)
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
-        lead.name?.toLowerCase().includes(searchLower) ||
-        lead.company?.toLowerCase().includes(searchLower) ||
+        lead.nomeContato?.toLowerCase().includes(searchLower) ||
+        lead.nomeEmpresa?.toLowerCase().includes(searchLower) ||
         lead.email?.toLowerCase().includes(searchLower) ||
-        lead.position?.toLowerCase().includes(searchLower) ||
-        (typeof lead.segment === 'object' ? lead.segment?.name?.toLowerCase().includes(searchLower) : false);
+        lead.cargoContato?.toLowerCase().includes(searchLower) ||
+        lead.segmento?.toLowerCase().includes(searchLower);
       if (!matchesSearch) return false;
     }
     
-    // Filtro por segmento
+    // Filtro por segmento (usando campo segmento da API)
     if (selectedSegments.length > 0) {
-      const segmentName = typeof lead.segment === 'object' ? lead.segment?.name : lead.segment;
-      if (!selectedSegments.includes(segmentName || '')) return false;
+      if (!selectedSegments.includes(lead.segmento || '')) return false;
     }
     
-    // Filtro por fonte
-    if (selectedSources.length > 0 && !selectedSources.includes(lead.source || '')) return false;
+    // Filtro por fonte (usando campo fonte da API)
+    if (selectedSources.length > 0 && !selectedSources.includes(lead.fonte || '')) return false;
     
     // Filtro por data
     if (dateRange.from || dateRange.to) {
@@ -376,22 +188,22 @@ export default function Leads2Page() {
     return true;
   }) : allLeads;
 
-  // Lógica de ordenação para dados demo
+  // Lógica de ordenação para dados da API
   const sortedLeads = !isUsingApiData ? [...filteredLeads].sort((a, b) => {
     let aValue, bValue;
     
     switch (sortBy) {
-      case 'name':
-        aValue = a.name || '';
-        bValue = b.name || '';
+      case 'nomeContato':
+        aValue = a.nomeContato || '';
+        bValue = b.nomeContato || '';
         break;
-      case 'company':
-        aValue = a.company || '';
-        bValue = b.company || '';
+      case 'nomeEmpresa':
+        aValue = a.nomeEmpresa || '';
+        bValue = b.nomeEmpresa || '';
         break;
-      case 'qualityScore':
-        aValue = a.qualityScore || 0;
-        bValue = b.qualityScore || 0;
+      case 'scoreQualificacao':
+        aValue = a.scoreQualificacao || 0;
+        bValue = b.scoreQualificacao || 0;
         break;
       case 'createdAt':
       default:
@@ -420,23 +232,19 @@ export default function Leads2Page() {
     ? allLeads // API já retorna dados paginados
     : sortedLeads.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Reset página quando filtros mudam (apenas para dados demo)
+  // Reset página quando filtros mudam
   useEffect(() => {
-    if (!isUsingApiData) {
-      setCurrentPage(1);
-    }
-  }, [filterStatus, searchTerm, selectedSegments, selectedSources, qualityRange, isUsingApiData]);
+    setCurrentPage(1);
+  }, [filterStatus, searchTerm, selectedSegments, selectedSources, qualityRange]);
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
   // Obter segmentos e fontes únicos para filtros
-  const availableSegments = [...new Set(allLeads.map(lead => 
-    typeof lead.segment === 'object' ? lead.segment?.name : lead.segment
-  ).filter(Boolean))];
+  const availableSegments = [...new Set(allLeads.map(lead => lead.segmento).filter(Boolean))];
 
-  const availableSources = [...new Set(allLeads.map(lead => lead.source).filter(Boolean))];
+  const availableSources = [...new Set(allLeads.map(lead => lead.fonte).filter(Boolean))];
 
   const clearAllFilters = () => {
     setFilterStatus('all');
@@ -455,17 +263,17 @@ export default function Leads2Page() {
     const csvData = [
       ['Nome', 'Email', 'Telefone', 'Empresa', 'Cargo', 'Cidade', 'Estado', 'Segmento', 'Qualidade', 'Status', 'Fonte', 'Tags'],
       ...leadsToExport.map(lead => [
-        lead.name || '',
+        lead.nomeContato || '',
         lead.email || '',
-        lead.phone || '',
-        lead.company || '',
-        lead.position || '',
-        lead.address?.city || '',
-        lead.address?.state || '',
-        typeof lead.segment === 'object' ? lead.segment?.name || '' : lead.segment || '',
-        `${lead.qualityScore || 0}%`,
+        lead.telefone || '',
+        lead.nomeEmpresa || '',
+        lead.cargoContato || '',
+        lead.endereco?.cidade || '',
+        lead.endereco?.estado || '',
+        lead.segmento || '',
+        `${lead.scoreQualificacao || 0}%`,
         getStatusLabel(lead.status),
-        lead.source || '',
+        lead.fonte || '',
         lead.tags?.join('; ') || ''
       ])
     ];
@@ -546,15 +354,15 @@ export default function Leads2Page() {
 
   // Estatísticas
   const stats = {
-    total: isUsingApiData ? totalItems : allLeads.length,
-    filtered: isUsingApiData ? totalItems : sortedLeads.length,
-    avgQuality: paginatedLeads.length > 0 ? Math.round(paginatedLeads.reduce((sum, lead) => sum + lead.qualityScore, 0) / paginatedLeads.length) : 0,
+    total: allLeads.length,
+    filtered: sortedLeads.length,
+    avgQuality: sortedLeads.length > 0 ? Math.round(sortedLeads.reduce((sum, lead) => sum + (lead.scoreQualificacao || 0), 0) / sortedLeads.length) : 0,
     statusCounts: {
-      new: paginatedLeads.filter(l => l.status === 'new').length,
-      qualified: paginatedLeads.filter(l => l.status === 'qualified').length,
-      contacted: paginatedLeads.filter(l => l.status === 'contacted').length,
-      converted: paginatedLeads.filter(l => l.status === 'converted').length,
-      discarded: paginatedLeads.filter(l => l.status === 'discarded').length,
+      novo: allLeads.filter(l => l.status === 'novo').length,
+      qualificado: allLeads.filter(l => l.status === 'qualificado').length,
+      contatado: allLeads.filter(l => l.status === 'contatado').length,
+      convertido: allLeads.filter(l => l.status === 'convertido').length,
+      descartado: allLeads.filter(l => l.status === 'descartado').length,
     }
   };
 
@@ -593,12 +401,7 @@ export default function Leads2Page() {
               )}
               {realLeads.length > 0 && (
                 <Badge className="text-xs bg-green-100 text-green-800 border-green-200">
-                  Dados Reais - Paginação API
-                </Badge>
-              )}
-              {isUsingApiData && (
-                <Badge className="text-xs bg-blue-100 text-blue-800 border-blue-200">
-                  Página {currentPage}/{totalPages}
+                  Dados Reais ({realLeads.length} da API)
                 </Badge>
               )}
             </div>
@@ -626,7 +429,7 @@ export default function Leads2Page() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Novos</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.statusCounts.new}</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.statusCounts.novo}</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
@@ -638,7 +441,7 @@ export default function Leads2Page() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Qualificados</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.statusCounts.qualified}</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.statusCounts.qualificado}</p>
                 </div>
                 <Star className="h-8 w-8 text-green-600" />
               </div>
@@ -650,7 +453,7 @@ export default function Leads2Page() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Contatados</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.statusCounts.contacted}</p>
+                  <p className="text-2xl font-bold text-yellow-600">{stats.statusCounts.contatado}</p>
                 </div>
                 <Phone className="h-8 w-8 text-yellow-600" />
               </div>
@@ -662,7 +465,7 @@ export default function Leads2Page() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Convertidos</p>
-                  <p className="text-2xl font-bold text-purple-600">{stats.statusCounts.converted}</p>
+                  <p className="text-2xl font-bold text-purple-600">{stats.statusCounts.convertido}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-purple-600" />
               </div>
@@ -674,7 +477,7 @@ export default function Leads2Page() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Descartados</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.statusCounts.discarded}</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.statusCounts.descartado}</p>
                 </div>
                 <X className="h-8 w-8 text-red-600" />
               </div>
@@ -725,11 +528,11 @@ export default function Leads2Page() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos ({stats.filtered})</SelectItem>
-                <SelectItem value="new">🆕 Novos ({stats.statusCounts.new})</SelectItem>
-                <SelectItem value="qualified">⭐ Qualificados ({stats.statusCounts.qualified})</SelectItem>
-                <SelectItem value="contacted">📞 Contatados ({stats.statusCounts.contacted})</SelectItem>
-                <SelectItem value="converted">🎯 Convertidos ({stats.statusCounts.converted})</SelectItem>
-                <SelectItem value="discarded">❌ Descartados ({stats.statusCounts.discarded})</SelectItem>
+                <SelectItem value="novo">🆕 Novos ({stats.statusCounts.novo})</SelectItem>
+                <SelectItem value="qualificado">⭐ Qualificados ({stats.statusCounts.qualificado})</SelectItem>
+                <SelectItem value="contatado">📞 Contatados ({stats.statusCounts.contatado})</SelectItem>
+                <SelectItem value="convertido">🎯 Convertidos ({stats.statusCounts.convertido})</SelectItem>
+                <SelectItem value="descartado">❌ Descartados ({stats.statusCounts.descartado})</SelectItem>
               </SelectContent>
             </Select>
 
@@ -739,9 +542,9 @@ export default function Leads2Page() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="createdAt">📅 Data de Criação</SelectItem>
-                <SelectItem value="qualityScore">⭐ Score de Qualidade</SelectItem>
-                <SelectItem value="name">👤 Nome</SelectItem>
-                <SelectItem value="company">🏢 Empresa</SelectItem>
+                <SelectItem value="scoreQualificacao">⭐ Score de Qualidade</SelectItem>
+                <SelectItem value="nomeContato">👤 Nome</SelectItem>
+                <SelectItem value="nomeEmpresa">🏢 Empresa</SelectItem>
               </SelectContent>
             </Select>
 
@@ -829,7 +632,7 @@ export default function Leads2Page() {
                           }}
                         />
                         <label htmlFor={`segment-${segment}`} className="ml-2 text-sm text-gray-600">
-                          {segment} ({allLeads.filter(l => (typeof l.segment === 'object' ? l.segment?.name : l.segment) === segment).length})
+                          {segment} ({allLeads.filter(l => l.segmento === segment).length})
                         </label>
                       </div>
                     ))}
@@ -854,7 +657,7 @@ export default function Leads2Page() {
                           }}
                         />
                         <label htmlFor={`source-${source}`} className="ml-2 text-sm text-gray-600">
-                          {getSourceIcon(source || '')} {source} ({allLeads.filter(l => l.source === source).length})
+                          {getSourceIcon(source || '')} {source} ({allLeads.filter(l => l.fonte === source).length})
                         </label>
                       </div>
                     ))}
@@ -1028,49 +831,49 @@ export default function Leads2Page() {
                   <TableRow key={lead.id} className="border-gray-100 hover:bg-gray-50">
                     <TableCell>
                       <Checkbox
-                        checked={selectedLeads.includes(lead.id)}
-                        onCheckedChange={(checked) => handleSelectLead(lead.id, checked as boolean)}
+                        checked={selectedLeads.includes(lead.id || '')}
+                        onCheckedChange={(checked) => handleSelectLead(lead.id || '', checked as boolean)}
                       />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={`https://avatar.vercel.sh/${lead.name}?size=32`} />
+                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato}?size=32`} />
                           <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
-                            {lead.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
+                            {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-gray-900">{lead.name}</p>
-                          <p className="text-sm text-gray-500">{lead.position}</p>
+                          <p className="font-medium text-gray-900">{lead.nomeContato}</p>
+                          <p className="text-sm text-gray-500">{lead.cargoContato}</p>
                           <p className="text-xs text-gray-400">{lead.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium text-gray-900">{lead.company}</p>
+                        <p className="font-medium text-gray-900">{lead.nomeEmpresa}</p>
                         <p className="text-sm text-gray-500">
-                          📍 {lead.address?.city}, {lead.address?.state}
+                          📍 {lead.endereco?.cidade}, {lead.endereco?.estado}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="border-gray-300">
-                        {typeof lead.segment === 'object' ? lead.segment?.name : lead.segment}
+                        {lead.segmento}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className={`text-sm font-medium ${getQualityColor(lead.qualityScore)}`}>
-                            {lead.qualityScore}%
+                          <span className={`text-sm font-medium ${getQualityColor(lead.scoreQualificacao || 0)}`}>
+                            {lead.scoreQualificacao}%
                           </span>
-                          <Badge variant={getQualityBadgeVariant(lead.qualityScore)} className="text-xs">
-                            {lead.qualityScore >= 90 ? 'Excelente' : lead.qualityScore >= 80 ? 'Alta' : lead.qualityScore >= 70 ? 'Média' : 'Baixa'}
+                          <Badge variant={getQualityBadgeVariant(lead.scoreQualificacao || 0)} className="text-xs">
+                            {(lead.scoreQualificacao || 0) >= 90 ? 'Excelente' : (lead.scoreQualificacao || 0) >= 80 ? 'Alta' : (lead.scoreQualificacao || 0) >= 70 ? 'Média' : 'Baixa'}
                           </Badge>
                         </div>
-                        <Progress value={lead.qualityScore} className="h-1.5" />
+                        <Progress value={lead.scoreQualificacao || 0} className="h-1.5" />
                       </div>
                     </TableCell>
                     <TableCell>
@@ -1080,13 +883,13 @@ export default function Leads2Page() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <span className="text-lg">{getSourceIcon(lead.source)}</span>
-                        <span className="text-sm text-gray-600 capitalize">{lead.source}</span>
+                        <span className="text-lg">{getSourceIcon(lead.fonte)}</span>
+                        <span className="text-sm text-gray-600 capitalize">{lead.fonte}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm font-medium text-gray-900">
-                        {formatCurrency(lead.accessCost)}
+                        -
                       </span>
                     </TableCell>
                     <TableCell>
@@ -1101,12 +904,10 @@ export default function Leads2Page() {
                             <Eye className="mr-2 h-4 w-4" />
                             Ver Detalhes
                           </DropdownMenuItem>
-                          {!lead.isAccessed && (
-                            <DropdownMenuItem>
-                              <Zap className="mr-2 h-4 w-4" />
-                              Solicitar Acesso
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem>
+                            <Zap className="mr-2 h-4 w-4" />
+                            Solicitar Acesso
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem>
                             <Phone className="mr-2 h-4 w-4" />
@@ -1149,20 +950,20 @@ export default function Leads2Page() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={`https://avatar.vercel.sh/${lead.name}?size=48`} />
+                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato}?size=48`} />
                           <AvatarFallback className="bg-primary-100 text-primary-700 text-sm">
-                            {lead.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
+                            {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">{lead.company}</h3>
-                          <p className="text-sm text-gray-600">{lead.name}</p>
-                          <p className="text-xs text-gray-500">{lead.position}</p>
+                          <h3 className="font-semibold text-gray-900">{lead.nomeEmpresa}</h3>
+                          <p className="text-sm text-gray-600">{lead.nomeContato}</p>
+                          <p className="text-xs text-gray-500">{lead.cargoContato}</p>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <Badge variant="outline" className="text-xs">
-                          ⭐ {lead.qualityScore}%
+                          ⭐ {lead.scoreQualificacao}%
                         </Badge>
                         <Badge className={getStatusColor(lead.status)}>
                           {getStatusLabel(lead.status)}
@@ -1177,19 +978,19 @@ export default function Leads2Page() {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Phone className="h-4 w-4 flex-shrink-0" />
-                        <span>{lead.phone}</span>
+                        <span>{lead.telefone}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <MapPin className="h-4 w-4 flex-shrink-0" />
-                        <span>{lead.address?.city}, {lead.address?.state}</span>
+                        <span>{lead.endereco?.cidade}, {lead.endereco?.estado}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Building2 className="h-4 w-4 flex-shrink-0" />
-                        <span>{typeof lead.segment === 'object' ? lead.segment?.name : lead.segment}</span>
+                        <span>{lead.segmento}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <span className="text-lg">{getSourceIcon(lead.source)}</span>
-                        <span className="capitalize">{lead.source}</span>
+                        <span className="text-lg">{getSourceIcon(lead.fonte)}</span>
+                        <span className="capitalize">{lead.fonte}</span>
                       </div>
                       {lead.tags && lead.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
@@ -1234,11 +1035,11 @@ export default function Leads2Page() {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {[
-                { id: 'new', title: 'Novos', color: 'bg-blue-50 border-blue-200', count: stats.statusCounts.new },
-                { id: 'qualified', title: 'Qualificados', color: 'bg-green-50 border-green-200', count: stats.statusCounts.qualified },
-                { id: 'contacted', title: 'Contatados', color: 'bg-yellow-50 border-yellow-200', count: stats.statusCounts.contacted },
-                { id: 'converted', title: 'Convertidos', color: 'bg-purple-50 border-purple-200', count: stats.statusCounts.converted },
-                { id: 'discarded', title: 'Descartados', color: 'bg-red-50 border-red-200', count: stats.statusCounts.discarded }
+                { id: 'novo', title: 'Novos', color: 'bg-blue-50 border-blue-200', count: stats.statusCounts.novo },
+                { id: 'qualificado', title: 'Qualificados', color: 'bg-green-50 border-green-200', count: stats.statusCounts.qualificado },
+                { id: 'contatado', title: 'Contatados', color: 'bg-yellow-50 border-yellow-200', count: stats.statusCounts.contatado },
+                { id: 'convertido', title: 'Convertidos', color: 'bg-purple-50 border-purple-200', count: stats.statusCounts.convertido },
+                { id: 'descartado', title: 'Descartados', color: 'bg-red-50 border-red-200', count: stats.statusCounts.descartado }
               ].map((column) => {
                 const columnLeads = sortedLeads.filter(lead => lead.status === column.id);
                 return (
@@ -1257,23 +1058,23 @@ export default function Leads2Page() {
                             <div className="flex items-center gap-2 mb-2">
                               <Avatar className="h-6 w-6">
                                 <AvatarFallback className="text-xs bg-primary-100 text-primary-700">
-                                  {lead.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
+                                  {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-sm font-medium truncate flex-1">{lead.company}</span>
+                              <span className="text-sm font-medium truncate flex-1">{lead.nomeEmpresa}</span>
                             </div>
-                            <p className="text-xs text-gray-600 mb-2 truncate">{lead.name}</p>
+                            <p className="text-xs text-gray-600 mb-2 truncate">{lead.nomeContato}</p>
                             <div className="flex items-center justify-between">
                               <Badge variant="outline" className="text-xs">
-                                ⭐ {lead.qualityScore}%
+                                ⭐ {lead.scoreQualificacao}%
                               </Badge>
                               <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
                                 <MoreVertical className="h-3 w-3" />
                               </Button>
                             </div>
                             <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-                              <span>{getSourceIcon(lead.source)}</span>
-                              <span className="capitalize">{lead.source}</span>
+                              <span>{getSourceIcon(lead.fonte)}</span>
+                              <span className="capitalize">{lead.fonte}</span>
                             </div>
                           </CardContent>
                         </Card>
