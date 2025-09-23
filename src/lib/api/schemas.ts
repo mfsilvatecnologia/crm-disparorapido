@@ -92,14 +92,17 @@ export const UserSchema = z.object({
   cargo: z.string().optional(),
   ativo: z.boolean().optional(),
   ultimoLogin: z.string().optional(),
+  createdAt: z.string().optional(), // Adicionado para suportar o formato da API
   roles: z.array(z.string()).optional(),
-  role: z.enum(['admin', 'org_admin', 'agent', 'viewer', 'user']).optional(),
+  role: z.union([
+    z.enum(['admin', 'org_admin', 'agent', 'viewer', 'user', 'usuario']),
+    z.string() // Permite qualquer string para ser mais flexível
+  ]).optional(),
   user_metadata: z.object({
     role: z.string().optional(),
   }).optional(),
   organizationId: z.string().optional(),
   avatar: z.string().optional(),
-  createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
 

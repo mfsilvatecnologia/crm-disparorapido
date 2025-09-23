@@ -287,14 +287,83 @@ class ApiClient {
 
   // User Profile
   async getCurrentUser(): Promise<User> {
-    return this.request('/api/v1/users/me', {}, UserSchema);
+    try {
+      console.log('Fazendo requisição para /api/v1/users/me');
+      const response = await this.request('/api/v1/users/me');
+      console.log('Resposta recebida:', response);
+      
+      // Verificar se a resposta tem o formato esperado
+      if (response && typeof response === 'object') {
+        if (response.success === true && response.data) {
+          console.log('Encontrado formato de resposta com envelope success/data');
+          // Validar os dados do usuário com o schema
+          try {
+            const validatedUser = UserSchema.parse(response.data);
+            console.log('Dados do usuário validados com sucesso:', validatedUser);
+            return validatedUser;
+          } catch (validationError) {
+            console.error('Erro de validação:', validationError);
+            throw new Error('Os dados do usuário não são válidos');
+          }
+        } else if (response.id && response.email) {
+          console.log('Encontrado formato de resposta direta sem envelope');
+          // A resposta já é o próprio objeto de usuário
+          try {
+            const validatedUser = UserSchema.parse(response);
+            console.log('Dados do usuário validados com sucesso:', validatedUser);
+            return validatedUser;
+          } catch (validationError) {
+            console.error('Erro de validação:', validationError);
+            throw new Error('Os dados do usuário não são válidos');
+          }
+        }
+      }
+      
+      console.error('Formato de resposta inesperado:', response);
+      throw new Error('Formato de resposta inesperado');
+    } catch (error) {
+      console.error('Erro em getCurrentUser:', error);
+      throw error;
+    }
   }
 
   async updateProfile(data: UpdateProfileRequest): Promise<User> {
-    return this.request('/api/v1/users/me', {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }, UserSchema);
+    try {
+      console.log('Enviando dados para atualizar perfil:', data);
+      const response = await this.request('/api/v1/users/me', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      console.log('Resposta da atualização de perfil:', response);
+      
+      if (response && typeof response === 'object') {
+        if (response.success === true && response.data) {
+          try {
+            const validatedUser = UserSchema.parse(response.data);
+            console.log('Perfil atualizado com sucesso:', validatedUser);
+            return validatedUser;
+          } catch (validationError) {
+            console.error('Erro de validação nos dados atualizados:', validationError);
+            throw new Error('Os dados atualizados não são válidos');
+          }
+        } else if (response.id && response.email) {
+          try {
+            const validatedUser = UserSchema.parse(response);
+            console.log('Perfil atualizado com sucesso:', validatedUser);
+            return validatedUser;
+          } catch (validationError) {
+            console.error('Erro de validação nos dados atualizados:', validationError);
+            throw new Error('Os dados atualizados não são válidos');
+          }
+        }
+      }
+      
+      console.error('Formato de resposta inesperado ao atualizar perfil:', response);
+      throw new Error('Formato de resposta inesperado ao atualizar perfil');
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      throw error;
+    }
   }
 
   async changePassword(data: ChangePasswordRequest): Promise<{ success: boolean; message: string }> {
@@ -441,7 +510,7 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    const response = await this.request(`/leads${query}`, {}, PaginatedApiResponseSchema(LeadSchema));
+    const response = await this.request(`/api/v1/leads${query}`, {}, PaginatedApiResponseSchema(LeadSchema));
     
     // Extract and ensure the data matches our expected type
     const data = response.data;

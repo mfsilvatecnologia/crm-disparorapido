@@ -43,7 +43,17 @@ export default function UserProfilePage() {
   // Fetch current user data
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['user', 'profile'],
-    queryFn: () => apiClient.getCurrentUser(),
+    queryFn: async () => {
+      try {
+        console.log('Iniciando chamada para apiClient.getCurrentUser()');
+        const userData = await apiClient.getCurrentUser();
+        console.log('Dados do usuário recebidos com sucesso:', userData);
+        return userData;
+      } catch (err) {
+        console.error('Erro ao buscar dados do usuário:', err);
+        throw err;
+      }
+    },
   });
 
   // Update profile form
@@ -132,11 +142,20 @@ export default function UserProfilePage() {
   }
 
   if (error) {
+    console.error('Erro detectado no componente:', error);
     return (
       <div className="container mx-auto p-6">
         <Alert variant="destructive">
           <AlertDescription>
-            Erro ao carregar dados do usuário. Tente novamente mais tarde.
+            Erro ao carregar dados do usuário: {(error as Error).message || 'Erro desconhecido'}
+            <div className="mt-2 text-xs">
+              <details>
+                <summary>Detalhes técnicos</summary>
+                <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-60">
+                  {JSON.stringify(error, null, 2)}
+                </pre>
+              </details>
+            </div>
           </AlertDescription>
         </Alert>
       </div>
