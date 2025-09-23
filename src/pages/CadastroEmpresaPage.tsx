@@ -65,9 +65,10 @@ export default function CadastroEmpresaPage() {
 
     } catch (error) {
       console.error("Erro ao cadastrar empresa:", error);
+      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro. Tente novamente.";
       toast({
         title: "Erro ao cadastrar empresa",
-        description: "Ocorreu um erro. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -96,7 +96,7 @@ function RequestResetForm() {
       <CardHeader>
         <CardTitle>Redefinir senha</CardTitle>
         <CardDescription>
-          Informe seu email e CNPJ da empresa para receber as instruções
+          Informe seu email para receber as instruções de login
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -112,19 +112,6 @@ function RequestResetForm() {
             />
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="cnpj">CNPJ da Empresa</Label>
-            <Input
-              id="cnpj"
-              placeholder="00.000.000/0000-00"
-              {...register('cnpj')}
-              className={errors.cnpj ? 'border-destructive' : ''}
-            />
-            {errors.cnpj && (
-              <p className="text-sm text-destructive">{errors.cnpj.message}</p>
             )}
           </div>
 

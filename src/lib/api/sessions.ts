@@ -83,7 +83,7 @@ export async function terminateSession(
     headers['X-Device-Id'] = getOrCreateDeviceId()
   }
 
-  const response = await fetch(`${API_BASE_URL}/admin/sessions/${sessionId}/terminate`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/admin/sessions/${sessionId}/terminate`, {
     method: 'POST',
     headers,
     body: JSON.stringify(terminateRequest),
@@ -106,7 +106,7 @@ export async function getCurrentSession(
   token: string,
   deviceId: string
 ): Promise<SessionInfo | null> {
-  const response = await fetch(`${API_BASE_URL}/sessions/active`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions/active`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,

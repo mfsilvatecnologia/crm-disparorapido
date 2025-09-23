@@ -20,6 +20,7 @@ export interface RegisterResponse {
     role: string
   }
   message?: string
+  error?: string
 }
 
 export interface LoginRequest {
@@ -41,7 +42,7 @@ export interface LoginResponse {
 export async function registerUser(data: RegisterRequest): Promise<RegisterResponse> {
   const deviceId = getOrCreateDeviceId()
 
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -53,7 +54,7 @@ export async function registerUser(data: RegisterRequest): Promise<RegisterRespo
   const result = await response.json()
 
   if (!response.ok) {
-    throw new Error(result.message || 'Falha no registro')
+    throw new Error(result.error || result.message || 'Falha no registro')
   }
 
   return result
@@ -62,7 +63,7 @@ export async function registerUser(data: RegisterRequest): Promise<RegisterRespo
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   const deviceId = getOrCreateDeviceId()
 
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -74,7 +75,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   const result = await response.json()
 
   if (!response.ok) {
-    throw new Error(result.message || 'Falha no login')
+    throw new Error(result.error || result.message || 'Falha no login')
   }
 
   return result

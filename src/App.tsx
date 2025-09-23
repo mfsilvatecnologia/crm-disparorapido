@@ -15,6 +15,7 @@ import WorkerMonitorPage from "./pages/WorkerMonitorPage";
 import SearchTermsPage from "./pages/SearchTermsPage";
 import ScrapingPage from "./pages/ScrapingPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import NewPasswordPage from "./pages/NewPasswordPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import UsersPage from "./pages/UsersPage";
 import EmpresasPage from "./pages/EmpresasPage";
@@ -57,6 +58,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/nova-senha" element={<NewPasswordPage />} />
       
       {/* Protected App Routes */}
       <Route path="/app" element={

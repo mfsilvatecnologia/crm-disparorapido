@@ -20,7 +20,7 @@ export async function updateUserRole(
     throw new Error('Role is required')
   }
 
-  const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/admin/users/${userId}/role`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,

@@ -9,7 +9,7 @@ import type {
   ComputedPermissions
 } from '../../types/auth'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 /**
  * Fetches user permissions from the API
@@ -19,7 +19,7 @@ export async function fetchUserPermissions(
   token: string,
   deviceId?: string
 ): Promise<ComputedPermissions> {
-  const response = await fetch(`${API_BASE_URL}/auth/permissions`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/permissions`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -55,7 +55,7 @@ export async function validatePermission(
     ...(resourceId && { resource: resourceId })
   }
 
-  const response = await fetch(`${API_BASE_URL}/auth/permissions/validate`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/permissions/validate`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -86,7 +86,7 @@ export async function fetchPermissionContext(
   token: string,
   deviceId?: string
 ): Promise<PermissionsResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/permissions`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/permissions`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,

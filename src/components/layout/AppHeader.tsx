@@ -1,5 +1,3 @@
-// Variável global de ambiente
-const STAGE = true; // Altere para false em produção
 import React from 'react';
 import { Bell, Search, Settings, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,28 +20,6 @@ import { OrganizationSwitcher } from '@/components/shared/OrganizationSwitcher';
 export function AppHeader() {
   const { user, logout } = useAuth();
   const { currentOrganization } = useOrganization();
-  // Marca d'água de ambiente
-  const stageWatermark = STAGE ? (
-    <div
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 1000,
-        pointerEvents: 'none',
-        opacity: 0.18,
-        fontWeight: 900,
-        fontSize: 32,
-        color: '#05628dff',
-        textShadow: '0 2px 8px #919191ff',
-        letterSpacing: 2,
-        userSelect: 'none',
-      }}
-    >
-      Ambiente Stage
-    </div>
-  ) : null;
 
   const handleLogout = async () => {
     try {
@@ -71,7 +47,6 @@ export function AppHeader() {
 
   return (
     <header className="border-b bg-card/50 backdrop-blur-sm" style={{position: 'relative'}}>
-      {stageWatermark}
       <div className="flex h-16 items-center gap-4 px-6">
         <SidebarTrigger />
         

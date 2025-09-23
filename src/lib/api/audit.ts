@@ -67,7 +67,7 @@ export async function createAuditLog(
   token: string,
   auditRequest: AuditLogRequest
 ): Promise<{ success: boolean }> {
-  const response = await fetch(`${API_BASE_URL}/admin/audit-logs`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/admin/audit-logs`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

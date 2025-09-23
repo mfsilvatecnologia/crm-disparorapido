@@ -7,6 +7,27 @@ export const PaginationSchema = z.object({
   total: z.number().int().nonnegative(),
 });
 
+// Error response schema
+export const ErrorResponseSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+  code: z.string().optional(),
+  details: z.record(z.any()).optional(),
+  context: z.object({
+    controller: z.string().optional(),
+    method: z.string().optional(),
+    stackTrace: z.string().optional(),
+    trace_id: z.string().optional(),
+    span_id: z.string().optional(),
+  }).optional(),
+  timestamp: z.string().optional(),
+  trace: z.object({
+    trace_id: z.string().optional(),
+    span_id: z.string().optional(),
+    requestId: z.string().optional(),
+  }).optional(),
+});
+
 export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     items: z.array(dataSchema),
@@ -18,6 +39,7 @@ export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =
     hasPrev: z.boolean(),
   });
 
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 export type CreateLeadDTO = z.infer<typeof CreateLeadDTOSchema>;
 export type UpdateLeadDTO = z.infer<typeof UpdateLeadDTOSchema>;
 export type User = z.infer<typeof UserSchema>;
@@ -88,7 +110,6 @@ export const LoginSchema = z.object({
 
 export const ResetPasswordSchema = z.object({
   email: z.string().email(),
-  cnpj: z.string().min(11, 'CNPJ deve ter pelo menos 11 caracteres'),
 });
 
 export const ConfirmResetPasswordSchema = z.object({
@@ -394,6 +415,7 @@ export const AuthResponseSchema = z.object({
     }).optional(), // Empresa is optional in auth response
   }),
   message: z.string(),
+  error: z.string().optional(),
   timestamp: z.string(),
   trace: z.any().optional(),
 });

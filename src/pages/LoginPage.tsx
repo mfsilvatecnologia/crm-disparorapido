@@ -1,29 +1,5 @@
-// Variável global de ambiente
-const STAGE = true; // Altere para false em produção
-
-const stageWatermark = STAGE ? (
-  <div
-    style={{
-      position: 'absolute',
-      top: 0,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 1000,
-      pointerEvents: 'none',
-      opacity: 0.5,
-      fontWeight: 900,
-      fontSize: 32,
-      color: '#05628dff',
-      textShadow: '0 2px 8px #919191ff',
-      letterSpacing: 2,
-      userSelect: 'none',
-    }}
-  >
-    Ambiente Stage
-  </div>
-) : null;
-import React, { useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
+import { useConnectivity } from '@/hooks/useConnectivity';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -46,6 +24,9 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const connectivity = useConnectivity();
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -57,9 +38,34 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  // Verifica redirecionamento do Supabase para reset de senha
+  useEffect(() => {
+    // Verifica se estamos recebendo um redirecionamento do Supabase para reset de senha
+    // Pode vir tanto na query string (?token=...) quanto no hash (#access_token=...)
+    let token = null;
+    let type = null;
+
+    // Verifica query parameters
+    const urlParams = new URLSearchParams(location.search);
+    token = urlParams.get('token');
+    type = urlParams.get('type');
+
+    // Se não encontrou nos query params, verifica no hash (formato do Supabase)
+    if (!token && location.hash) {
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      token = hashParams.get('access_token');
+      type = hashParams.get('type');
+    }
+
+    if (token && type === 'recovery') {
+      // Redireciona para a página de nova senha com o token
+      navigate(`/nova-senha?token=${token}&type=${type}`);
+    }
+  }, [location.search, location.hash, navigate]);
+
   // Movendo a verificação de autenticação para dentro de um useEffect
   const [shouldRedirect, setShouldRedirect] = useState(false);
-  
+
   React.useEffect(() => {
     if (isAuthenticated) {
       setShouldRedirect(true);
@@ -103,7 +109,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex" style={{position: 'relative'}}>
-      {stageWatermark}
       {/* Left side - Hero */}
       <div className="hidden lg:flex flex-1 bg-gradient-hero items-center justify-center p-12 text-white">
         <div className="max-w-md text-center">
@@ -144,12 +149,29 @@ export default function LoginPage() {
               <CardDescription>
                 Faça login para acessar sua conta
               </CardDescription>
+              
+              {/* Show connectivity status when offline */}
+              {!connectivity.isOnline && (
+                <div className="mt-4">
+                  <ConnectionStatus variant="card" showDetails={true} />
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {loginError && (
                   <Alert variant="destructive">
                     <AlertDescription>{loginError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Show inline connectivity status for minor issues */}
+                {connectivity.isOnline && connectivity.responseTime && connectivity.responseTime > 2000 && (
+                  <Alert>
+                    <AlertDescription className="flex items-center gap-2">
+                      <ConnectionStatus variant="inline" size="sm" />
+                      <span>Conexão lenta detectada</span>
+                    </AlertDescription>
                   </Alert>
                 )}
 
@@ -199,13 +221,15 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !connectivity.isOnline}
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Entrando...
                     </>
+                  ) : !connectivity.isOnline ? (
+                    'Sem conexão'
                   ) : (
                     'Entrar'
                   )}
@@ -241,11 +265,6 @@ export default function LoginPage() {
               </div>
             </CardContent>
           </Card>
-
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p>Demo Login:</p>
-            <p>Email: test@example.com | Senha: password</p>
-          </div>
         </div>
       </div>
     </div>

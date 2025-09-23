@@ -27,7 +27,7 @@ export function useRegister(): UseRegisterResult {
         setSuccess(true)
         return true
       } else {
-        setError(result.message || 'Falha no registro')
+        setError(result.error || result.message || 'Falha no registro')
         return false
       }
     } catch (err) {

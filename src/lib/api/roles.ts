@@ -27,7 +27,7 @@ export interface CreateRoleRequest {
  * Based on GET /api/v1/admin/roles endpoint
  */
 export async function fetchRoles(token: string): Promise<RolesListResponse> {
-  const response = await fetch(`${API_BASE_URL}/admin/roles`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/admin/roles`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -68,7 +68,7 @@ export async function createRole(
     throw new Error('Role permissions are required')
   }
 
-  const response = await fetch(`${API_BASE_URL}/admin/roles`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/admin/roles`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
