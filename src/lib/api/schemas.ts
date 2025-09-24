@@ -467,7 +467,7 @@ export const LeadAddressSchema = z.object({
 
 export const LeadSchema = z.object({
   id: z.string(),
-  empresaId: z.string(),
+  empresaId: z.string().optional(),
   nomeEmpresa: z.string(),
   nomeContato: z.string(),
   cargoContato: z.string().optional(),
@@ -481,7 +481,7 @@ export const LeadSchema = z.object({
   numFuncionarios: z.number().optional(),
   receitaAnualEstimada: z.number().optional(),
   endereco: LeadAddressSchema.optional(),
-  status: z.enum(['novo', 'qualificado', 'contatado', 'convertido', 'descartado']).optional(),
+  status: z.enum(['novo', 'qualificado', 'contatado', 'convertido', 'descartado', 'privado']).optional(),
   scoreQualificacao: z.number().min(0).max(100).optional(),
   tags: z.array(z.string()).optional(),
   observacoes: z.string().optional(),

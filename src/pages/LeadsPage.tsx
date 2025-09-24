@@ -66,13 +66,13 @@ import { formatCurrency } from '@/lib/utils';
 import { AdvancedPagination } from '@/components/shared/AdvancedPagination';
 
 type ViewMode = 'table' | 'cards' | 'kanban';
-type FilterStatus = 'all' | 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado';
+type FilterStatus = 'all' | 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado';
 
 interface LeadData {
-  id?: string;
+  id: string;
   empresaId?: string;
-  nomeEmpresa?: string;
-  nomeContato?: string;
+  nomeEmpresa: string;
+  nomeContato: string;
   cargoContato?: string;
   email?: string;
   telefone?: string;
@@ -93,14 +93,14 @@ interface LeadData {
     latitude?: number | null;
     longitude?: number | null;
   };
-  status?: 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado';
+  status?: 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado';
   scoreQualificacao?: number;
   tags?: string[];
   observacoes?: string | null;
   fonte?: string;
   dadosOriginais?: Record<string, unknown>;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function LeadsPage() {
@@ -321,6 +321,14 @@ export default function LeadsPage() {
 
   const getStatusColor = (status: string) => {
     const colors = {
+      // Valores da API
+      novo: 'bg-blue-100 text-blue-800 border-blue-200',
+      qualificado: 'bg-green-100 text-green-800 border-green-200',
+      contatado: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      convertido: 'bg-purple-100 text-purple-800 border-purple-200',
+      descartado: 'bg-red-100 text-red-800 border-red-200',
+      privado: 'bg-gray-100 text-gray-800 border-gray-200',
+      // Valores antigos (para compatibilidade)
       new: 'bg-blue-100 text-blue-800 border-blue-200',
       qualified: 'bg-green-100 text-green-800 border-green-200',
       contacted: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -332,6 +340,14 @@ export default function LeadsPage() {
 
   const getStatusLabel = (status: string) => {
     const labels = {
+      // Valores da API
+      novo: 'Novo',
+      qualificado: 'Qualificado',
+      contatado: 'Contatado',
+      convertido: 'Convertido',
+      descartado: 'Descartado',
+      privado: 'Privado',
+      // Valores antigos (para compatibilidade)
       new: 'Novo',
       qualified: 'Qualificado',
       contacted: 'Contatado',
@@ -363,6 +379,7 @@ export default function LeadsPage() {
       contatado: allLeads.filter(l => l.status === 'contatado').length,
       convertido: allLeads.filter(l => l.status === 'convertido').length,
       descartado: allLeads.filter(l => l.status === 'descartado').length,
+      privado: allLeads.filter(l => l.status === 'privado').length,
     }
   };
 
@@ -394,11 +411,11 @@ export default function LeadsPage() {
               <Badge variant="secondary" className="text-xs">
                 Qualidade média: {stats.avgQuality}%
               </Badge>
-              {realLeads.length === 0 && (
+              {/* {realLeads.length === 0 && (
                 <Badge className="text-xs bg-amber-100 text-amber-800 border-amber-200">
                   Modo Demonstração
                 </Badge>
-              )}
+              )} */}
               {realLeads.length > 0 && (
                 <Badge className="text-xs bg-green-100 text-green-800 border-green-200">
                   Dados Reais ({realLeads.length} da API)
@@ -528,11 +545,12 @@ export default function LeadsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos ({stats.filtered})</SelectItem>
-                <SelectItem value="novo">🆕 Novos ({stats.statusCounts.novo})</SelectItem>
-                <SelectItem value="qualificado">⭐ Qualificados ({stats.statusCounts.qualificado})</SelectItem>
-                <SelectItem value="contatado">📞 Contatados ({stats.statusCounts.contatado})</SelectItem>
-                <SelectItem value="convertido">🎯 Convertidos ({stats.statusCounts.convertido})</SelectItem>
-                <SelectItem value="descartado">❌ Descartados ({stats.statusCounts.descartado})</SelectItem>
+                <SelectItem value="novo">🆕 Novos ({stats.statusCounts.novo || 0})</SelectItem>
+                <SelectItem value="qualificado">⭐ Qualificados ({stats.statusCounts.qualificado || 0})</SelectItem>
+                <SelectItem value="contatado">📞 Contatados ({stats.statusCounts.contatado || 0})</SelectItem>
+                <SelectItem value="convertido">🎯 Convertidos ({stats.statusCounts.convertido || 0})</SelectItem>
+                <SelectItem value="descartado">❌ Descartados ({stats.statusCounts.descartado || 0})</SelectItem>
+                <SelectItem value="privado">🔒 Privados ({stats.statusCounts.privado || 0})</SelectItem>
               </SelectContent>
             </Select>
 
@@ -831,8 +849,8 @@ export default function LeadsPage() {
                   <TableRow key={lead.id} className="border-gray-100 hover:bg-gray-50">
                     <TableCell>
                       <Checkbox
-                        checked={selectedLeads.includes(lead.id || '')}
-                        onCheckedChange={(checked) => handleSelectLead(lead.id || '', checked as boolean)}
+                        checked={selectedLeads.includes(lead.id)}
+                        onCheckedChange={(checked) => handleSelectLead(lead.id, checked as boolean)}
                       />
                     </TableCell>
                     <TableCell>
