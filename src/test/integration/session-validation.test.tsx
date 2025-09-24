@@ -5,8 +5,8 @@ import React from 'react'
 import { describe, it, expect } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '../../contexts/AuthContext'
-import { SessionProvider, useSession } from '../../contexts/SessionContext'
+import { AuthProvider } from '../../shared/contexts/AuthContext'
+import { SessionProvider, useSession } from '../../shared/contexts/SessionContext'
 
 function SessionTestComponent() {
   const { session, deviceId, isValidSession } = useSession()

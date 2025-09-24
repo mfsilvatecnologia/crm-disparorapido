@@ -1,0 +1,420 @@
+import React from 'react';
+import {
+  TrendingUp,
+  Users,
+  Target,
+  DollarSign,
+  Rocket,
+  BarChart3,
+  FileDown,
+  Settings,
+  Bell,
+  Calendar,
+  Clock,
+  Star
+} from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { useOrganization } from '@/shared/contexts/OrganizationContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useLeads } from '@/features/leads/hooks/useLeads';
+import { KpiCard, ActiveCampaignsWidget, RecentLeadsWidget, UsageMonitorWidget } from '@/features/dashboard';
+import {
+  MetricCard,
+  LeadsMetricCard,
+  QualityMetricCard,
+  ROIMetricCard,
+  GrowthMetricCard,
+  QuickActions,
+  useQuickActions,
+  CampaignsWidget
+} from '@/features/dashboard';
+
+const Dashboard: React.FC = () => {
+  const { currentOrganization } = useOrganization();
+  const { user } = useAuth();
+  const { actions } = useQuickActions();
+
+  // Fetch real leads data
+  const { data: leadsData, isLoading: leadsLoading } = useLeads({
+    limit: 10,
+  });
+
+  // Enhanced mock data with more realistic metrics
+  const mockCampaigns = [
+    {
+      id: '1',
+      name: 'B2B Software - São Paulo',
+      status: 'active' as const,
+      leadsGenerated: 1247,
+      targetLeads: 1500,
+      qualityScore: 87,
+      invested: 3118,
+      budget: 4000,
+      progress: 78,
+      remainingDays: 2,
+      totalDays: 30,
+      createdAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000),
+      lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      segment: 'Software',
+      source: 'LinkedIn + Google Maps',
+      conversionRate: 12.3
+    },
+    {
+      id: '2', 
+      name: 'Agências Marketing - RJ',
+      status: 'active' as const,
+      leadsGenerated: 892,
+      targetLeads: 1000,
+      qualityScore: 91,
+      invested: 2230,
+      budget: 2500,
+      progress: 65,
+      remainingDays: 5,
+      totalDays: 20,
+      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      lastActivity: new Date(Date.now() - 1 * 60 * 60 * 1000),
+      segment: 'Marketing',
+      source: 'Google Maps',
+      conversionRate: 15.7
+    },
+    {
+      id: '3',
+      name: 'Consultoria Financeira - SP',
+      status: 'paused' as const,
+      leadsGenerated: 543,
+      targetLeads: 800,
+      qualityScore: 84,
+      invested: 1360,
+      budget: 2000,
+      progress: 45,
+      remainingDays: 10,
+      totalDays: 25,
+      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      lastActivity: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      segment: 'Finanças',
+      source: 'LinkedIn',
+      conversionRate: 8.9
+    }
+  ];
+
+  const mockUsage = {
+    plan: 'Professional',
+    leadsUsed: 2847,
+    leadsLimit: 4000,
+    daysRemaining: 12,
+    activeCampaigns: 4,
+    maxCampaigns: 10,
+    integrations: 2,
+    maxIntegrations: 5,
+    exports: 18,
+    maxExports: 50,
+    apiCalls: 1247,
+    maxApiCalls: 5000,
+    estimatedDaysUntilLimit: 8
+  };
+
+  const mockRecentLeads = [
+    {
+      id: '1',
+      companyName: 'TechStart Solutions',
+      contactName: 'Maria Silva',
+      contactRole: 'CEO',
+      email: 'maria@techstart.com.br',
+      phone: '(11) 99999-9999',
+      sector: 'Software',
+      location: 'São Paulo',
+      employees: 25,
+      qualityScore: 94,
+      createdAt: new Date(Date.now() - 5 * 60 * 1000),
+      campaign: 'B2B Software - SP',
+      linkedinUrl: 'https://linkedin.com/in/maria-silva'
+    }
+  ];
+
+  const totalLeads = leadsData?.items?.length || 2847;
+  const qualityAverage = 89;
+  const monthGrowth = 247;
+  const estimatedROI = 8340;
+
+  // Enhanced metrics calculations
+  const leadsBreakdown = {
+    novos: Math.round(totalLeads * 0.54), // 54% novos
+    qualificados: Math.round(totalLeads * 0.36), // 36% qualificados  
+    convertidos: Math.round(totalLeads * 0.10) // 10% convertidos
+  };
+
+  const qualityDistribution = {
+    alta: Math.round(totalLeads * 0.67), // 67% alta qualidade (85-100)
+    media: Math.round(totalLeads * 0.28), // 28% média (70-84)
+    baixa: Math.round(totalLeads * 0.05) // 5% baixa (<70)
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+  };
+
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour < 6) return 'madrugada';
+    if (hour < 12) return 'manhã';
+    if (hour < 18) return 'tarde';
+    return 'noite';
+  };
+
+  // Handler functions
+  const handleViewAllLeads = () => {
+    window.location.href = '/app/leads';
+  };
+
+  const handleFilterLeads = () => {
+    console.log('Filtrar leads');
+  };
+
+  const handleExportLeads = () => {
+    console.log('Exportar leads');
+  };
+
+  const handleOptimizeQuality = () => {
+    console.log('Otimizar qualidade');
+  };
+
+  const handleViewReport = () => {
+    console.log('Ver relatório');
+  };
+
+  const handleAnalyzeGrowth = () => {
+    console.log('Analisar crescimento');
+  };
+
+  const handleViewCampaign = (campaignId: string) => {
+    console.log('Ver campanha:', campaignId);
+  };
+
+  const handlePauseCampaign = (campaignId: string) => {
+    console.log('Pausar campanha:', campaignId);
+  };
+
+  const handleResumeCampaign = (campaignId: string) => {
+    console.log('Retomar campanha:', campaignId);
+  };
+
+  const handleEditCampaign = (campaignId: string) => {
+    console.log('Editar campanha:', campaignId);
+  };
+
+  const handleCreateNewCampaign = () => {
+    console.log('Nova campanha');
+  };
+
+  const getUserFirstName = () => {
+    if (user?.name) {
+      return user.name.split(' ')[0];
+    }
+    return user?.email?.split('@')[0] || 'Usuário';
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Enhanced Hero Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {getGreeting()}, {getUserFirstName()}! 👋
+                </h1>
+                <Badge variant="outline" className="px-3 py-1">
+                  {mockUsage.plan}
+                </Badge>
+              </div>
+              <p className="text-gray-600">
+                Sua operação está {getTimeOfDay() === 'manhã' ? 'iniciando bem' : 'performando excelente'} esta {getTimeOfDay()}. 
+                {mockUsage.daysRemaining} dias restantes no seu plano.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                Notificações
+              </Button>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Agendar Reunião
+              </Button>
+            </div>
+          </div>
+
+          {/* Main Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <LeadsMetricCard
+              total={totalLeads}
+              change={15.3}
+              breakdown={leadsBreakdown}
+              onViewAll={handleViewAllLeads}
+              onFilter={handleFilterLeads}
+              onExport={handleExportLeads}
+            />
+            
+            <QualityMetricCard
+              average={qualityAverage}
+              distribution={qualityDistribution}
+              trend="up"
+              onOptimize={handleOptimizeQuality}
+            />
+            
+            <GrowthMetricCard
+              percentage={monthGrowth}
+              trend="up"
+              onAnalyze={handleAnalyzeGrowth}
+            />
+            
+            <ROIMetricCard
+              value={estimatedROI}
+              period="Este mês"
+              projection={estimatedROI * 1.2}
+              onViewReport={handleViewReport}
+            />
+          </div>
+
+          {/* Quick Actions */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
+            <QuickActions actions={actions} />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-6 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Campaigns */}
+          <div className="lg:col-span-2">
+            <CampaignsWidget
+              campaigns={mockCampaigns}
+              onViewCampaign={handleViewCampaign}
+              onPauseCampaign={handlePauseCampaign}
+              onResumeCampaign={handleResumeCampaign}
+              onEditCampaign={handleEditCampaign}
+              onCreateNew={handleCreateNewCampaign}
+              className="mb-6"
+            />
+            
+            {/* Recent Leads */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">Leads Recentes</CardTitle>
+                  <Button variant="outline" size="sm" onClick={handleViewAllLeads}>
+                    Ver Todos
+                  </Button>
+                </div>
+                <CardDescription>
+                  Últimos leads capturados com alta qualidade
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RecentLeadsWidget leads={mockRecentLeads} />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Usage & Analytics */}
+          <div className="space-y-6">
+            {/* Usage Monitor */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-primary-600" />
+                  Monitor de Uso
+                </CardTitle>
+                <CardDescription>
+                  Acompanhe seu consumo e limites
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UsageMonitorWidget usage={mockUsage} />
+              </CardContent>
+            </Card>
+
+            {/* Performance Insights */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  Insights de Performance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-green-600 rounded-full"></div>
+                    <span className="text-sm font-medium">Qualidade em alta</span>
+                  </div>
+                  <Badge variant="outline" className="text-green-700 border-green-300">
+                    +2.3% esta semana
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
+                    <span className="text-sm font-medium">Conversion rate</span>
+                  </div>
+                  <Badge variant="outline" className="text-blue-700 border-blue-300">
+                    12.3% média
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-yellow-600 rounded-full"></div>
+                    <span className="text-sm font-medium">Otimização sugerida</span>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Ver dicas
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-purple-600" />
+                  Estatísticas Rápidas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Leads hoje</span>
+                  <span className="font-semibold">127</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Campanhas ativas</span>
+                  <span className="font-semibold">{mockCampaigns.filter(c => c.status === 'active').length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Custo por lead</span>
+                  <span className="font-semibold">R$ 2,50</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Tempo médio resposta</span>
+                  <span className="font-semibold">4.2h</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;

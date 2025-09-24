@@ -5,8 +5,8 @@ import React from 'react'
 import { describe, it, expect } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '../../contexts/AuthContext'
-import { useAudit } from '../../hooks/useAudit'
+import { AuthProvider } from '../../shared/contexts/AuthContext'
+import { useAudit } from '../../shared/hooks/useAudit'
 
 function AuditTestComponent() {
   const { logAuditEvent, auditLogs, isLoading } = useAudit()

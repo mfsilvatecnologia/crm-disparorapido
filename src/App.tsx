@@ -1,29 +1,25 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/shared/components/ui/toaster";
+import { Toaster as Sonner } from "@/shared/components/ui/sonner";
+import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { OrganizationProvider } from "./contexts/OrganizationContext";
-import { AppLayout } from "./components/layout/AppLayout";
-import { Index } from "./pages/Index";
-import LoginPage from "./pages/LoginPage";
-import { RegisterPage } from "./components/auth/RegisterPage";
-import Dashboard from "./pages/Dashboard";
-import LeadsPage from "./pages/LeadsPage";
-import WorkerMonitorPage from "./pages/WorkerMonitorPage";
-import SearchTermsPage from "./pages/SearchTermsPage";
-import ScrapingPage from "./pages/ScrapingPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import NewPasswordPage from "./pages/NewPasswordPage";
-import UserProfilePage from "./pages/UserProfilePage";
-import UsersPage from "./pages/UsersPage";
-import EmpresasPage from "./pages/EmpresasPage";
-import SegmentosPage from "./pages/SegmentosPage";
-import PipelinePage from "./pages/PipelinePage";
-import NotFound from "./pages/NotFound";
-import CadastroEmpresaPage from "./pages/CadastroEmpresaPage";
-import { AdminPage } from "./components/admin/AdminPage";
+import { AuthProvider } from "./shared/contexts/AuthContext";
+import { useAuth } from "./features/authentication/hooks/useAuth";
+import { OrganizationProvider } from "./shared/contexts/OrganizationContext";
+import { AppLayout } from "./shared/components/layout/AppLayout";
+// Feature imports
+import { Index } from "./features/landing";
+import { LoginPage, RegisterPage, ResetPasswordPage, NewPasswordPage, UserProfilePage } from "./features/authentication";
+import { Dashboard } from "./features/dashboard";
+import { LeadsPage } from "./features/leads";
+import { AdminPage } from "./features/admin";
+import { SearchTermsPage, ScrapingPage, WorkerMonitorPage } from "./features/scraping";
+import { UsersPage } from "./features/user-management";
+import { EmpresasPage, CadastroEmpresaPage } from "./features/companies";
+import { SegmentosPage } from "./features/segments";
+import { PipelinePage } from "./features/pipeline";
+import { CampanhasPage } from "./features/campaigns";
+import { NotFound } from "./shared/pages";
 
 const queryClient = new QueryClient({
   defaultOptions: {

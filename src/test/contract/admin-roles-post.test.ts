@@ -3,8 +3,8 @@
 // Tests the admin role creation endpoint based on auth-permissions.json contract
 
 import { describe, it, expect } from 'vitest'
-import { createRole } from '../../lib/api/roles'
-import type { PermissionSet } from '../../types/auth'
+import { createRole } from '../../shared/services/roles'
+import type { PermissionSet } from '../../shared/types/auth'
 
 describe('Contract Test: POST /api/v1/admin/roles', () => {
   it('should create role with correct contract structure', async () => {

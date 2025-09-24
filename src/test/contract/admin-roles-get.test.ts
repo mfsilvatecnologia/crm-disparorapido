@@ -3,7 +3,7 @@
 // Tests the admin roles listing endpoint based on auth-permissions.json contract
 
 import { describe, it, expect } from 'vitest'
-import { fetchRoles } from '../../lib/api/roles'
+import { fetchRoles } from '../../shared/services/roles'
 
 describe('Contract Test: GET /api/v1/admin/roles', () => {
   it('should return roles list with correct contract structure', async () => {

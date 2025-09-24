@@ -1,0 +1,12 @@
+// Landing Feature - Centralized exports
+export { FAQSection } from './components/FAQSection'
+export { FeaturesSection } from './components/FeaturesSection'
+export { FinalCTA } from './components/FinalCTA'
+export { HeroSection } from './components/HeroSection'
+export { HowItWorks } from './components/HowItWorks'
+export { LandingFooter } from './components/LandingFooter'
+export { PricingSection } from './components/PricingSection'
+export { ROICalculator } from './components/ROICalculator'
+export { SocialProof } from './components/SocialProof'
+export { TestimonialsCarousel } from './components/TestimonialsCarousel'
+export { Index } from './pages/Index'

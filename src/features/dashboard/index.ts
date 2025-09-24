@@ -1,0 +1,12 @@
+// Dashboard Feature - Centralized exports
+export { ActiveCampaignsWidget } from './components/ActiveCampaignsWidget'
+export { CampaignsWidget } from './components/CampaignsWidget'
+export { KpiCard } from './components/KpiCard'
+export { LeadsChart } from './components/LeadsChart'
+export { MetricCard, LeadsMetricCard, QualityMetricCard, ROIMetricCard, GrowthMetricCard } from './components/MetricCard'
+export { QualityChart } from './components/QualityChart'
+export { QuickActions, useQuickActions } from './components/QuickActions'
+export { RecentLeadsWidget } from './components/RecentLeadsWidget'
+export { RegionMap } from './components/RegionMap'
+export { UsageMonitorWidget } from './components/UsageMonitorWidget'
+export { default as Dashboard } from './pages/Dashboard'

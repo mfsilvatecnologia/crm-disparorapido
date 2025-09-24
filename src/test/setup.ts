@@ -1,8 +1,10 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
-// Mock do window.location
-Object.defineProperty(window, 'location', {
+// Check if window is available (browser environment)
+if (typeof window !== 'undefined') {
+  // Mock do window.location
+  Object.defineProperty(window, 'location', {
   value: {
     href: 'http://localhost:3000/',
     origin: 'http://localhost:3000',
@@ -20,8 +22,40 @@ Object.defineProperty(window, 'location', {
   writable: true,
 })
 
+  // Mock de window.matchMedia
+  Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
+}
+
+// Mock de ResizeObserver
+if (typeof global !== 'undefined') {
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }))
+
+  // Mock de IntersectionObserver
+  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }))
+}
+
 // Mock do Supabase
-vi.mock('../lib/supabase', () => ({
+vi.mock('../shared/services/supabase', () => ({
   supabase: {
     auth: {
       getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
@@ -44,42 +78,25 @@ vi.mock('../lib/supabase', () => ({
   }
 }))
 
-// Mock do React Router (não usaremos mais, pois o App já tem BrowserRouter)
-// vi.mock('react-router-dom', async () => {
-//   const actual = await vi.importActual('react-router-dom')
-//   return {
-//     ...actual,
-//     useNavigate: () => vi.fn(),
-//     useLocation: () => ({ pathname: '/' }),
-//     useParams: () => ({})
-//   }
-// })
-
-// Mock de window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+// Mock de device.ts
+vi.mock('../shared/utils/device', () => ({
+  getOrCreateDeviceId: vi.fn(() => 'mock-device-id'),
+  getDeviceFingerprint: vi.fn(() => 'mock-fingerprint'),
+  getDeviceInfo: vi.fn(() => ({
+    userAgent: 'Test User Agent',
+    language: 'en-US',
+    platform: 'Test Platform',
+    screenResolution: '1920x1080',
+    colorDepth: 24,
+    timezone: 'UTC',
+    timezoneOffset: 0
   })),
-})
-
-// Mock de ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
-
-// Mock de IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
+  clearDeviceData: vi.fn(),
+  validateDeviceFingerprint: vi.fn(() => true),
+  getClientType: vi.fn(() => 'web'),
+  detectDeviceChanges: vi.fn(() => ({
+    fingerprintChanged: false,
+    userAgentChanged: false,
+    riskLevel: 'low'
+  }))
 }))

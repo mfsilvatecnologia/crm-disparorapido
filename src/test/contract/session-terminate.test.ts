@@ -3,7 +3,7 @@
 // Tests the session termination endpoint based on auth-permissions.json contract
 
 import { describe, it, expect } from 'vitest'
-import { terminateSession } from '../../lib/api/sessions'
+import { terminateSession } from '../../shared/services/sessions'
 
 describe('Contract Test: POST /api/v1/admin/sessions/{sessionId}/terminate', () => {
   it('should terminate session with correct contract structure', async () => {

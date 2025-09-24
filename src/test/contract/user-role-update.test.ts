@@ -3,7 +3,7 @@
 // Tests the user role update endpoint based on auth-permissions.json contract
 
 import { describe, it, expect } from 'vitest'
-import { updateUserRole } from '../../lib/api/users'
+import { updateUserRole } from '../../shared/services/users'
 
 describe('Contract Test: PUT /api/v1/admin/users/{userId}/role', () => {
   it('should update user role with correct contract structure', async () => {
