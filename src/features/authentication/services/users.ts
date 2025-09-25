@@ -1,7 +1,7 @@
 // Users API Client
 // Handles user role management API calls to the REST backend
 
-import { getOrCreateDeviceId } from '../utils/device'
+import { getOrCreateDeviceId } from '@/shared/utils/device'
 import type { UserRoleUpdateResponse, RoleUpdateRequest } from '../../types/auth'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'

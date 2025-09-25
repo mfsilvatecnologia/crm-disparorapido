@@ -1,7 +1,7 @@
 // RoleManagement Component - Admin interface for managing roles
 import React from 'react'
-import { useRoles } from '@/shared/hooks/useRoles'
-import { usePermissions } from '@/shared/hooks/usePermissions'
+import { useRoles } from '@/features/authentication'
+import { usePermissions } from '@/features/authentication'
 
 export function RoleManagement() {
   const { roles, isLoading, canManageRoles } = useRoles()

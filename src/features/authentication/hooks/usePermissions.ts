@@ -2,8 +2,8 @@
 // Manages permission state with React Query caching and session validation
 
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '../contexts/AuthContext'
-import { useSession } from '../contexts/SessionContext'
+import { useAuth } from '@/shared/contexts/AuthContext'
+import { useSession } from '@/shared/contexts/SessionContext'
 import { fetchUserPermissions, handlePermissionError } from '../services/permissions'
 import type { ComputedPermissions } from '../types/auth'
 

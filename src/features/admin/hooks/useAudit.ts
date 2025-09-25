@@ -2,8 +2,8 @@
 // Manages audit log data and operations
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '../contexts/AuthContext'
-import { usePermissions } from './usePermissions'
+import { useAuth } from '@/features/authentication'
+import { usePermissions } from '@/features/authentication'
 import { fetchAuditLogs, createAuditLog } from '../services/audit'
 import type { AuditLogRequest } from '../types/auth'
 

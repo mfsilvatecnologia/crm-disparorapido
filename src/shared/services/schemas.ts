@@ -463,30 +463,32 @@ export const LeadAddressSchema = z.object({
   estado: z.string().optional(),
   cep: z.string().optional(),
   pais: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
 });
 
 export const LeadSchema = z.object({
   id: z.string(),
-  empresaId: z.string().optional(),
-  nomeEmpresa: z.string().nullable(),
-  nomeContato: z.string().nullable(),
-  cargoContato: z.string().optional(),
-  email: z.string().optional(),
-  telefone: z.string().optional(),
-  linkedinUrl: z.string().optional(),
-  siteEmpresa: z.string().optional(),
-  cnpj: z.string().optional(),
+  empresaId: z.string().optional(), // Pode ser string vazia ""
+  nomeEmpresa: z.string(),
+  nomeContato: z.string().nullable().optional(),
+  cargoContato: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  telefone: z.string().nullable().optional(),
+  linkedinUrl: z.string().nullable().optional(),
+  siteEmpresa: z.string().nullable().optional(),
+  cnpj: z.string().nullable().optional(),
   segmento: z.string().optional(),
-  porteEmpresa: z.string().optional(),
-  numFuncionarios: z.number().optional(),
-  receitaAnualEstimada: z.number().optional(),
-  endereco: LeadAddressSchema.optional(),
+  porteEmpresa: z.string().nullable().optional(),
+  numFuncionarios: z.number().nullable().optional(),
+  receitaAnualEstimada: z.number().nullable().optional(),
+  endereco: LeadAddressSchema.nullable().optional(),
   status: z.enum(['novo', 'qualificado', 'contatado', 'convertido', 'descartado', 'privado']).optional(),
-  scoreQualificacao: z.number().min(0).max(100).optional(),
+  scoreQualificacao: z.number().min(0).max(100).default(0),
   tags: z.array(z.string()).optional(),
-  observacoes: z.string().optional(),
+  observacoes: z.string().nullable().optional(),
   fonte: z.string().optional(),
-  dadosOriginais: z.record(z.any()).optional(),
+  dadosOriginais: z.record(z.unknown()).optional(),
   custoAquisicao: z.number().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -518,6 +520,22 @@ export const LeadAccessSchema = z.object({
   cost: z.number().nonnegative(),
   accessedAt: z.string(),
 });
+
+// Schema específico para a resposta de leads
+export const LeadsResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    items: z.array(LeadSchema),
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+    hasNext: z.boolean(),
+    hasPrev: z.boolean(),
+  })
+});
+
+export type LeadsResponse = z.infer<typeof LeadsResponseSchema>;
 
 export const LeadFilterSchema = z.object({
   search: z.string().optional(),
@@ -694,24 +712,25 @@ export const ScrapingTemplateSchema = z.object({
 });
 
 export const ScrapingStatsSchema = z.object({
-  totalJobs: z.number(),
-  jobsAtivos: z.number(),
-  jobsConcluidos: z.number(),
-  totalLeadsColetados: z.number(),
-  leadsHoje: z.number(),
-  taxaSucesso: z.number().min(0).max(1),
-  tempoMedioExecucao: z.number(), // em minutos
+  totalJobs: z.number().optional().default(0),
+  jobsAtivos: z.number().optional().default(0),
+  jobsConcluidos: z.number().optional().default(0),
+  totalLeadsColetados: z.number().optional().default(0),
+  leadsHoje: z.number().optional().default(0),
+  taxaSucesso: z.number().min(0).max(1).optional().default(0),
+  tempoMedioExecucao: z.number().optional().default(0), // em minutos
   ultimaExecucao: z.string().optional(),
 });
 
-// Worker Status schemas
+// Worker Status schemas - matches actual API response from /scraping/status
 export const WorkerStatusSchema = z.object({
   isRunning: z.boolean(),
-  startTime: z.string().optional(),
-  uptime: z.number().optional(), // em segundos
-  processedJobs: z.number().default(0),
-  errorCount: z.number().default(0),
-  config: z.record(z.any()).optional(),
+  currentJobs: z.number().optional(),
+  maxConcurrentJobs: z.number().optional(),
+  totalJobsProcessed: z.number().optional(),
+  totalLeadsScraped: z.number().optional(),
+  errorCount: z.number().optional(),
+  queueSize: z.number().optional(),
 });
 
 export const WorkerStatsSchema = z.object({

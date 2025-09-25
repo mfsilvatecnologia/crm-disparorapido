@@ -1,9 +1,9 @@
 // SessionManagement Component - Admin interface for managing user sessions
 import React, { useState } from 'react'
-import { usePermissions } from '@/shared/hooks/usePermissions'
-import { useSessions } from '@/shared/hooks/useSessions'
+import { usePermissions } from '@/features/authentication'
+import { useSessions } from '@/features/authentication'
 import { useAuth } from '@/shared/contexts/AuthContext'
-import { terminateSession } from '@/shared/services/sessions'
+import { terminateSession } from '@/features/authentication/services/sessions'
 
 export function SessionManagement() {
   const { canManageSessions } = usePermissions()

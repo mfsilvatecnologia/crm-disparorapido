@@ -26,10 +26,34 @@ export function useLeads(params?: {
   createdAfter?: string;
   createdBefore?: string;
 }) {
+  // Normalizar parâmetros para evitar cache misses desnecessários
+  const normalizedParams = params ? {
+    ...params,
+    // Remover parâmetros undefined/null
+    ...(Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null && value !== '')
+    ))
+  } : {};
+
   return useQuery({
-    queryKey: leadKeys.list(params || {}),
-    queryFn: () => apiClient.getLeads(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: leadKeys.list(normalizedParams),
+    queryFn: () => apiClient.getLeads(normalizedParams),
+    retry: (failureCount, error) => {
+      // Só retry em erros de rede, não em erros de cliente (4xx)
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = error.status as number;
+        if (status >= 400 && status < 500) {
+          return false; // Não retry em erros 4xx
+        }
+      }
+      return failureCount < 2; // Máximo 2 retries
+    },
+    retryDelay: 1000, // Delay fixo de 1s
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnMount: false, // Não refetch ao montar se ainda não expirou
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 

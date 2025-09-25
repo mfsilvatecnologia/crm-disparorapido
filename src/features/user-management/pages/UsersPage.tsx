@@ -449,7 +449,7 @@ export default function UsersPage() {
                   <SelectValue placeholder="Filtrar por função" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as funções</SelectItem>
+                  <SelectItem value="all">Todas as funções</SelectItem>
                   {Object.entries(roleLabels).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}

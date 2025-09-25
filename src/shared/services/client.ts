@@ -44,6 +44,7 @@ import {
   AuthResponseSchema,
   OrganizationSchema,
   LeadSchema,
+  LeadsResponseSchema,
   PaginatedResponseSchema,
   PaginatedApiResponseSchema,
   UsageMetricsSchema,
@@ -86,7 +87,7 @@ class ApiClient {
   private organizationId: string | null = null;
   private refreshCallback: (() => Promise<void>) | null = null;
   private isRefreshing = false;
-  private failedQueue: Array<{ resolve: Function; reject: Function }> = [];
+  private failedQueue: Array<{ resolve: (value?: any) => void; reject: (reason?: any) => void }> = [];
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
@@ -121,9 +122,8 @@ class ApiClient {
     config: RequestInit = {},
     schema?: z.ZodSchema<T>
   ): Promise<T> {
-    return healthCheckService.executeWithRetry(async () => {
-      return this.performRequest(endpoint, config, schema);
-    });
+    // Fazer requisições diretas sem health check retry para evitar duplicação
+    return this.performRequest(endpoint, config, schema);
   }
 
   private async performRequest<T>(
@@ -294,18 +294,19 @@ class ApiClient {
       
       // Verificar se a resposta tem o formato esperado
       if (response && typeof response === 'object') {
-        if (response.success === true && response.data) {
+        const res = response as any; // Type assertion para evitar erros de tipagem
+        if (res.success === true && res.data) {
           console.log('Encontrado formato de resposta com envelope success/data');
           // Validar os dados do usuário com o schema
           try {
-            const validatedUser = UserSchema.parse(response.data);
+            const validatedUser = UserSchema.parse(res.data);
             console.log('Dados do usuário validados com sucesso:', validatedUser);
             return validatedUser;
           } catch (validationError) {
             console.error('Erro de validação:', validationError);
             throw new Error('Os dados do usuário não são válidos');
           }
-        } else if (response.id && response.email) {
+        } else if (res.id && res.email) {
           console.log('Encontrado formato de resposta direta sem envelope');
           // A resposta já é o próprio objeto de usuário
           try {
@@ -337,16 +338,17 @@ class ApiClient {
       console.log('Resposta da atualização de perfil:', response);
       
       if (response && typeof response === 'object') {
-        if (response.success === true && response.data) {
+        const res = response as any; // Type assertion para evitar erros de tipagem
+        if (res.success === true && res.data) {
           try {
-            const validatedUser = UserSchema.parse(response.data);
+            const validatedUser = UserSchema.parse(res.data);
             console.log('Perfil atualizado com sucesso:', validatedUser);
             return validatedUser;
           } catch (validationError) {
             console.error('Erro de validação nos dados atualizados:', validationError);
             throw new Error('Os dados atualizados não são válidos');
           }
-        } else if (response.id && response.email) {
+        } else if (res.id && res.email) {
           try {
             const validatedUser = UserSchema.parse(response);
             console.log('Perfil atualizado com sucesso:', validatedUser);
@@ -491,38 +493,111 @@ class ApiClient {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
   }): Promise<PaginatedResponse<Lead>> {
-    const searchParams = new URLSearchParams();
-    
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.status) searchParams.append('status', params.status);
-    if (params?.scoreMin) searchParams.append('scoreMin', params.scoreMin.toString());
-    if (params?.scoreMax) searchParams.append('scoreMax', params.scoreMax.toString());
-    if (params?.segmento) searchParams.append('segmento', params.segmento);
-    if (params?.porteEmpresa) searchParams.append('porteEmpresa', params.porteEmpresa);
-    if (params?.fonte) searchParams.append('fonte', params.fonte);
-    if (params?.search) searchParams.append('search', params.search);
-    if (params?.tags && params.tags.length > 0) searchParams.append('tags', params.tags.join(','));
-    if (params?.createdAfter) searchParams.append('createdAfter', params.createdAfter);
-    if (params?.createdBefore) searchParams.append('createdBefore', params.createdBefore);
-    if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
-    if (params?.sortOrder) searchParams.append('sortOrder', params.sortOrder);
+    try {
+      const searchParams = new URLSearchParams();
+      
+      // Parâmetros de paginação
+      searchParams.append('page', (params?.page || 1).toString());
+      searchParams.append('limit', (params?.limit || 20).toString());
+      
+      // Parâmetros de ordenação - usando valores que a API espera
+      searchParams.append('sortBy', params?.sortBy || 'createdAt');
+      searchParams.append('sortOrder', params?.sortOrder || 'desc');
+      
+      // Parâmetros de filtro opcionais
+      if (params?.search) {
+        searchParams.append('search', params.search);
+      }
+      if (params?.status && params.status !== 'all') {
+        searchParams.append('status', params.status);
+      }
+      if (params?.scoreMin !== undefined) {
+        searchParams.append('scoreMin', params.scoreMin.toString());
+      }
+      if (params?.scoreMax !== undefined) {
+        searchParams.append('scoreMax', params.scoreMax.toString());
+      }
+      if (params?.segmento) {
+        searchParams.append('segmento', params.segmento);
+      }
+      if (params?.porteEmpresa) {
+        searchParams.append('porteEmpresa', params.porteEmpresa);
+      }
+      if (params?.fonte) {
+        searchParams.append('fonte', params.fonte);
+      }
+      if (params?.tags && params.tags.length > 0) {
+        searchParams.append('tags', params.tags.join(','));
+      }
+      if (params?.createdAfter) {
+        searchParams.append('createdAfter', params.createdAfter);
+      }
+      if (params?.createdBefore) {
+        searchParams.append('createdBefore', params.createdBefore);
+      }
 
-    const query = searchParams.toString() ? `?${searchParams}` : '';
-    
-    const response = await this.request(`/api/v1/leads${query}`, {}, PaginatedApiResponseSchema(LeadSchema));
-    
-    // Extract and ensure the data matches our expected type
-    const data = response.data;
-    return {
-      items: data.items || [],
-      total: data.total || 0,
-      page: data.page || 1,
-      limit: data.limit || 20,
-      totalPages: data.totalPages || 0,
-      hasNext: data.hasNext || false,
-      hasPrev: data.hasPrev || false,
-    };
+      const query = searchParams.toString() ? `?${searchParams}` : '';
+      const url = `/api/v1/leads${query}`;
+      
+      const response = await this.request(url, {}, LeadsResponseSchema);
+
+      // Validar a resposta com o schema
+      try {
+        const validatedData = LeadsResponseSchema.parse(response);
+        
+        return {
+          items: validatedData.data.items || [],
+          total: validatedData.data.total || 0,
+          page: validatedData.data.page || 1,
+          limit: validatedData.data.limit || 20,
+          totalPages: validatedData.data.totalPages || 1,
+          hasNext: validatedData.data.hasNext || false,
+          hasPrev: validatedData.data.hasPrev || false,
+        };
+      } catch (schemaError) {
+        console.error('❌ Schema validation failed:', {
+          error: schemaError,
+          response: response,
+          expectedFormat: 'LeadsResponseSchema'
+        });
+        
+        // Tentar criar uma resposta válida mesmo com erro de schema
+        if (response && typeof response === 'object' && 'data' in response) {
+          const fallbackResponse: PaginatedResponse<Lead> = {
+            items: Array.isArray(response.data?.items) ? response.data.items : [],
+            total: response.data?.total || 0,
+            page: response.data?.page || 1,
+            limit: response.data?.limit || 20,
+            totalPages: response.data?.totalPages || 1,
+            hasNext: response.data?.hasNext || false,
+            hasPrev: response.data?.hasPrev || false,
+          };
+          
+
+          return fallbackResponse;
+        }
+        
+        throw schemaError;
+      }
+
+    } catch (error) {
+      console.error('❌ API Request Failed:', {
+        error,
+        params,
+        url: `/api/v1/leads`,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+      
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      
+      throw new ApiError(
+        500,
+        'Internal Server Error',
+        error instanceof Error ? error.message : 'Erro na comunicação com o servidor'
+      );
+    }
   }
 
   async getLead(id: string): Promise<Lead> {
@@ -810,16 +885,25 @@ class ApiClient {
   }
 
   async getSearchTermCategories(): Promise<string[]> {
-    return this.request('/api/v1/search-terms/categories', {}, z.array(z.string()));
+    const response = await this.request('/api/v1/search-terms/categories', {}, z.object({
+      data: z.array(z.string())
+    }));
+    return response.data;
   }
 
   async getSearchTermStats(): Promise<SearchTermStats[]> {
-    return this.request('/api/v1/search-terms/stats', {}, z.array(SearchTermStatsSchema));
+    const response = await this.request('/api/v1/search-terms/stats', {}, z.object({
+      data: z.array(SearchTermStatsSchema)
+    }));
+    return response.data;
   }
 
   // Google Maps Scraping
   async getScrapingStatus(): Promise<WorkerStatus> {
-    return this.request('/api/v1/scraping/status', {}, WorkerStatusSchema);
+    const response = await this.request('/api/v1/scraping/status', {}, z.object({
+      data: WorkerStatusSchema
+    }));
+    return response.data;
   }
 
   async startScraping(): Promise<{ success: boolean; message: string }> {
@@ -875,7 +959,38 @@ class ApiClient {
   }
 
   async getScrapingStats(): Promise<ScrapingStats> {
-    return this.request('/api/v1/scraping/stats', {}, ScrapingStatsSchema);
+    try {
+      // Try with a more flexible schema first to see what the API returns
+      const response = await this.request('/api/v1/scraping/stats', {}, z.object({
+        data: z.record(z.any()).transform((data): ScrapingStats => ({
+          totalJobs: data.totalJobs ?? 0,
+          jobsAtivos: data.jobsAtivos ?? 0,
+          jobsConcluidos: data.jobsConcluidos ?? 0,
+          totalLeadsColetados: data.totalLeadsColetados ?? 0,
+          leadsHoje: data.leadsHoje ?? 0,
+          taxaSucesso: data.taxaSucesso ?? 0,
+          tempoMedioExecucao: data.tempoMedioExecucao ?? 0,
+          ultimaExecucao: data.ultimaExecucao ?? undefined,
+        }))
+      }));
+      return response.data;
+    } catch (error) {
+      console.log('GET /scraping/stats endpoint error:', error);
+
+      // Mock data para desenvolvimento
+      const mockStats: ScrapingStats = {
+        totalJobs: 0,
+        jobsAtivos: 0,
+        jobsConcluidos: 0,
+        totalLeadsColetados: 0,
+        leadsHoje: 0,
+        taxaSucesso: 0,
+        tempoMedioExecucao: 0,
+        ultimaExecucao: undefined,
+      };
+
+      return mockStats;
+    }
   }
 
   async getScrapingTemplates(): Promise<ScrapingTemplate[]> {

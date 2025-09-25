@@ -1,394 +1,235 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Building2,
-  Target,
-  DollarSign,
-  ArrowUpRight,
-  ArrowDownRight,
-  Loader2,
-  PieChart,
-  Filter,
-  Calendar,
-  Download
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Badge } from '@/shared/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import { Badge } from '@/shared/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
-import { Progress } from '@/shared/components/ui/progress';
-import { LoadingState } from '@/shared/components/common/LoadingState';
-import { ErrorState } from '@/shared/components/common/ErrorState';
-import { EmptyState } from '@/shared/components/common/EmptyState';
-import { useToast } from '@/shared/hooks/use-toast';
-import { apiClient } from '@/shared/services/client';
-import type { Segment, SegmentStats } from '@/shared/services/schemas';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/shared/components/ui/dialog';
+import { Users, Plus, TrendingUp, Target, Activity, Layers } from 'lucide-react';
+import { SegmentList, SegmentBuilder } from '../components';
+import { useSegmentStats } from '../hooks/useSegments';
+import { Segment } from '../types/segments';
 
-export default function SegmentosPage() {
-  const { toast } = useToast();
-  const [timeRange, setTimeRange] = useState('30d');
-  const [sortBy, setSortBy] = useState('totalEmpresas');
+const SegmentosPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('lista');
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [editingSegment, setEditingSegment] = useState<Segment | undefined>();
 
-  // Fetch segments
-  const { data: segments, isLoading: segmentsLoading, error: segmentsError } = useQuery({
-    queryKey: ['segments', timeRange],
-    queryFn: () => apiClient.getSegments({ timeRange }),
-  });
+  const { data: stats, isLoading: statsLoading } = useSegmentStats();
 
-  // Fetch segment stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['segments', 'stats', timeRange],
-    queryFn: () => apiClient.getSegmentStats({ timeRange }),
-  });
-
-  const isLoading = segmentsLoading || statsLoading;
-
-  if (isLoading) {
-    return <LoadingState message="Carregando análise de segmentos..." />;
-  }
-
-  if (segmentsError) {
-    return (
-      <ErrorState 
-        title="Erro ao carregar segmentos"
-        message="Não foi possível carregar a análise de segmentos"
-      />
-    );
-  }
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
+  const handleCreateSegment = () => {
+    setEditingSegment(undefined);
+    setShowBuilder(true);
   };
 
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('pt-BR').format(value);
+  const handleEditSegment = (segment: Segment) => {
+    setEditingSegment(segment);
+    setShowBuilder(true);
   };
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
+  const handleCloseBuilder = () => {
+    setShowBuilder(false);
+    setEditingSegment(undefined);
   };
 
-  const sortedSegments = segments ? [...segments].sort((a, b) => {
-    switch (sortBy) {
-      case 'totalEmpresas':
-        return b.totalEmpresas - a.totalEmpresas;
-      case 'taxaConversao':
-        return b.taxaConversao - a.taxaConversao;
-      case 'crescimentoMensal':
-        return (b.crescimentoMensal || 0) - (a.crescimentoMensal || 0);
-      case 'valorMedio':
-        return (b.valorMedio || 0) - (a.valorMedio || 0);
+  const handleSaveSegment = (segmentData: any) => {
+    console.log('Salvando segmento:', segmentData);
+    setShowBuilder(false);
+    setEditingSegment(undefined);
+  };
+
+  const getTipoIcon = (tipo: string) => {
+    switch (tipo) {
+      case 'demografico':
+        return <Users className="h-4 w-4" />;
+      case 'comportamental':
+        return <Activity className="h-4 w-4" />;
+      case 'geografico':
+        return <Target className="h-4 w-4" />;
+      case 'psicografico':
+        return <TrendingUp className="h-4 w-4" />;
       default:
-        return 0;
+        return <Layers className="h-4 w-4" />;
     }
-  }) : [];
+  };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-8 w-8" />
-            Análise por Segmentos
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Segmentação de Leads</h1>
           <p className="text-muted-foreground">
-            Análise detalhada do desempenho por segmento de mercado
+            Organize e categorize seus leads para campanhas mais eficazes
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">7 dias</SelectItem>
-              <SelectItem value="30d">30 dias</SelectItem>
-              <SelectItem value="90d">90 dias</SelectItem>
-              <SelectItem value="1y">1 ano</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Exportar
-          </Button>
-        </div>
+        <Button onClick={handleCreateSegment}>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Segmento
+        </Button>
       </div>
 
-      {/* Stats Overview */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Estatísticas rápidas */}
+      {!statsLoading && stats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total de Segmentos</p>
-                  <p className="text-2xl font-bold">{stats.totalSegmentos}</p>
-                </div>
-                <PieChart className="h-8 w-8 text-muted-foreground" />
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Segmentos</CardTitle>
+              <Layers className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalSegmentos}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.segmentosAtivos} ativos
+              </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Empresas Segmentadas</p>
-                  <p className="text-2xl font-bold">{formatNumber(stats.totalEmpresasSegmentadas)}</p>
-                </div>
-                <Building2 className="h-8 w-8 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Leads Segmentados</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats.totalLeadsSegmentados.toLocaleString('pt-BR')}
               </div>
+              <p className="text-xs text-muted-foreference">
+                Organizados em segmentos
+              </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Taxa Conversão Geral</p>
-                  <p className="text-2xl font-bold">{formatPercentage(stats.taxaConversaoGeral)}</p>
-                </div>
-                <Target className="h-8 w-8 text-muted-foreground" />
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tipos de Segmento</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.distribuicaoPorTipo.length}</div>
+              <p className="text-xs text-muted-foreground">
+                Diferentes categorias
+              </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Faturamento Total</p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.faturamentoTotal)}</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Mais Utilizado</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats.segmentosMaisUtilizados[0]?.contadorLeads.toLocaleString('pt-BR') || '0'}
               </div>
+              <p className="text-xs text-muted-foreground truncate">
+                {stats.segmentosMaisUtilizados[0]?.nome || 'Nenhum segmento'}
+              </p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Top Performers */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Segmento Mais Lucrativo
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  {stats.segmentoMaisLucrativo || 'N/A'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ArrowUpRight className="h-5 w-5" />
-                Maior Crescimento
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  {stats.segmentoMaisCrescimento || 'N/A'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Distribuição por tipo */}
+      {!statsLoading && stats && stats.distribuicaoPorTipo.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Distribuição por Tipo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {stats.distribuicaoPorTipo.map((item) => (
+                <div key={item.tipo} className="flex items-center gap-2">
+                  {getTipoIcon(item.tipo)}
+                  <span className="text-sm font-medium capitalize">{item.tipo}</span>
+                  <Badge variant="secondary">{item.quantidade}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Main Content */}
-      <Tabs defaultValue="segments" className="w-full">
+      {/* Conteúdo principal */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
-          <TabsTrigger value="segments">Desempenho por Segmento</TabsTrigger>
-          <TabsTrigger value="distribution">Distribuição</TabsTrigger>
+          <TabsTrigger value="lista">Lista de Segmentos</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="segments" className="space-y-6">
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Filtros e Ordenação</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Ordenar por:</span>
-                </div>
-                
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="totalEmpresas">Total de Empresas</SelectItem>
-                    <SelectItem value="taxaConversao">Taxa de Conversão</SelectItem>
-                    <SelectItem value="crescimentoMensal">Crescimento Mensal</SelectItem>
-                    <SelectItem value="valorMedio">Valor Médio</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Segments List */}
-          <div className="grid grid-cols-1 gap-4">
-            {sortedSegments.map((segment) => (
-              <Card key={segment.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{segment.nome}</CardTitle>
-                      {segment.descricao && (
-                        <CardDescription>{segment.descricao}</CardDescription>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {segment.crescimentoMensal !== undefined && (
-                        <Badge 
-                          variant={segment.crescimentoMensal >= 0 ? "default" : "destructive"}
-                          className="flex items-center gap-1"
-                        >
-                          {segment.crescimentoMensal >= 0 ? (
-                            <ArrowUpRight className="h-3 w-3" />
-                          ) : (
-                            <ArrowDownRight className="h-3 w-3" />
-                          )}
-                          {formatPercentage(Math.abs(segment.crescimentoMensal))}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Metrics Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Empresas</p>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-blue-500" />
-                        <span className="font-semibold">{formatNumber(segment.totalEmpresas)}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {segment.empresasAtivas} ativas
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">Leads</p>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-green-500" />
-                        <span className="font-semibold">{formatNumber(segment.totalLeads)}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {segment.leadsQualificados} qualificados
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">Taxa Conversão</p>
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-orange-500" />
-                        <span className="font-semibold">{formatPercentage(segment.taxaConversao)}</span>
-                      </div>
-                      <Progress value={segment.taxaConversao} className="h-1 mt-1" />
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">Valor Médio</p>
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-purple-500" />
-                        <span className="font-semibold">
-                          {segment.valorMedio ? formatCurrency(segment.valorMedio) : 'N/A'}
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {segment.oportunidadesAbertas} oportunidades
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Performance Bar */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Performance Geral</span>
-                      <span className="font-medium">
-                        {Math.round((segment.taxaConversao + (segment.crescimentoMensal || 0) + 10) / 3)}%
-                      </span>
-                    </div>
-                    <Progress 
-                      value={Math.round((segment.taxaConversao + (segment.crescimentoMensal || 0) + 10) / 3)} 
-                      className="h-2" 
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {(!segments || segments.length === 0) && (
-            <EmptyState
-              icon={BarChart3}
-              title="Nenhum segmento encontrado"
-              description="Os dados de segmentos aparecerão aqui conforme as empresas forem categorizadas."
-            />
-          )}
+        <TabsContent value="lista" className="space-y-6">
+          <SegmentList
+            onCreateSegment={handleCreateSegment}
+            onEditSegment={handleEditSegment}
+            onDuplicateSegment={(segment) => {
+              // Implementar duplicação
+              console.log('Duplicando segmento:', segment);
+            }}
+            onViewSegmentLeads={(segment) => {
+              // Implementar visualização de leads
+              console.log('Visualizando leads do segmento:', segment);
+            }}
+            onViewSegmentAnalytics={(segment) => {
+              // Implementar analytics do segmento
+              console.log('Analytics do segmento:', segment);
+            }}
+            onExportSegment={(segment) => {
+              // Implementar exportação
+              console.log('Exportando segmento:', segment);
+            }}
+          />
         </TabsContent>
 
-        <TabsContent value="distribution" className="space-y-6">
+        <TabsContent value="analytics" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Distribuição por Segmento</CardTitle>
-              <CardDescription>
-                Visualize como suas empresas e leads estão distribuídos entre os segmentos
-              </CardDescription>
+              <CardTitle>Analytics de Segmentação</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Análises detalhadas sobre performance dos segmentos
+              </p>
             </CardHeader>
             <CardContent>
-              {stats?.distribuicaoPorSegmento ? (
-                <div className="space-y-4">
-                  {stats.distribuicaoPorSegmento.map((item, index) => (
-                    <div key={item.segmento} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">{item.segmento}</span>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{formatNumber(item.empresas)} empresas</span>
-                          <span>{formatNumber(item.leads)} leads</span>
-                          <span className="font-medium">{formatPercentage(item.percentual)}</span>
-                        </div>
-                      </div>
-                      <Progress value={item.percentual} className="h-2" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  icon={PieChart}
-                  title="Dados de distribuição não disponíveis"
-                  description="Os dados de distribuição aparecerão conforme mais dados forem coletados."
-                />
-              )}
+              <div className="text-center py-12">
+                <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Analytics em Desenvolvimento</h3>
+                <p className="text-muted-foreground">
+                  As análises detalhadas de performance dos segmentos estarão disponíveis em breve.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog do Segment Builder */}
+      <Dialog open={showBuilder} onOpenChange={setShowBuilder}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingSegment ? 'Editar Segmento' : 'Criar Novo Segmento'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingSegment
+                ? 'Modifique as configurações do segmento abaixo.'
+                : 'Defina as condições e configurações para seu novo segmento de leads.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          <SegmentBuilder
+            segment={editingSegment}
+            onSave={handleSaveSegment}
+            onCancel={handleCloseBuilder}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
+};
+
+export default SegmentosPage;

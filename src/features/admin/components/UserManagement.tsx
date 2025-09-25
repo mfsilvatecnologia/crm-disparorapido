@@ -2,9 +2,9 @@
 // Admin interface for managing users and their roles
 
 import React, { useState } from 'react'
-import { usePermissions } from '@/shared/hooks/usePermissions'
+import { usePermissions } from '@/features/authentication'
 import { RoleSelector } from '@/features/authentication/components/RoleSelector'
-import { updateUserRole } from "@/shared/services/users"
+import { updateUserRole } from "@/features/authentication/services/users"
 import { useAuth } from '@/shared/contexts/AuthContext'
 
 interface User {

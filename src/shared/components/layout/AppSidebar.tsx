@@ -15,7 +15,9 @@ import {
   Activity,
   Search,
   Map,
-  User
+  User,
+  Target,
+  Mail
 } from 'lucide-react';
 import {
   Sidebar,
@@ -51,16 +53,22 @@ const navigationItems = [
     description: 'Gestão de empresas'
   },
   {
-    title: 'Workers',
-    url: '/app/workers',
-    icon: Activity,
-    description: 'Monitorar workers e jobs'
+    title: 'Campanhas',
+    url: '/app/campanhas',
+    icon: Target,
+    description: 'Marketing automation e campanhas'
   },
   {
-    title: 'Termos de Busca',
-    url: '/app/search-terms',
-    icon: Search,
-    description: 'Gerenciar termos para scraping'
+    title: 'Pipeline',
+    url: '/app/pipeline',
+    icon: Kanban,
+    description: 'Funil de vendas'
+  },
+  {
+    title: 'Segmentos',
+    url: '/app/segments',
+    icon: BarChart3,
+    description: 'Análise e segmentação'
   },
   {
     title: 'Scraping',
@@ -69,16 +77,16 @@ const navigationItems = [
     description: 'Jobs de coleta Google Maps'
   },
   {
-    title: 'Segmentos',
-    url: '/app/segments',
-    icon: BarChart3,
-    description: 'Análise por segmento' 
+    title: 'Termos de Busca',
+    url: '/app/search-terms',
+    icon: Search,
+    description: 'Gerenciar termos para scraping'
   },
   {
-    title: 'Pipeline',
-    url: '/app/pipeline',
-    icon: Kanban,
-    description: 'Funil de vendas'
+    title: 'Workers',
+    url: '/app/workers',
+    icon: Activity,
+    description: 'Monitorar workers e jobs'
   },
   {
     title: 'Ferramentas',

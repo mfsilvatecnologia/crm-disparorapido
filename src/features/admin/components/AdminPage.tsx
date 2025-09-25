@@ -1,6 +1,6 @@
 // AdminPage Component - Main admin interface with tabbed navigation
 import React, { useState } from 'react'
-import { usePermissions } from '@/shared/hooks/usePermissions'
+import { usePermissions } from '@/features/authentication'
 import { UserManagement } from './UserManagement'
 import { RoleManagement } from './RoleManagement'
 import { SessionManagement } from './SessionManagement'

@@ -3,8 +3,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getOrCreateDeviceId, getDeviceFingerprint } from '../utils/device'
-import { getCurrentSession } from '../services/sessions'
+import { getOrCreateDeviceId, getDeviceFingerprint } from '@/shared/utils/device'
+import { getCurrentSession } from '@/features/authentication/services/sessions'
 import type { SessionContext as SessionContextType, UserSession } from '../types'
 
 const SessionContext = createContext<SessionContextType | null>(null)

@@ -1,7 +1,7 @@
 // Audit API Client
 // Handles audit log API calls to the REST backend
 
-import { getOrCreateDeviceId } from '../utils/device'
+import { getOrCreateDeviceId } from '@/shared/utils/device'
 import type {
   AuditLogsResponse,
   AuditLogRequest

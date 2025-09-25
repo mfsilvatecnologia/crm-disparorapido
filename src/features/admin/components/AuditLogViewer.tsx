@@ -1,6 +1,6 @@
 // AuditLogViewer Component - Admin interface for viewing audit logs
 import React, { useState, useMemo } from 'react'
-import { useAudit } from '@/shared/hooks/useAudit'
+import { useAudit } from '@/features/admin'
 
 const ACTION_TYPES = [
   { value: '', label: 'Todas as ações' },

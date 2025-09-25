@@ -43,9 +43,15 @@ export function useWorkerMonitor() {
         ...prev,
         isConnected: connected,
         isLoading: false,
-        error: connected ? null : 'Falha ao conectar com Supabase'
+        error: connected ? null : null // Sem erro se não conectado - é opcional
       }));
     });
+
+    // Cleanup na desmontagem
+    return () => {
+      console.log('🧹 Limpando serviço realtime...');
+      service.cleanup();
+    };
   }, []);
 
   // Handlers para atualizações
@@ -68,19 +74,51 @@ export function useWorkerMonitor() {
 
   // Iniciar monitoramento
   const startMonitoring = useCallback(() => {
-    if (!realtimeService) return;
+    if (!realtimeService) {
+      return;
+    }
+
+    if (!state.isConnected) {
+      console.log('ℹ️ Monitoramento realtime não disponível - Supabase offline');
+      return;
+    }
 
     console.log('🚀 Iniciando monitoramento de workers...');
 
-    const unsubscribeWorkers = realtimeService.subscribeToWorkerStatus(handleWorkerUpdate);
-    const unsubscribeJobs = realtimeService.subscribeToScrapingJobUpdates(handleJobUpdate);
+    let isActive = true;
+    let unsubscribeWorkers: (() => void) | null = null;
+    let unsubscribeJobs: (() => void) | null = null;
+
+    // Aguardar um pouco para garantir que a conexão está estável
+    const timer = setTimeout(() => {
+      if (isActive) {
+        unsubscribeWorkers = realtimeService.subscribeToWorkerStatus(handleWorkerUpdate);
+        unsubscribeJobs = realtimeService.subscribeToScrapingJobUpdates(handleJobUpdate);
+      }
+    }, 100);
 
     return () => {
+      isActive = false;
+      clearTimeout(timer);
       console.log('🛑 Parando monitoramento de workers...');
-      unsubscribeWorkers();
-      unsubscribeJobs();
+
+      if (unsubscribeWorkers) {
+        try {
+          unsubscribeWorkers();
+        } catch (error) {
+          console.warn('⚠️ Erro ao cancelar inscrição de workers:', error);
+        }
+      }
+
+      if (unsubscribeJobs) {
+        try {
+          unsubscribeJobs();
+        } catch (error) {
+          console.warn('⚠️ Erro ao cancelar inscrição de jobs:', error);
+        }
+      }
     };
-  }, [realtimeService, handleWorkerUpdate, handleJobUpdate]);
+  }, [realtimeService, handleWorkerUpdate, handleJobUpdate, state.isConnected]);
 
   // Parar monitoramento
   const stopMonitoring = useCallback(() => {

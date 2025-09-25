@@ -26,6 +26,10 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchIntervalInBackground: false,
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      gcTime: 10 * 60 * 1000, // 10 minutos (era cacheTime)
     },
   },
 });
@@ -70,6 +74,7 @@ function AppRoutes() {
         <Route path="search-terms" element={<SearchTermsPage />} />
         <Route path="scraping" element={<ScrapingPage />} />
         <Route path="empresas" element={<EmpresasPage />} />
+        <Route path="campanhas" element={<CampanhasPage />} />
         <Route path="segments" element={<SegmentosPage />} />
         <Route path="pipeline" element={<PipelinePage />} />
         <Route path="sales-tools" element={<div className="p-6">Ferramentas de Vendas - Em desenvolvimento</div>} />

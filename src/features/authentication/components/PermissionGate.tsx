@@ -2,7 +2,7 @@
 // Conditionally renders children based on permissions or roles
 
 import React from 'react'
-import { usePermissions } from '../../../shared/hooks/usePermissions'
+import { usePermissions } from '@/features/authentication'
 
 interface PermissionGateProps {
   permission?: string

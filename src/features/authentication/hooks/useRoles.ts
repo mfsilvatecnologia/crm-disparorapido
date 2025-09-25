@@ -2,8 +2,8 @@
 // Manages role data with React Query caching
 
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '../contexts/AuthContext'
-import { fetchRoles, createRole } from "@/shared/services/roles"
+import { useAuth } from '@/shared/contexts/AuthContext'
+import { fetchRoles, createRole } from "../services/roles"
 import type { Role, PermissionSet } from '../types/auth'
 
 export function useRoles() {

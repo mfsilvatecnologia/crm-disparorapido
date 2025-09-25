@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '../../shared/contexts/AuthContext'
-import { usePermissions } from '../../shared/hooks/usePermissions'
+import { usePermissions } from '@/features/authentication'
 
 function CacheTestComponent() {
   const { permissions, isLoading, refreshPermissions } = usePermissions()

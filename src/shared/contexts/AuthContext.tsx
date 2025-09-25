@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from './SessionContext';
-import { getOrCreateDeviceId, getDeviceFingerprint, clearDeviceData } from '../utils/device';
+import { getOrCreateDeviceId, getDeviceFingerprint, clearDeviceData } from '@/shared/utils/device';
 import type { User, ComputedPermissions, LoginCredentials, ClientType } from '../types';
 import apiClient from '../services/client';
 import { fetchUserPermissions } from '../../features/authentication/services/permissions';

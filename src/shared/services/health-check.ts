@@ -38,15 +38,18 @@ class HealthCheckService {
   /**
    * Start periodic health checks
    */
-  startHealthCheck(intervalMs: number = 30000) {
+  startHealthCheck(intervalMs: number = 60000) { // Increased from 30s to 60s
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
     }
 
-    // Initial check
-    this.performHealthCheck();
+    // Initial check (only if not recently checked)
+    const timeSinceLastCheck = Date.now() - this.healthStatus.lastCheck.getTime();
+    if (timeSinceLastCheck > 30000) { // Only if last check was >30s ago
+      this.performHealthCheck();
+    }
 
-    // Periodic checks
+    // Periodic checks (less frequent)
     this.checkInterval = setInterval(() => {
       this.performHealthCheck();
     }, intervalMs);

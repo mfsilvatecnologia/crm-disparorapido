@@ -64,44 +64,15 @@ import { useLeads } from '../hooks/useLeads';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { formatCurrency } from '@/shared/utils/utils';
 import { AdvancedPagination } from '@/shared/components/common/AdvancedPagination';
+import { LeadDetailsDialog } from '../components/LeadDetailsDialog';
+import { LeadEditDialog } from '../components/LeadEditDialog';
+import type { Lead } from '@/shared/services/schemas';
 
 type ViewMode = 'table' | 'cards' | 'kanban';
 type FilterStatus = 'all' | 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado';
 
-interface LeadData {
-  id: string;
-  empresaId?: string;
-  nomeEmpresa: string;
-  nomeContato: string;
-  cargoContato?: string;
-  email?: string;
-  telefone?: string;
-  linkedinUrl?: string;
-  siteEmpresa?: string;
-  cnpj?: string;
-  segmento?: string;
-  porteEmpresa?: string;
-  numFuncionarios?: number;
-  receitaAnualEstimada?: number;
-  endereco?: {
-    rua?: string;
-    numero?: string;
-    cidade?: string;
-    estado?: string;
-    cep?: string;
-    pais?: string;
-    latitude?: number | null;
-    longitude?: number | null;
-  };
-  status?: 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado';
-  scoreQualificacao?: number;
-  tags?: string[];
-  observacoes?: string | null;
-  fonte?: string;
-  dadosOriginais?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-}
+// Usar o tipo Lead da API diretamente
+type LeadData = Lead;
 
 export default function LeadsPage() {
   const { currentOrganization } = useOrganization();
@@ -115,6 +86,11 @@ export default function LeadsPage() {
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // Estados para dialogs
+  const [showLeadDetails, setShowLeadDetails] = useState(false);
+  const [showEditLead, setShowEditLead] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,7 +113,16 @@ export default function LeadsPage() {
   // Use dados reais da API diretamente
   const allLeads: LeadData[] = realLeads;
 
-  console.log('LeadsPage - Dados carregados:', { realLeads, allLeads, isLoading, error });
+  console.log('LeadsPage - Dados carregados:', { 
+    realLeads, 
+    leadsData, 
+    isLoading, 
+    error: error ? {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      status: error && typeof error === 'object' && 'status' in error ? error.status : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined
+    } : null 
+  });
 
   // Para dados da API, use os metadados de paginação retornados
   const isUsingApiData = realLeads.length > 0;
@@ -161,12 +146,12 @@ export default function LeadsPage() {
     // Filtro de busca (usando campos da API)
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
-        lead.nomeContato?.toLowerCase().includes(searchLower) ||
-        lead.nomeEmpresa?.toLowerCase().includes(searchLower) ||
-        lead.email?.toLowerCase().includes(searchLower) ||
-        lead.cargoContato?.toLowerCase().includes(searchLower) ||
-        lead.segmento?.toLowerCase().includes(searchLower);
+      const matchesSearch =
+        (lead.nomeContato && lead.nomeContato.toLowerCase().includes(searchLower)) ||
+        (lead.nomeEmpresa && lead.nomeEmpresa.toLowerCase().includes(searchLower)) ||
+        (lead.email && lead.email.toLowerCase().includes(searchLower)) ||
+        (lead.cargoContato && lead.cargoContato.toLowerCase().includes(searchLower)) ||
+        (lead.segmento && lead.segmento.toLowerCase().includes(searchLower));
       if (!matchesSearch) return false;
     }
     
@@ -263,16 +248,16 @@ export default function LeadsPage() {
     const csvData = [
       ['Nome', 'Email', 'Telefone', 'Empresa', 'Cargo', 'Cidade', 'Estado', 'Segmento', 'Qualidade', 'Status', 'Fonte', 'Tags'],
       ...leadsToExport.map(lead => [
-        lead.nomeContato || '',
-        lead.email || '',
-        lead.telefone || '',
+        lead.nomeContato || 'Nome não informado',
+        lead.email || 'Email não informado',
+        lead.telefone || 'Telefone não informado',
         lead.nomeEmpresa || '',
-        lead.cargoContato || '',
+        lead.cargoContato || 'Cargo não informado',
         lead.endereco?.cidade || '',
         lead.endereco?.estado || '',
         lead.segmento || '',
         `${lead.scoreQualificacao || 0}%`,
-        getStatusLabel(lead.status),
+        getStatusLabel(lead.status || 'novo'),
         lead.fonte || '',
         lead.tags?.join('; ') || ''
       ])
@@ -304,6 +289,23 @@ export default function LeadsPage() {
     } else {
       setSelectedLeads([]);
     }
+  };
+
+  // Dialog handlers
+  const handleViewLead = (lead: Lead) => {
+    setSelectedLead(lead);
+    setShowLeadDetails(true);
+  };
+
+  const handleEditLead = (lead: Lead) => {
+    setSelectedLead(lead);
+    setShowEditLead(true);
+  };
+
+  const handleCloseDialogs = () => {
+    setShowLeadDetails(false);
+    setShowEditLead(false);
+    setSelectedLead(null);
   };
 
   const getQualityColor = (score: number) => {
@@ -382,6 +384,64 @@ export default function LeadsPage() {
       privado: allLeads.filter(l => l.status === 'privado').length,
     }
   };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <Card className="max-w-2xl mx-auto mt-8 border-red-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              ❌ Erro ao Carregar Leads
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-red-50 p-4 rounded-lg">
+              <p className="text-sm text-red-800 font-medium mb-2">
+                {error instanceof Error ? error.message : 'Erro desconhecido'}
+              </p>
+              {error && typeof error === 'object' && 'status' in error && (
+                <p className="text-xs text-red-600">
+                  Status: {error.status}
+                </p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-medium text-gray-900">Possíveis soluções:</h4>
+              <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                <li>Verifique se a API está rodando em http://localhost:3000</li>
+                <li>Confirme se você está autenticado</li>
+                <li>Verifique a conexão com a internet</li>
+                <li>Tente recarregar a página</li>
+              </ul>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+              >
+                🔄 Recarregar Página
+              </Button>
+              <Button 
+                onClick={() => {
+                  import('../../../shared/utils/debug-api').then(({ debugApiConnection }) => {
+                    debugApiConnection().then(result => {
+                      console.log('Debug result:', result);
+                      alert(`Debug result: ${JSON.stringify(result, null, 2)}`);
+                    });
+                  });
+                }}
+                variant="outline"
+              >
+                🔍 Debug API
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -846,8 +906,12 @@ export default function LeadsPage() {
               </TableHeader>
               <TableBody>
                 {paginatedLeads.map((lead) => (
-                  <TableRow key={lead.id} className="border-gray-100 hover:bg-gray-50">
-                    <TableCell>
+                  <TableRow
+                    key={lead.id}
+                    className="border-gray-100 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleViewLead(lead)}
+                  >
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedLeads.includes(lead.id)}
                         onCheckedChange={(checked) => handleSelectLead(lead.id, checked as boolean)}
@@ -856,15 +920,16 @@ export default function LeadsPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato}?size=32`} />
+                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=32`} />
                           <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
-                            {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
+                            {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() ||
+                             lead.nomeEmpresa?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'NN'}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-gray-900">{lead.nomeContato}</p>
-                          <p className="text-sm text-gray-500">{lead.cargoContato}</p>
-                          <p className="text-xs text-gray-400">{lead.email}</p>
+                          <p className="font-medium text-gray-900">{lead.nomeContato || 'Nome não informado'}</p>
+                          <p className="text-sm text-gray-500">{lead.cargoContato || 'Cargo não informado'}</p>
+                          <p className="text-xs text-gray-400">{lead.email || 'Email não informado'}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -963,20 +1028,25 @@ export default function LeadsPage() {
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {paginatedLeads.map((lead) => (
-                <Card key={lead.id} className="border-gray-200 hover:shadow-lg transition-all duration-200 hover:border-primary-300">
+                <Card
+                  key={lead.id}
+                  className="border-gray-200 hover:shadow-lg transition-all duration-200 hover:border-primary-300 cursor-pointer"
+                  onClick={() => handleViewLead(lead)}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato}?size=48`} />
+                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=48`} />
                           <AvatarFallback className="bg-primary-100 text-primary-700 text-sm">
-                            {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
+                            {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() ||
+                             lead.nomeEmpresa?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'NN'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{lead.nomeEmpresa}</h3>
-                          <p className="text-sm text-gray-600">{lead.nomeContato}</p>
-                          <p className="text-xs text-gray-500">{lead.cargoContato}</p>
+                          <p className="text-sm text-gray-600">{lead.nomeContato || 'Nome não informado'}</p>
+                          <p className="text-xs text-gray-500">{lead.cargoContato || 'Cargo não informado'}</p>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
@@ -1053,13 +1123,13 @@ export default function LeadsPage() {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {[
-                { id: 'novo', title: 'Novos', color: 'bg-blue-50 border-blue-200', count: stats.statusCounts.novo },
-                { id: 'qualificado', title: 'Qualificados', color: 'bg-green-50 border-green-200', count: stats.statusCounts.qualificado },
-                { id: 'contatado', title: 'Contatados', color: 'bg-yellow-50 border-yellow-200', count: stats.statusCounts.contatado },
-                { id: 'convertido', title: 'Convertidos', color: 'bg-purple-50 border-purple-200', count: stats.statusCounts.convertido },
-                { id: 'descartado', title: 'Descartados', color: 'bg-red-50 border-red-200', count: stats.statusCounts.descartado }
+                { id: 'novo', title: 'Novos', color: 'bg-blue-50 border-blue-200' },
+                { id: 'qualificado', title: 'Qualificados', color: 'bg-green-50 border-green-200' },
+                { id: 'contatado', title: 'Contatados', color: 'bg-yellow-50 border-yellow-200' },
+                { id: 'convertido', title: 'Convertidos', color: 'bg-purple-50 border-purple-200' },
+                { id: 'descartado', title: 'Descartados', color: 'bg-red-50 border-red-200' }
               ].map((column) => {
-                const columnLeads = sortedLeads.filter(lead => lead.status === column.id);
+                const columnLeads = sortedLeads.filter(lead => (lead.status || 'novo') === column.id);
                 return (
                   <div key={column.id} className={`rounded-lg border-2 ${column.color} p-4 min-h-96`}>
                     <div className="flex items-center justify-between mb-4">
@@ -1071,22 +1141,35 @@ export default function LeadsPage() {
                     
                     <div className="space-y-3">
                       {columnLeads.slice(0, 10).map((lead) => (
-                        <Card key={lead.id} className="border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+                        <Card
+                          key={lead.id}
+                          className="border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => handleViewLead(lead)}
+                        >
                           <CardContent className="p-3">
                             <div className="flex items-center gap-2 mb-2">
                               <Avatar className="h-6 w-6">
                                 <AvatarFallback className="text-xs bg-primary-100 text-primary-700">
-                                  {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'NN'}
+                                  {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() ||
+                                   lead.nomeEmpresa?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'NN'}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm font-medium truncate flex-1">{lead.nomeEmpresa}</span>
                             </div>
-                            <p className="text-xs text-gray-600 mb-2 truncate">{lead.nomeContato}</p>
+                            <p className="text-xs text-gray-600 mb-2 truncate">{lead.nomeContato || 'Nome não informado'}</p>
                             <div className="flex items-center justify-between">
                               <Badge variant="outline" className="text-xs">
                                 ⭐ {lead.scoreQualificacao}%
                               </Badge>
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditLead(lead);
+                                }}
+                              >
                                 <MoreVertical className="h-3 w-3" />
                               </Button>
                             </div>
@@ -1148,6 +1231,25 @@ export default function LeadsPage() {
           isLoading={isLoading}
         />
       )}
+
+      {/* Dialogs */}
+      <LeadDetailsDialog
+        lead={selectedLead}
+        open={showLeadDetails}
+        onClose={handleCloseDialogs}
+        onEdit={handleEditLead}
+      />
+
+      <LeadEditDialog
+        lead={selectedLead}
+        open={showEditLead}
+        onClose={handleCloseDialogs}
+        onSave={(updatedLead) => {
+          // TODO: Implement lead update API call
+          console.log('Lead updated:', updatedLead);
+          handleCloseDialogs();
+        }}
+      />
     </div>
   );
 }

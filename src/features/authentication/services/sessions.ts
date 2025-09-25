@@ -1,7 +1,7 @@
 // Sessions API Client
 // Handles session management API calls to the REST backend
 
-import { getOrCreateDeviceId } from '../utils/device'
+import { getOrCreateDeviceId } from '@/shared/utils/device'
 import type {
   CompanySessionsResponse,
   TerminateSessionRequest,

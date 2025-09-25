@@ -242,9 +242,17 @@ export default function SearchTermsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Queries
+  // Normalize filters to avoid unnecessary refetches
+  const normalizedFilters = {
+    page,
+    ...(search && search.trim() && { search: search.trim() }),
+    ...(categoriaFilter !== 'all' && { categoria: categoriaFilter }),
+    ...(ativoFilter !== 'all' && { ativo: ativoFilter === 'true' }),
+  };
+
+  // Queries with optimized caching
   const { data: searchTerms, isLoading } = useQuery({
-    queryKey: ['search-terms', { page, search, categoria: categoriaFilter, ativo: ativoFilter }],
+    queryKey: ['search-terms', normalizedFilters],
     queryFn: () => apiClient.getSearchTerms({
       page,
       limit: 20,
@@ -252,16 +260,28 @@ export default function SearchTermsPage() {
       categoria: categoriaFilter !== 'all' ? categoriaFilter : undefined,
       ativo: ativoFilter !== 'all' ? ativoFilter === 'true' : undefined,
     }),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   const { data: stats } = useQuery({
     queryKey: ['search-terms', 'stats'],
     queryFn: () => apiClient.getSearchTermStats(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   const { data: categorias } = useQuery({
     queryKey: ['search-terms', 'categories'],
     queryFn: () => apiClient.getSearchTermCategories(),
+    staleTime: 10 * 60 * 1000, // 10 minutes (categorias mudam raramente)
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // Mutations

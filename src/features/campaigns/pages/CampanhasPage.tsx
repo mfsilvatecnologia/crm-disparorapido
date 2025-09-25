@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Megaphone, 
-  Plus, 
-  Search, 
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Megaphone,
+  Plus,
+  Search,
   Filter,
   MoreHorizontal,
   Pencil,
@@ -25,7 +25,8 @@ import {
   TrendingUp,
   Clock,
   Target,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -40,47 +41,43 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { Progress } from '@/shared/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { useToast } from '@/shared/hooks/use-toast';
-import { LoadingState } from '@/shared/components/common/LoadingState';
-import { ErrorState } from '@/shared/components/common/ErrorState';
-import { EmptyState } from '@/shared/components/common/EmptyState';
-import { StatsGrid } from '@/shared/components/common/StatsCard';
-import { apiClient } from '@/shared/services/client';
-import type { Campanha, CampanhaStats, CreateCampanha, UpdateCampanha } from '@/shared/services/schemas';
+import { useCampaigns, useCampaignStats, useCreateCampaign } from '../hooks/useCampaigns';
+import type { Campaign, CampaignFilters } from '../types/campaigns';
 
 const createCampanhaSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
   descricao: z.string().optional(),
-  tipo: z.enum(['EMAIL', 'SMS', 'WHATSAPP', 'LINKEDIN', 'SEQUENCE']),
+  tipo: z.enum(['scraping_web', 'lista_importada', 'api_externa', 'manual']),
   segmentosAlvo: z.array(z.string()).optional(),
   dataInicio: z.string().optional(),
   dataFim: z.string().optional(),
-  periodicidade: z.enum(['ONCE', 'DAILY', 'WEEKLY', 'MONTHLY']).optional(),
 });
 
 type CreateCampanhaForm = z.infer<typeof createCampanhaSchema>;
 
 const tipoIcons = {
-  EMAIL: Mail,
-  SMS: Smartphone,
-  WHATSAPP: MessageSquare,
-  LINKEDIN: Users,
-  SEQUENCE: BarChart3,
+  email: Mail,
+  sms: Smartphone,
+  whatsapp: MessageSquare,
+  linkedin: Users,
+  phone: Smartphone,
+  mixed: BarChart3,
 };
 
 const statusLabels = {
-  DRAFT: 'Rascunho',
-  ACTIVE: 'Ativa',
-  PAUSED: 'Pausada',
-  COMPLETED: 'Concluída',
-  CANCELLED: 'Cancelada',
+  rascunho: 'Rascunho',
+  ativa: 'Ativa',
+  pausada: 'Pausada',
+  finalizada: 'Finalizada',
+  cancelada: 'Cancelada',
 };
 
 const statusColors = {
-  DRAFT: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
-  ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  PAUSED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  COMPLETED: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  rascunho: 'bg-gray-100 text-gray-800',
+  ativa: 'bg-green-100 text-green-800',
+  pausada: 'bg-yellow-100 text-yellow-800',
+  finalizada: 'bg-blue-100 text-blue-800',
+  cancelada: 'bg-red-100 text-red-800',
 };
 
 export default function CampanhasPage() {
@@ -88,31 +85,24 @@ export default function CampanhasPage() {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [tipoFilter, setTipoFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [tipoFilter, setTipoFilter] = useState<string>('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editingCampanha, setEditingCampanha] = useState<Campanha | null>(null);
-  const [viewingCampanha, setViewingCampanha] = useState<Campanha | null>(null);
+  const [editingCampanha, setEditingCampanha] = useState<Campaign | null>(null);
+  const [viewingCampanha, setViewingCampanha] = useState<Campaign | null>(null);
 
-  // Fetch campanhas
-  const { data: campanhasData, isLoading, error } = useQuery({
-    queryKey: ['campanhas', currentPage, searchTerm, statusFilter, tipoFilter],
-    queryFn: () => apiClient.getCampanhas({
-      page: currentPage,
-      limit: 20,
-      search: searchTerm || undefined,
-      status: statusFilter || undefined,
-      tipo: tipoFilter || undefined,
-    }),
-  });
+  // Preparar filtros
+  const filters: CampaignFilters = {
+    search: searchTerm || undefined,
+    status: statusFilter && statusFilter !== 'all' ? [statusFilter] : undefined,
+    tipo: tipoFilter && tipoFilter !== 'all' ? [tipoFilter] : undefined,
+  };
 
-  // Fetch stats
-  const { data: stats } = useQuery({
-    queryKey: ['campanhas', 'stats'],
-    queryFn: () => apiClient.getCampanhaStats(),
-  });
+  // Fetch campanhas e stats usando hooks
+  const { data: campanhasData, isLoading, error, refetch } = useCampaigns(filters);
+  const { data: stats } = useCampaignStats();
 
   // Create campanha form
   const {
@@ -127,113 +117,69 @@ export default function CampanhasPage() {
   });
 
   // Mutations
-  const createCampanhaMutation = useMutation({
-    mutationFn: (data: CreateCampanha) => apiClient.createCampanha(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campanhas'] });
-      resetForm();
-      setCreateDialogOpen(false);
-      toast({
-        title: "Campanha criada",
-        description: "Nova campanha foi criada com sucesso.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro ao criar campanha",
-        description: error.message || "Ocorreu um erro ao criar a campanha.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateCampanhaStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => 
-      apiClient.updateCampanha(id, { status } as UpdateCampanha),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campanhas'] });
-      toast({
-        title: "Status atualizado",
-        description: "Status da campanha foi atualizado com sucesso.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro ao atualizar status",
-        description: error.message || "Ocorreu um erro ao atualizar o status.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteCampanhaMutation = useMutation({
-    mutationFn: (id: string) => apiClient.deleteCampanha(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campanhas'] });
-      toast({
-        title: "Campanha removida",
-        description: "Campanha foi removida com sucesso.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro ao remover campanha",
-        description: error.message || "Ocorreu um erro ao remover a campanha.",
-        variant: "destructive",
-      });
-    },
-  });
+  const createCampanhaMutation = useCreateCampaign();
 
   const onCreateCampanha = (data: CreateCampanhaForm) => {
-    const campanha: CreateCampanha = {
+    const campaignData = {
       nome: data.nome,
-      descricao: data.descricao,
+      descricao: data.descricao || '',
       tipo: data.tipo,
+      sequencia: [], // Sequência vazia por enquanto
+      segmentosAlvo: data.segmentosAlvo || [],
       configuracoes: {
-        segmentosAlvo: data.segmentosAlvo,
         agendamento: {
           dataInicio: data.dataInicio,
           dataFim: data.dataFim,
-          periodicidade: data.periodicidade,
-        },
-      },
+        }
+      }
     };
-    
-    createCampanhaMutation.mutate(campanha);
-  };
 
-  const handleStatusChange = (campanha: Campanha, newStatus: string) => {
-    updateCampanhaStatusMutation.mutate({
-      id: campanha.id,
-      status: newStatus,
+    createCampanhaMutation.mutate(campaignData, {
+      onSuccess: () => {
+        resetForm();
+        setCreateDialogOpen(false);
+        refetch(); // Atualizar lista
+      }
     });
   };
 
-  const handleDeleteCampanha = (id: string, nome: string) => {
-    if (window.confirm(`Tem certeza que deseja remover a campanha "${nome}"?`)) {
-      deleteCampanhaMutation.mutate(id);
-    }
-  };
-
-  const handleViewCampanha = (campanha: Campanha) => {
+  const handleViewCampanha = (campanha: Campaign) => {
     setViewingCampanha(campanha);
     setViewDialogOpen(true);
   };
 
-  const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
-  const formatNumber = (value: number) => value.toLocaleString('pt-BR');
+  const formatPercentage = (value: number | undefined) => value ? `${value.toFixed(1)}%` : '0%';
+  const formatNumber = (value: number | undefined) => value ? value.toLocaleString('pt-BR') : '0';
 
   if (isLoading) {
-    return <LoadingState message="Carregando campanhas..." />;
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Carregando campanhas...</span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <ErrorState 
-        title="Erro ao carregar campanhas"
-        message="Não foi possível carregar a lista de campanhas"
-        onRetry={() => queryClient.invalidateQueries({ queryKey: ['campanhas'] })}
-      />
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Erro ao carregar campanhas</h3>
+              <p className="text-muted-foreground mb-4">Não foi possível carregar a lista de campanhas</p>
+              <Button onClick={() => refetch()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Tentar novamente
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -294,11 +240,10 @@ export default function CampanhasPage() {
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="EMAIL">Email Marketing</SelectItem>
-                        <SelectItem value="SMS">SMS</SelectItem>
-                        <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
-                        <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
-                        <SelectItem value="SEQUENCE">Sequência Automática</SelectItem>
+                        <SelectItem value="scraping_web">Scraping Web</SelectItem>
+                        <SelectItem value="lista_importada">Lista Importada</SelectItem>
+                        <SelectItem value="api_externa">API Externa</SelectItem>
+                        <SelectItem value="manual">Manual</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.tipo && (
@@ -377,34 +322,51 @@ export default function CampanhasPage() {
 
       {/* Stats */}
       {stats && (
-        <StatsGrid 
-          cards={[
-            {
-              title: 'Total de Campanhas',
-              value: stats.totalCampanhas,
-              icon: Megaphone,
-              description: `${stats.campanhasAtivas} ativas`,
-            },
-            {
-              title: 'Total Enviados',
-              value: formatNumber(stats.totalEnviados),
-              icon: Send,
-              description: 'Mensagens enviadas',
-            },
-            {
-              title: 'Taxa de Entrega',
-              value: formatPercentage(stats.taxaEntregaGeral),
-              icon: Target,
-              variant: stats.taxaEntregaGeral >= 95 ? 'success' : 'warning',
-            },
-            {
-              title: 'Taxa de Abertura',
-              value: formatPercentage(stats.taxaAberturaGeral),
-              icon: TrendingUp,
-              variant: stats.taxaAberturaGeral >= 20 ? 'success' : 'warning',
-            },
-          ]}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Campanhas</CardTitle>
+              <Megaphone className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.total}</div>
+              <p className="text-xs text-muted-foreground">{stats.ativas} ativas</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Contatos</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatNumber(stats.performanceGeral.totalContatos)}</div>
+              <p className="text-xs text-muted-foreground">Total de contatos</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taxa de Abertura</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatPercentage(stats.performanceGeral.taxaAberturaMedia)}</div>
+              <p className="text-xs text-muted-foreground">Média geral</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">ROI Total</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatPercentage(stats.performanceGeral.roiMedio)}</div>
+              <p className="text-xs text-muted-foreground">Retorno sobre investimento</p>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Filters */}
@@ -429,31 +391,32 @@ export default function CampanhasPage() {
               </div>
             </div>
             
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value === 'all' ? '' : value)}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
-                <SelectItem value="DRAFT">Rascunho</SelectItem>
-                <SelectItem value="ACTIVE">Ativa</SelectItem>
-                <SelectItem value="PAUSED">Pausada</SelectItem>
-                <SelectItem value="COMPLETED">Concluída</SelectItem>
-                <SelectItem value="CANCELLED">Cancelada</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="rascunho">Rascunho</SelectItem>
+                <SelectItem value="ativa">Ativa</SelectItem>
+                <SelectItem value="pausada">Pausada</SelectItem>
+                <SelectItem value="finalizada">Finalizada</SelectItem>
+                <SelectItem value="cancelada">Cancelada</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={tipoFilter} onValueChange={setTipoFilter}>
+            <Select value={tipoFilter} onValueChange={(value) => setTipoFilter(value === 'all' ? '' : value)}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filtrar por tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
-                <SelectItem value="EMAIL">Email</SelectItem>
-                <SelectItem value="SMS">SMS</SelectItem>
-                <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
-                <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
-                <SelectItem value="SEQUENCE">Sequência</SelectItem>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="sms">SMS</SelectItem>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                <SelectItem value="linkedin">LinkedIn</SelectItem>
+                <SelectItem value="phone">Telefone</SelectItem>
+                <SelectItem value="mixed">Misto</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -468,142 +431,103 @@ export default function CampanhasPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Campanha</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Performance</TableHead>
-                <TableHead>Criada em</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {campanhasData?.items?.map((campanha) => {
-                const TipoIcon = tipoIcons[campanha.tipo];
-                return (
-                  <TableRow key={campanha.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{campanha.nome}</div>
-                        {campanha.descricao && (
-                          <div className="text-sm text-muted-foreground line-clamp-1">
-                            {campanha.descricao}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <TipoIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{campanha.tipo}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline"
-                        className={statusColors[campanha.status]}
-                      >
-                        {statusLabels[campanha.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Send className="h-3 w-3" />
-                          <span>{formatNumber(campanha.metricas.totalEnviados)} enviados</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Eye className="h-3 w-3" />
-                          <span>{formatPercentage(campanha.metricas.taxaAbertura)} abertura</span>
-                        </div>
-                        <Progress 
-                          value={campanha.metricas.taxaAbertura} 
-                          className="h-1 w-16" 
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {new Date(campanha.createdAt).toLocaleDateString('pt-BR')}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewCampanha(campanha)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            Visualizar
-                          </DropdownMenuItem>
-                          
-                          {campanha.status === 'DRAFT' && (
-                            <DropdownMenuItem 
-                              onClick={() => handleStatusChange(campanha, 'ACTIVE')}
-                            >
-                              <Play className="mr-2 h-4 w-4" />
-                              Ativar
-                            </DropdownMenuItem>
-                          )}
-                          
-                          {campanha.status === 'ACTIVE' && (
-                            <DropdownMenuItem 
-                              onClick={() => handleStatusChange(campanha, 'PAUSED')}
-                            >
-                              <Pause className="mr-2 h-4 w-4" />
-                              Pausar
-                            </DropdownMenuItem>
-                          )}
-                          
-                          {campanha.status === 'PAUSED' && (
-                            <DropdownMenuItem 
-                              onClick={() => handleStatusChange(campanha, 'ACTIVE')}
-                            >
-                              <Play className="mr-2 h-4 w-4" />
-                              Retomar
-                            </DropdownMenuItem>
-                          )}
-
-                          <DropdownMenuItem onClick={() => setEditingCampanha(campanha)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteCampanha(campanha.id, campanha.nome)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Remover
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-
-          {(!campanhasData?.items || campanhasData.items.length === 0) && (
-            <EmptyState
-              icon={Megaphone}
-              title="Nenhuma campanha encontrada"
-              description={
-                searchTerm || statusFilter || tipoFilter
+          {(!campanhasData?.campaigns || campanhasData.campaigns.length === 0) ? (
+            <div className="text-center py-12">
+              <Megaphone className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhuma campanha encontrada</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm || statusFilter || tipoFilter
                   ? 'Tente ajustar os filtros para encontrar campanhas.'
                   : 'Comece criando sua primeira campanha de marketing.'
-              }
-              action={{
-                label: 'Nova Campanha',
-                onClick: () => setCreateDialogOpen(true)
-              }}
-            />
+                }
+              </p>
+              <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Campanha
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campanha</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Contatos</TableHead>
+                  <TableHead>Criada em</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {campanhasData.campaigns.map((campanha) => {
+                  const TipoIcon = tipoIcons[campanha.tipo];
+                  return (
+                    <TableRow key={campanha.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{campanha.nome}</div>
+                          {campanha.descricao && (
+                            <div className="text-sm text-muted-foreground line-clamp-1">
+                              {campanha.descricao}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <TipoIcon className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm capitalize">{campanha.tipo}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={statusColors[campanha.status] || 'bg-gray-100 text-gray-800'}
+                        >
+                          {statusLabels[campanha.status] || campanha.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Users className="h-3 w-3" />
+                            <span>{formatNumber(campanha.metricas?.totalContatos || 0)} contatos</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <TrendingUp className="h-3 w-3" />
+                            <span>{formatPercentage(campanha.metricas?.taxaConversao || 0)} conversão</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {new Date(campanha.dataCriacao).toLocaleDateString('pt-BR')}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewCampanha(campanha)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Visualizar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setEditingCampanha(campanha)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
@@ -629,14 +553,14 @@ export default function CampanhasPage() {
                   <Label className="text-sm font-medium text-muted-foreground">Tipo</Label>
                   <div className="flex items-center gap-2 mt-1">
                     {React.createElement(tipoIcons[viewingCampanha.tipo], { className: "h-4 w-4" })}
-                    <span className="text-sm">{viewingCampanha.tipo}</span>
+                    <span className="text-sm capitalize">{viewingCampanha.tipo}</span>
                   </div>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Status</Label>
                   <div className="mt-1">
-                    <Badge className={statusColors[viewingCampanha.status]}>
-                      {statusLabels[viewingCampanha.status]}
+                    <Badge className={statusColors[viewingCampanha.status] || 'bg-gray-100 text-gray-800'}>
+                      {statusLabels[viewingCampanha.status] || viewingCampanha.status}
                     </Badge>
                   </div>
                 </div>
@@ -645,30 +569,24 @@ export default function CampanhasPage() {
               {/* Metrics */}
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Métricas</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                   <div className="text-center p-3 border rounded">
                     <div className="text-2xl font-bold text-blue-600">
-                      {formatNumber(viewingCampanha.metricas.totalEnviados)}
+                      {formatNumber(viewingCampanha.metricas?.totalContatos || 0)}
                     </div>
-                    <div className="text-xs text-muted-foreground">Enviados</div>
+                    <div className="text-xs text-muted-foreground">Contatos</div>
                   </div>
                   <div className="text-center p-3 border rounded">
                     <div className="text-2xl font-bold text-green-600">
-                      {formatPercentage(viewingCampanha.metricas.taxaEntrega)}
+                      {formatPercentage(viewingCampanha.metricas?.taxaConversao || 0)}
                     </div>
-                    <div className="text-xs text-muted-foreground">Taxa Entrega</div>
-                  </div>
-                  <div className="text-center p-3 border rounded">
-                    <div className="text-2xl font-bold text-orange-600">
-                      {formatPercentage(viewingCampanha.metricas.taxaAbertura)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Taxa Abertura</div>
+                    <div className="text-xs text-muted-foreground">Taxa Conversão</div>
                   </div>
                   <div className="text-center p-3 border rounded">
                     <div className="text-2xl font-bold text-purple-600">
-                      {formatPercentage(viewingCampanha.metricas.taxaClique)}
+                      {viewingCampanha.sequencia?.length || 0}
                     </div>
-                    <div className="text-xs text-muted-foreground">Taxa Clique</div>
+                    <div className="text-xs text-muted-foreground">Etapas</div>
                   </div>
                 </div>
               </div>
@@ -686,13 +604,13 @@ export default function CampanhasPage() {
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Criada em</Label>
                   <p className="text-sm mt-1">
-                    {new Date(viewingCampanha.createdAt).toLocaleString('pt-BR')}
+                    {new Date(viewingCampanha.dataCriacao).toLocaleString('pt-BR')}
                   </p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Atualizada em</Label>
                   <p className="text-sm mt-1">
-                    {new Date(viewingCampanha.updatedAt).toLocaleString('pt-BR')}
+                    {new Date(viewingCampanha.dataAtualizacao).toLocaleString('pt-BR')}
                   </p>
                 </div>
               </div>
