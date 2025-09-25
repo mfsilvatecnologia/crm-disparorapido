@@ -52,7 +52,16 @@ const createCampanhaSchema = z.object({
   localizacao: z.string().optional(),
 });
 
+const addContatoSchema = z.object({
+  nome: z.string().min(1, 'Nome é obrigatório'),
+  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
+  empresa: z.string().optional(),
+  cargo: z.string().optional(),
+  telefone: z.string().optional(),
+});
+
 type CreateCampanhaForm = z.infer<typeof createCampanhaSchema>;
+type AddContatoForm = z.infer<typeof addContatoSchema>;
 
 const tipoIcons = {
   scraping_web: Search,
@@ -94,6 +103,7 @@ export default function CampanhasPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [contatosDialogOpen, setContatosDialogOpen] = useState(false);
+  const [addContatoDialogOpen, setAddContatoDialogOpen] = useState(false);
   const [editingCampanha, setEditingCampanha] = useState<Campaign | null>(null);
   const [viewingCampanha, setViewingCampanha] = useState<Campaign | null>(null);
   const [gerenciandoContatos, setGerenciandoContatos] = useState<Campaign | null>(null);
@@ -122,6 +132,16 @@ export default function CampanhasPage() {
     watch,
   } = useForm<CreateCampanhaForm>({
     resolver: zodResolver(createCampanhaSchema),
+  });
+
+  // Add contato form
+  const {
+    register: registerContato,
+    handleSubmit: handleSubmitContato,
+    formState: { errors: errorsContato, isSubmitting: isSubmittingContato },
+    reset: resetContatoForm,
+  } = useForm<AddContatoForm>({
+    resolver: zodResolver(addContatoSchema),
   });
 
   // Mutations
@@ -157,6 +177,25 @@ export default function CampanhasPage() {
   const handleGerenciarContatos = (campanha: Campaign) => {
     setGerenciandoContatos(campanha);
     setContatosDialogOpen(true);
+  };
+
+  const handleAdicionarContatos = () => {
+    setAddContatoDialogOpen(true);
+  };
+
+  const onAdicionarContato = (data: AddContatoForm) => {
+    if (!gerenciandoContatos) return;
+    
+    // Por enquanto, vamos apenas simular a adição
+    console.log('Adicionando contato à campanha:', gerenciandoContatos.id, data);
+    
+    toast({
+      title: 'Contato adicionado',
+      description: `${data.nome} foi adicionado à campanha com sucesso.`,
+    });
+
+    resetContatoForm();
+    setAddContatoDialogOpen(false);
   };
 
   const formatPercentage = (value: number | undefined) => value ? `${value.toFixed(1)}%` : '0%';
@@ -631,7 +670,7 @@ export default function CampanhasPage() {
               Gerenciar Contatos - {gerenciandoContatos?.nome}
             </DialogTitle>
             <DialogDescription>
-              Adicione, visualize ou remova contatos desta campanha
+              Adicione, visualize ou remova contatos desta campanha(alterar para buscar do banco)
             </DialogDescription>
           </DialogHeader>
 
@@ -639,7 +678,7 @@ export default function CampanhasPage() {
             <div className="space-y-6">
               {/* Ações rápidas */}
               <div className="flex gap-2">
-                <Button className="flex-1">
+                <Button className="flex-1" onClick={handleAdicionarContatos}>
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar Contatos
                 </Button>
@@ -690,6 +729,102 @@ export default function CampanhasPage() {
               Fechar
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Adicionar Contato Dialog */}
+      <Dialog open={addContatoDialogOpen} onOpenChange={setAddContatoDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Adicionar Contato
+            </DialogTitle>
+            <DialogDescription>
+              Adicione um novo contato à campanha "{gerenciandoContatos?.nome}"
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmitContato(onAdicionarContato)} className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome-contato">Nome *</Label>
+                <Input
+                  id="nome-contato"
+                  {...registerContato('nome')}
+                  className={errorsContato.nome ? 'border-destructive' : ''}
+                  placeholder="Nome completo"
+                />
+                {errorsContato.nome && (
+                  <p className="text-sm text-destructive">{errorsContato.nome.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email-contato">Email *</Label>
+                <Input
+                  id="email-contato"
+                  type="email"
+                  {...registerContato('email')}
+                  className={errorsContato.email ? 'border-destructive' : ''}
+                  placeholder="contato@empresa.com"
+                />
+                {errorsContato.email && (
+                  <p className="text-sm text-destructive">{errorsContato.email.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="empresa-contato">Empresa</Label>
+                <Input
+                  id="empresa-contato"
+                  {...registerContato('empresa')}
+                  placeholder="Nome da empresa"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cargo-contato">Cargo</Label>
+                <Input
+                  id="cargo-contato"
+                  {...registerContato('cargo')}
+                  placeholder="Ex: Gerente de Marketing"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="telefone-contato">Telefone</Label>
+                <Input
+                  id="telefone-contato"
+                  {...registerContato('telefone')}
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setAddContatoDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmittingContato}>
+                {isSubmittingContato ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adicionando...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

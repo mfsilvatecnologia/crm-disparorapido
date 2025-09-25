@@ -102,7 +102,7 @@ function ScrapingStatsCards({ stats, workerStatus }: {
           </div>
           <p className="text-xs text-muted-foreground">
             {workerStatus?.isRunning 
-              ? `${workerStatus.processedJobs || 0} jobs processados`
+              ? `${workerStatus.totalJobsProcessed || 0} jobs processados`
               : 'Worker não está executando'
             }
           </p>
@@ -164,16 +164,16 @@ function ScrapingJobForm({
   isSubmitting?: boolean;
 }) {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [formData, setFormData] = useState<CreateScrapingJob>({
-    termo: '',
-    localizacao: '',
-    limite: 50,
-    prioridade: 'normal',
+  const [formData, setFormData] = useState({
+    termo_busca: '',
+    cidade: '',
+    estado: '',
+    maxResultados: 20,
+    prioridade: 'normal' as 'low' | 'normal' | 'high',
     filtros: {
-      verificado: false,
-      comTelefone: true,
-      avaliacaoMinima: undefined,
-      aberto: false,
+      apenasVerificados: false,
+      apenasComTelefone: true,
+      avaliacaoMinima: 0,
     },
   });
 
@@ -181,19 +181,44 @@ function ScrapingJobForm({
     setSelectedTemplate(templateId);
     const template = templates?.find(t => t.id === templateId);
     if (template) {
+      // Converter do formato antigo para o novo
+      const localizacaoParts = template.parametrosBase.localizacao.split(',');
+      const cidade = localizacaoParts[0]?.trim() || '';
+      const estado = localizacaoParts[1]?.trim() || '';
+      
       setFormData({
-        termo: template.parametrosBase.termo,
-        localizacao: template.parametrosBase.localizacao,
-        limite: template.parametrosBase.limite,
+        termo_busca: template.parametrosBase.termo,
+        cidade,
+        estado,
+        maxResultados: template.parametrosBase.limite,
         prioridade: template.parametrosBase.prioridade,
-        filtros: { ...template.parametrosBase.filtros },
+        filtros: {
+          apenasVerificados: template.parametrosBase.filtros?.verificado || false,
+          apenasComTelefone: template.parametrosBase.filtros?.comTelefone || true,
+          avaliacaoMinima: template.parametrosBase.filtros?.avaliacaoMinima || 0,
+        },
       });
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Converter para o formato esperado pela API
+    const payload: CreateScrapingJob = {
+      parametros_busca: {
+        termo_busca: formData.termo_busca,
+        cidade: formData.cidade,
+        estado: formData.estado,
+        maxResultados: formData.maxResultados,
+        filtros: {
+          apenasVerificados: formData.filtros.apenasVerificados,
+          apenasComTelefone: formData.filtros.apenasComTelefone,
+          avaliacaoMinima: formData.filtros.avaliacaoMinima,
+        },
+      },
+      prioridade: formData.prioridade,
+    };
+    onSubmit(payload);
   };
 
   return (
@@ -217,39 +242,52 @@ function ScrapingJobForm({
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="termo">Termo de Busca</Label>
+        <Label htmlFor="termo_busca">Termo de Busca</Label>
         <Input
-          id="termo"
-          value={formData.termo}
-          onChange={(e) => setFormData(prev => ({ ...prev, termo: e.target.value }))}
+          id="termo_busca"
+          value={formData.termo_busca}
+          onChange={(e) => setFormData(prev => ({ ...prev, termo_busca: e.target.value }))}
           placeholder="Ex: restaurantes, clínicas dentárias..."
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="localizacao">Localização</Label>
-        <Input
-          id="localizacao"
-          value={formData.localizacao}
-          onChange={(e) => setFormData(prev => ({ ...prev, localizacao: e.target.value }))}
-          placeholder="Ex: São Paulo, SP"
           required
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="limite">Limite de Leads</Label>
+          <Label htmlFor="cidade">Cidade</Label>
           <Input
-            id="limite"
+            id="cidade"
+            value={formData.cidade}
+            onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
+            placeholder="Ex: Franca"
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="estado">Estado</Label>
+          <Input
+            id="estado"
+            value={formData.estado}
+            onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+            placeholder="Ex: SP"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="maxResultados">Máximo de Resultados</Label>
+          <Input
+            id="maxResultados"
             type="number"
             min="1"
             max="1000"
-            value={formData.limite}
+            value={formData.maxResultados}
             onChange={(e) => setFormData(prev => ({ 
               ...prev, 
-              limite: parseInt(e.target.value) || 50 
+              maxResultados: parseInt(e.target.value) || 20 
             }))}
           />
         </div>
@@ -280,61 +318,47 @@ function ScrapingJobForm({
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <Switch
-              id="verificado"
-              checked={formData.filtros?.verificado || false}
+              id="apenasVerificados"
+              checked={formData.filtros.apenasVerificados}
               onCheckedChange={(checked) => 
                 setFormData(prev => ({
                   ...prev,
-                  filtros: { ...prev.filtros, verificado: checked }
+                  filtros: { ...prev.filtros, apenasVerificados: checked }
                 }))
               }
             />
-            <Label htmlFor="verificado">Apenas estabelecimentos verificados</Label>
+            <Label htmlFor="apenasVerificados">Apenas estabelecimentos verificados</Label>
           </div>
 
           <div className="flex items-center space-x-2">
             <Switch
-              id="comTelefone"
-              checked={formData.filtros?.comTelefone || false}
+              id="apenasComTelefone"
+              checked={formData.filtros.apenasComTelefone}
               onCheckedChange={(checked) => 
                 setFormData(prev => ({
                   ...prev,
-                  filtros: { ...prev.filtros, comTelefone: checked }
+                  filtros: { ...prev.filtros, apenasComTelefone: checked }
                 }))
               }
             />
-            <Label htmlFor="comTelefone">Apenas com telefone</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="aberto"
-              checked={formData.filtros?.aberto || false}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({
-                  ...prev,
-                  filtros: { ...prev.filtros, aberto: checked }
-                }))
-              }
-            />
-            <Label htmlFor="aberto">Apenas estabelecimentos abertos</Label>
+            <Label htmlFor="apenasComTelefone">Apenas com telefone</Label>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="avaliacaoMinima">Avaliação mínima (1-5)</Label>
+            <Label htmlFor="avaliacaoMinima">Avaliação mínima (0-5)</Label>
             <Input
               id="avaliacaoMinima"
               type="number"
-              min="1"
+              min="0"
               max="5"
               step="0.1"
-              value={formData.filtros?.avaliacaoMinima || ''}
+              value={formData.filtros.avaliacaoMinima}
               onChange={(e) => 
                 setFormData(prev => ({
                   ...prev,
                   filtros: { 
                     ...prev.filtros, 
-                    avaliacaoMinima: e.target.value ? parseFloat(e.target.value) : undefined 
+                    avaliacaoMinima: parseFloat(e.target.value) || 0
                   }
                 }))
               }

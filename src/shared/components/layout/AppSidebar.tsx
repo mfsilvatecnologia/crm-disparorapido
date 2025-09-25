@@ -32,6 +32,8 @@ import {
 } from '@/shared/components/ui/sidebar';
 import { Badge } from '@/shared/components/ui/badge';
 import { useAuth } from '@/shared/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { leadKeys } from '@/features/leads/hooks/useLeads';
 
 const navigationItems = [
   {
@@ -136,6 +138,7 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -148,6 +151,11 @@ export function AppSidebar() {
     return isActive(path) 
       ? "bg-primary text-primary-foreground hover:bg-primary/90" 
       : "hover:bg-accent hover:text-accent-foreground";
+  };
+
+  const handleNavClick = () => {
+    queryClient.invalidateQueries({ queryKey: leadKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: ['companies'] });
   };
 
   const isAdmin = user?.role === 'admin';
@@ -182,6 +190,7 @@ export function AppSidebar() {
                       to={item.url}
                       className={getNavClassName(item.url)}
                       title={!open ? item.description : undefined}
+                      onClick={handleNavClick}
                     >
                       <item.icon className="h-4 w-4" />
                       {open && <span>{item.title}</span>}
@@ -205,6 +214,7 @@ export function AppSidebar() {
                       to={item.url}
                       className={getNavClassName(item.url)}
                       title={!open ? item.description : undefined}
+                      onClick={handleNavClick}
                     >
                       <item.icon className="h-4 w-4" />
                       {open && <span>{item.title}</span>}
@@ -234,6 +244,7 @@ export function AppSidebar() {
                         to={item.url}
                         className={getNavClassName(item.url)}
                         title={!open ? item.description : undefined}
+                        onClick={handleNavClick}
                       >
                         <item.icon className="h-4 w-4" />
                         {open && <span>{item.title}</span>}

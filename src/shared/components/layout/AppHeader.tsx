@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Search, Settings, User } from 'lucide-react';
+import { Bell, Search, Settings, User, RefreshCw } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
@@ -16,10 +16,13 @@ import { SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useOrganization } from '@/shared/contexts/OrganizationContext';
 import { OrganizationSwitcher } from '@/shared/components/common/OrganizationSwitcher';
+import { useQueryClient } from '@tanstack/react-query';
+import { leadKeys } from '@/features/leads/hooks/useLeads';
 
 export function AppHeader() {
   const { user, logout } = useAuth();
   const { currentOrganization } = useOrganization();
+  const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     try {
@@ -27,6 +30,11 @@ export function AppHeader() {
     } catch (error) {
       console.error('Logout failed:', error);
     }
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: leadKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: ['companies'] });
   };
 
   const getQuotaStatus = () => {
@@ -62,6 +70,11 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Refresh Button */}
+          <Button variant="ghost" size="icon" onClick={handleRefresh}>
+            <RefreshCw className="h-5 w-5" />
+          </Button>
+
           {/* Organization Info */}
           <div className="hidden md:flex items-center gap-3">
             <OrganizationSwitcher />

@@ -687,6 +687,22 @@ export const GoogleMapsSearchParamsSchema = z.object({
   }).optional().default({}),
 });
 
+// Novo formato para criação de jobs de scraping
+export const CreateScrapingJobSchema = z.object({
+  parametros_busca: z.object({
+    termo_busca: z.string(),
+    cidade: z.string(),
+    estado: z.string(),
+    maxResultados: z.number().min(1).max(1000).default(20),
+    filtros: z.object({
+      apenasVerificados: z.boolean().optional().default(false),
+      apenasComTelefone: z.boolean().optional().default(true),
+      avaliacaoMinima: z.number().min(0).max(5).optional().default(0),
+    }).optional().default({}),
+  }),
+  prioridade: z.enum(['low', 'normal', 'high']).default('normal'),
+});
+
 export const ScrapingJobSchema = z.object({
   id: z.string(),
   parametros: GoogleMapsSearchParamsSchema,
@@ -698,8 +714,6 @@ export const ScrapingJobSchema = z.object({
   iniciadoEm: z.string().optional(),
   finalizadoEm: z.string().optional(),
 });
-
-export const CreateScrapingJobSchema = GoogleMapsSearchParamsSchema;
 
 export const ScrapingTemplateSchema = z.object({
   id: z.string(),
