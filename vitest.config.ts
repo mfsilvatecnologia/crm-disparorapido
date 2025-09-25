@@ -7,12 +7,13 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    include: [
-      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'specs/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+    environmentMatchGlobs: [
+      ['src/test/contract/**', 'node'],
+      ['src/test/integration/**', 'jsdom'],
+      ['src/App.test.tsx', 'jsdom'],
     ],
+    setupFiles: ['./src/test/setup.ts', './src/test/setup-node.ts'],
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

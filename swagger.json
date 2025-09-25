@@ -1048,8 +1048,7 @@
       "ResetPasswordRequest": {
         "type": "object",
         "required": [
-          "email",
-          "cnpj"
+          "email"
         ],
         "properties": {
           "email": {
@@ -1057,11 +1056,6 @@
             "format": "email",
             "description": "Email do usuário",
             "example": "usuario@empresa.com"
-          },
-          "cnpj": {
-            "type": "string",
-            "description": "CNPJ da empresa",
-            "example": "12.345.678/0001-90"
           }
         }
       },
@@ -2493,14 +2487,6 @@
                   "password": {
                     "type": "string",
                     "description": "Senha do usuário"
-                  },
-                  "cnpj": {
-                    "type": "string",
-                    "description": "CNPJ da empresa (opcional)"
-                  },
-                  "empresa_id": {
-                    "type": "string",
-                    "description": "ID da empresa (opcional - deprecated, use cnpj)"
                   }
                 }
               }
@@ -2566,18 +2552,13 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "email",
-                  "cnpj"
+                  "email"
                 ],
                 "properties": {
                   "email": {
                     "type": "string",
                     "format": "email",
                     "description": "Email do usuário"
-                  },
-                  "cnpj": {
-                    "type": "string",
-                    "description": "CNPJ da empresa"
                   }
                 }
               }
@@ -2722,6 +2703,72 @@
           },
           "409": {
             "description": "CNPJ já cadastrado"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/auth/confirm-reset-password": {
+      "post": {
+        "summary": "Confirmar nova senha com token de reset",
+        "tags": [
+          "Autenticação"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token",
+                  "password"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "Token de reset recebido por email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "description": "Nova senha do usuário"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 8,
+                    "description": "Nova senha do usuário (alternativa ao campo password)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Senha alterada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Senha alterada com sucesso."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos ou token expirado"
           },
           "500": {
             "description": "Erro interno do servidor"
@@ -3932,7 +3979,7 @@
         }
       }
     },
-    "/api/v1/dashboard/metrics": {
+    "/dashboard/metrics": {
       "get": {
         "summary": "Obter métricas completas do dashboard",
         "description": "Retorna todas as métricas necessárias para o dashboard principal incluindo leads, campanhas, search terms, scraping e gráficos",
@@ -4023,7 +4070,7 @@
         }
       }
     },
-    "/api/v1/dashboard/quick-stats": {
+    "/dashboard/quick-stats": {
       "get": {
         "summary": "Obter estatísticas rápidas do dashboard",
         "description": "Retorna estatísticas básicas para widgets de dashboard - ideal para atualizações frequentes",
@@ -4067,7 +4114,7 @@
         }
       }
     },
-    "/api/v1/dashboard/health": {
+    "/dashboard/health": {
       "get": {
         "summary": "Verificar saúde do sistema dashboard",
         "description": "Retorna indicadores de saúde específicos para funcionalidades do dashboard",
@@ -4156,7 +4203,7 @@
         }
       }
     },
-    "/api/v1/dashboard/export": {
+    "/dashboard/export": {
       "post": {
         "summary": "Exportar dados do dashboard",
         "description": "Gera e retorna um arquivo com os dados do dashboard no formato especificado",
@@ -4195,7 +4242,7 @@
                       "properties": {
                         "downloadUrl": {
                           "type": "string",
-                          "example": "/api/v1/downloads/dashboard-export-12345.pdf"
+                          "example": "/downloads/dashboard-export-12345.pdf"
                         },
                         "expiresAt": {
                           "type": "string",
@@ -4305,6 +4352,60 @@
           },
           "400": {
             "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/empresas/stats": {
+      "get": {
+        "summary": "Obter estatísticas da empresa",
+        "tags": [
+          "Empresas"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estatísticas retornadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalLeads": {
+                          "type": "number"
+                        },
+                        "totalCampanhas": {
+                          "type": "number"
+                        },
+                        "creditsUsed": {
+                          "type": "number"
+                        },
+                        "creditsRemaining": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Não autorizado"
@@ -4595,15 +4696,10 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "empresa_id",
                   "parametros_busca"
                 ],
                 "properties": {
-                  "empresa_id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "parametrosBusca": {
+                  "parametros_busca": {
                     "type": "object",
                     "required": [
                       "termo_busca"
@@ -4706,15 +4802,10 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "empresaId",
                   "termosBusca",
                   "cidade"
                 ],
                 "properties": {
-                  "empresaId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
                   "termosBusca": {
                     "type": "array",
                     "items": {
@@ -4792,15 +4883,10 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "empresaId",
                   "segmento",
                   "cidade"
                 ],
                 "properties": {
-                  "empresaId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
                   "segmento": {
                     "type": "string",
                     "enum": [
@@ -6011,15 +6097,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "empresaId"
-                ],
                 "properties": {
-                  "empresaId": {
-                    "type": "string",
-                    "description": "ID da empresa",
-                    "example": "e5f42684-ce1a-4bee-9f67-295ceadf840d"
-                  },
                   "batchSize": {
                     "type": "integer",
                     "minimum": 1,
@@ -7076,7 +7154,7 @@
         }
       }
     },
-    "/api/v1/search-terms": {
+    "/search-terms": {
       "post": {
         "summary": "Criar novo termo de busca",
         "tags": [
@@ -7214,7 +7292,7 @@
         }
       }
     },
-    "/api/v1/search-terms/{id}": {
+    "/search-terms/{id}": {
       "get": {
         "summary": "Buscar termo de busca por ID",
         "tags": [
@@ -7389,7 +7467,7 @@
         }
       }
     },
-    "/api/v1/search-terms/categories": {
+    "/search-terms/categories": {
       "get": {
         "summary": "Listar categorias disponíveis",
         "tags": [
@@ -7429,7 +7507,7 @@
         }
       }
     },
-    "/api/v1/search-terms/stats": {
+    "/search-terms/stats": {
       "get": {
         "summary": "Obter estatísticas dos termos de busca",
         "tags": [
@@ -7862,6 +7940,94 @@
         }
       }
     },
+    "/sessions/active": {
+      "get": {
+        "summary": "Listar sessões ativas do usuário",
+        "description": "Lista todas as sessões ativas do usuário atual.\nInclui informações sobre dispositivos, tipos de cliente e atividade recente.\n",
+        "tags": [
+          "Sessões"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de sessões ativas retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "device_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "device_fingerprint": {
+                            "type": "string"
+                          },
+                          "client_type": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "extension"
+                            ]
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "last_activity": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "expires_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "ip_address": {
+                            "type": "string"
+                          },
+                          "user_agent": {
+                            "type": "string"
+                          },
+                          "is_current": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
     "/users": {
       "post": {
         "summary": "Criar novo usuário na empresa",
@@ -7915,6 +8081,12 @@
                     ],
                     "description": "Role inicial do usuário (sujeita à validação hierárquica)",
                     "example": "usuario"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "description": "Senha do usuário (opcional - se não fornecida, será gerada automaticamente)",
+                    "example": "minhasenha123"
                   }
                 }
               }

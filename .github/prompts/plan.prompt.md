@@ -19,11 +19,18 @@ Given the implementation details provided as an argument, do this:
    - Run the Execution Flow (main) function steps 1-10
    - The template is self-contained and executable
    - Follow error handling and gate checks as specified
+   - Consider the project's feature-based architecture (features/ vs shared/)
+   - Respect the established component organization patterns:
+     * Features: admin, authentication, campaigns, companies, dashboard, leads, pipeline, scraping, segments, user-management
+     * Each feature contains: components/, hooks/, services/, types/, pages/, contexts/, index.ts
+     * Shared resources in: shared/components/, shared/hooks/, shared/services/, shared/types/, shared/utils/
    - Let the template guide artifact generation in $SPECS_DIR:
      * Phase 0 generates research.md
      * Phase 1 generates data-model.md, contracts/, quickstart.md
      * Phase 2 generates tasks.md
    - Incorporate user-provided details from arguments into Technical Context: $ARGUMENTS
+   - Ensure generated tasks respect the feature-based component organization
+   - Follow import patterns: use feature public APIs via index.ts, avoid direct internal imports
    - Update Progress Tracking as you complete each phase
 
 5. Verify execution completed:

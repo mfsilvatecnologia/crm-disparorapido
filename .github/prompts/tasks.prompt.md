@@ -20,11 +20,15 @@ Given the context provided as an argument, do this:
 3. Generate tasks following the template:
    - Use `.specify/templates/tasks-template.md` as the base
    - Replace example tasks with actual tasks based on:
-     * **Setup tasks**: Project init, dependencies, linting
+     * **Setup tasks**: Project init, dependencies, linting, feature structure
      * **Test tasks [P]**: One per contract, one per integration scenario
-     * **Core tasks**: One per entity, service, CLI command, endpoint
-     * **Integration tasks**: DB connections, middleware, logging
-     * **Polish tasks [P]**: Unit tests, performance, docs
+     * **Core tasks**: One per entity, service, component, page, hook
+     * **Integration tasks**: API connections, state management, routing
+     * **Polish tasks [P]**: Unit tests, performance, documentation
+   - Consider the project's feature-based architecture:
+     * Tasks should respect features/ vs shared/ organization
+     * Components go in appropriate feature or shared location
+     * Follow established import patterns (feature public APIs)
 
 4. Task generation rules:
    - Each contract file → contract test task marked [P]

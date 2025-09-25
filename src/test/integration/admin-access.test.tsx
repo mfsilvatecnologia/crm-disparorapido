@@ -6,9 +6,9 @@ import React from 'react'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '../../contexts/AuthContext'
-import { usePermissions } from '../../hooks/usePermissions'
-import { PermissionGate } from '../../components/auth/PermissionGate'
+import { AuthProvider } from '../../shared/contexts/AuthContext'
+import { usePermissions } from '@/features/authentication'
+import { PermissionGate } from '../../features/authentication/components/PermissionGate'
 
 // Test component to verify admin permissions
 function AdminTestComponent() {
@@ -21,6 +21,7 @@ function AdminTestComponent() {
   return (
     <div>
       <div data-testid="is-admin">{isAdmin ? 'true' : 'false'}</div>
+      <div data-testid="scope-to-organization">{permissions?.scopeToOrganization ? 'true' : 'false'}</div>
       <div data-testid="can-create-users">{hasPermission('users.create') ? 'true' : 'false'}</div>
       <div data-testid="can-delete-users">{hasPermission('users.delete') ? 'true' : 'false'}</div>
       <div data-testid="can-access-admin">{hasPermission('admin.access') ? 'true' : 'false'}</div>
@@ -55,6 +56,16 @@ describe('Integration Test: Admin role can access all permissions', () => {
         },
       },
     })
+
+    // Mock authenticated admin user
+    const adminUser = {
+      id: 'user-123',
+      email: 'admin@empresa.com',
+      role: 'admin',
+    }
+    localStorage.setItem('leadsrapido_auth_token', 'admin-jwt-token')
+    localStorage.setItem('leadsrapido_refresh_token', 'admin-refresh-token')
+    localStorage.setItem('user', JSON.stringify(adminUser))
   })
 
   it('should grant admin user access to all permissions', async () => {
@@ -103,7 +114,6 @@ describe('Integration Test: Admin role can access all permissions', () => {
     })
 
     // Admin should not be scoped to organization
-    const { permissions } = usePermissions()
-    expect(permissions?.scopeToOrganization).toBe(false)
+    expect(screen.getByTestId('scope-to-organization')).toHaveTextContent('false')
   })
 })

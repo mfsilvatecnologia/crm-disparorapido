@@ -3,7 +3,7 @@
 // Tests the permission validation endpoint based on auth-permissions.json contract
 
 import { describe, it, expect } from 'vitest'
-import { validatePermission } from '../../lib/api/permissions'
+import { validatePermission } from '../../shared/services/permissions'
 
 describe('Contract Test: POST /api/v1/auth/permissions/validate', () => {
   it('should validate permission and return correct contract structure', async () => {

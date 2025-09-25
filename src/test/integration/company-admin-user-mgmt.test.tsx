@@ -6,9 +6,9 @@ import React from 'react'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '../../contexts/AuthContext'
-import { usePermissions } from '../../hooks/usePermissions'
-import { PermissionGate } from '../../components/auth/PermissionGate'
+import { AuthProvider } from '../../shared/contexts/AuthContext'
+import { usePermissions } from '@/features/authentication'
+import { PermissionGate } from '../../features/authentication/components/PermissionGate'
 
 // Test component to verify company admin permissions
 function CompanyAdminTestComponent() {
@@ -61,6 +61,16 @@ describe('Integration Test: Company admin manages users in same org', () => {
         },
       },
     })
+
+    // Mock authenticated company admin user
+    const companyAdminUser = {
+      id: 'user-456',
+      email: 'coadmin@empresa.com',
+      role: 'empresa_admin',
+    }
+    localStorage.setItem('leadsrapido_auth_token', 'coadmin-jwt-token')
+    localStorage.setItem('leadsrapido_refresh_token', 'coadmin-refresh-token')
+    localStorage.setItem('user', JSON.stringify(companyAdminUser))
   })
 
   it('should grant company admin user management permissions within organization', async () => {
@@ -115,8 +125,7 @@ describe('Integration Test: Company admin manages users in same org', () => {
     })
 
     // Company admin should be scoped to their organization
-    const { permissions } = usePermissions()
-    expect(permissions?.scopeToOrganization).toBe(true)
+    expect(screen.getByTestId('scope-to-org')).toHaveTextContent('true')
   })
 
   it('should allow role assignment within permitted roles', async () => {

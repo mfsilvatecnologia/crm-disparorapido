@@ -5,9 +5,9 @@ import React from 'react'
 import { describe, it, expect } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '../../contexts/AuthContext'
-import { usePermissions } from '../../hooks/usePermissions'
-import { PermissionGate } from '../../components/auth/PermissionGate'
+import { AuthProvider } from '../../shared/contexts/AuthContext'
+import { usePermissions } from '@/features/authentication'
+import { PermissionGate } from '../../features/authentication/components/PermissionGate'
 
 function RegularUserTestComponent() {
   const { hasPermission, isUser, permissions, isLoading } = usePermissions()
@@ -31,6 +31,18 @@ function RegularUserTestComponent() {
 }
 
 describe('Integration Test: Regular user has read-only access', () => {
+  beforeEach(() => {
+    // Mock authenticated regular user
+    const regularUser = {
+      id: 'user-789',
+      email: 'user@empresa.com',
+      role: 'user',
+    }
+    localStorage.setItem('leadsrapido_auth_token', 'user-jwt-token')
+    localStorage.setItem('leadsrapido_refresh_token', 'user-refresh-token')
+    localStorage.setItem('user', JSON.stringify(regularUser))
+  })
+
   it('should restrict regular user to read-only permissions', async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 

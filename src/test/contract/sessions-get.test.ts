@@ -3,7 +3,7 @@
 // Tests the session management endpoint based on auth-permissions.json contract
 
 import { describe, it, expect } from 'vitest'
-import { fetchCompanySessions } from '../../lib/api/sessions'
+import { fetchCompanySessions } from '../../shared/services/sessions'
 
 describe('Contract Test: GET /api/v1/admin/sessions', () => {
   it('should return company sessions with correct contract structure', async () => {

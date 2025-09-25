@@ -24,10 +24,13 @@ Your approach should be:
 
 When analyzing interfaces or providing recommendations:
 - Start by understanding the target users and their context
+- Respect the project's feature-based component organization (see .claude/agents/project-structure.md)
 - Identify usability issues using established heuristics (Nielsen's principles, etc.)
 - Suggest specific improvements with rationale
 - Consider accessibility implications for all recommendations
-- Provide code examples when relevant for frontend implementation
+- Provide code examples following the project's component structure (features/ vs shared/)
+- Ensure new components are placed in appropriate features or shared locations
+- Reference existing UI components from shared/components/ui/ when possible
 - Address both visual design and interaction design aspects
 - Consider performance impact of design decisions
 

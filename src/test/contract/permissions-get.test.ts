@@ -3,7 +3,7 @@
 // Tests the permissions endpoint based on auth-permissions.json contract
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { fetchUserPermissions } from '../../lib/api/permissions'
+import { fetchUserPermissions } from '../../shared/services/permissions'
 
 describe('Contract Test: GET /api/v1/auth/permissions', () => {
   const API_BASE_URL = 'http://localhost:3000/api/v1'

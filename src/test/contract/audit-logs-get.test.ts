@@ -3,7 +3,7 @@
 // Tests the audit logs endpoint based on auth-permissions.json contract
 
 import { describe, it, expect } from 'vitest'
-import { fetchAuditLogs } from '../../lib/api/audit'
+import { fetchAuditLogs } from '../../shared/services/audit'
 
 describe('Contract Test: GET /api/v1/admin/audit-logs', () => {
   it('should return audit logs with correct contract structure', async () => {
