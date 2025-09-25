@@ -48,14 +48,17 @@ const createCampanhaSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
   descricao: z.string().optional(),
   tipo: z.enum(['scraping_web', 'lista_importada', 'api_externa', 'manual']),
-  segmentosAlvo: z.array(z.string()).optional(),
-  dataInicio: z.string().optional(),
-  dataFim: z.string().optional(),
+  palavras_chave: z.string().optional(),
+  localizacao: z.string().optional(),
 });
 
 type CreateCampanhaForm = z.infer<typeof createCampanhaSchema>;
 
 const tipoIcons = {
+  scraping_web: Search,
+  lista_importada: Users,
+  api_externa: Target,
+  manual: Pencil,
   email: Mail,
   sms: Smartphone,
   whatsapp: MessageSquare,
@@ -90,19 +93,24 @@ export default function CampanhasPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [contatosDialogOpen, setContatosDialogOpen] = useState(false);
   const [editingCampanha, setEditingCampanha] = useState<Campaign | null>(null);
   const [viewingCampanha, setViewingCampanha] = useState<Campaign | null>(null);
+  const [gerenciandoContatos, setGerenciandoContatos] = useState<Campaign | null>(null);
 
   // Preparar filtros
   const filters: CampaignFilters = {
     search: searchTerm || undefined,
-    status: statusFilter && statusFilter !== 'all' ? [statusFilter] : undefined,
-    tipo: tipoFilter && tipoFilter !== 'all' ? [tipoFilter] : undefined,
+    status: statusFilter && statusFilter !== 'all' ? [statusFilter as Campaign['status']] : undefined,
+    tipo: tipoFilter && tipoFilter !== 'all' ? [tipoFilter as Campaign['tipo']] : undefined,
   };
 
   // Fetch campanhas e stats usando hooks
   const { data: campanhasData, isLoading, error, refetch } = useCampaigns(filters);
   const { data: stats } = useCampaignStats();
+
+  // Debug: verificar estrutura dos dados
+  console.log('campanhasData:', campanhasData);
 
   // Create campanha form
   const {
@@ -122,15 +130,13 @@ export default function CampanhasPage() {
   const onCreateCampanha = (data: CreateCampanhaForm) => {
     const campaignData = {
       nome: data.nome,
-      descricao: data.descricao || '',
+      descricao: data.descricao,
       tipo: data.tipo,
-      sequencia: [], // Sequência vazia por enquanto
-      segmentosAlvo: data.segmentosAlvo || [],
       configuracoes: {
-        agendamento: {
-          dataInicio: data.dataInicio,
-          dataFim: data.dataFim,
-        }
+        ...(data.palavras_chave && { 
+          palavras_chave: data.palavras_chave.split(',').map(k => k.trim()) 
+        }),
+        ...(data.localizacao && { localizacao: data.localizacao })
       }
     };
 
@@ -146,6 +152,11 @@ export default function CampanhasPage() {
   const handleViewCampanha = (campanha: Campaign) => {
     setViewingCampanha(campanha);
     setViewDialogOpen(true);
+  };
+
+  const handleGerenciarContatos = (campanha: Campaign) => {
+    setGerenciandoContatos(campanha);
+    setContatosDialogOpen(true);
   };
 
   const formatPercentage = (value: number | undefined) => value ? `${value.toFixed(1)}%` : '0%';
@@ -213,92 +224,66 @@ export default function CampanhasPage() {
             </DialogHeader>
 
             <form onSubmit={handleSubmit(onCreateCampanha)} className="space-y-4">
-              <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
-                  <TabsTrigger value="config">Configurações</TabsTrigger>
-                </TabsList>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome da Campanha</Label>
+                  <Input
+                    id="nome"
+                    {...register('nome')}
+                    className={errors.nome ? 'border-destructive' : ''}
+                    placeholder="Ex: Campanha de Prospeccão Q1"
+                  />
+                  {errors.nome && (
+                    <p className="text-sm text-destructive">{errors.nome.message}</p>
+                  )}
+                </div>
 
-                <TabsContent value="basic" className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome da Campanha</Label>
-                    <Input
-                      id="nome"
-                      {...register('nome')}
-                      className={errors.nome ? 'border-destructive' : ''}
-                      placeholder="Ex: Campanha de Prospeccão Q1"
-                    />
-                    {errors.nome && (
-                      <p className="text-sm text-destructive">{errors.nome.message}</p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tipo">Tipo de Campanha</Label>
+                  <Select onValueChange={(value) => setValue('tipo', value as any)}>
+                    <SelectTrigger className={errors.tipo ? 'border-destructive' : ''}>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="scraping_web">Scraping Web</SelectItem>
+                      <SelectItem value="lista_importada">Lista Importada</SelectItem>
+                      <SelectItem value="api_externa">API Externa</SelectItem>
+                      <SelectItem value="manual">Manual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.tipo && (
+                    <p className="text-sm text-destructive">{errors.tipo.message}</p>
+                  )}
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tipo">Tipo de Campanha</Label>
-                    <Select onValueChange={(value) => setValue('tipo', value as any)}>
-                      <SelectTrigger className={errors.tipo ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="scraping_web">Scraping Web</SelectItem>
-                        <SelectItem value="lista_importada">Lista Importada</SelectItem>
-                        <SelectItem value="api_externa">API Externa</SelectItem>
-                        <SelectItem value="manual">Manual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.tipo && (
-                      <p className="text-sm text-destructive">{errors.tipo.message}</p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="descricao">Descrição</Label>
+                  <Textarea
+                    id="descricao"
+                    {...register('descricao')}
+                    placeholder="Descreva o objetivo da campanha..."
+                    rows={3}
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="descricao">Descrição</Label>
-                    <Textarea
-                      id="descricao"
-                      {...register('descricao')}
-                      placeholder="Descreva o objetivo da campanha..."
-                      rows={3}
-                    />
-                  </div>
-                </TabsContent>
+                <div className="space-y-2">
+                  <Label htmlFor="palavras_chave">Palavras-chave</Label>
+                  <Input
+                    id="palavras_chave"
+                    {...register('palavras_chave')}
+                    placeholder="Ex: tecnologia, startup, marketing (separado por vírgula)"
+                  />
+                </div>
 
-                <TabsContent value="config" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="dataInicio">Data de Início</Label>
-                      <Input
-                        id="dataInicio"
-                        type="datetime-local"
-                        {...register('dataInicio')}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="dataFim">Data de Fim</Label>
-                      <Input
-                        id="dataFim"
-                        type="datetime-local"
-                        {...register('dataFim')}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="periodicidade">Periodicidade</Label>
-                    <Select onValueChange={(value) => setValue('periodicidade', value as any)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a periodicidade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ONCE">Uma vez</SelectItem>
-                        <SelectItem value="DAILY">Diária</SelectItem>
-                        <SelectItem value="WEEKLY">Semanal</SelectItem>
-                        <SelectItem value="MONTHLY">Mensal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                <div className="space-y-2">
+                  <Label htmlFor="localizacao">Localização</Label>
+                  <Input
+                    id="localizacao"
+                    {...register('localizacao')}
+                    placeholder="Ex: São Paulo, Brasil"
+                  />
+                </div>
+              </div>
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
@@ -459,7 +444,7 @@ export default function CampanhasPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {campanhasData.campaigns.map((campanha) => {
+                {Array.isArray(campanhasData?.campaigns) && campanhasData.campaigns.length > 0 ? campanhasData.campaigns.map((campanha) => {
                   const TipoIcon = tipoIcons[campanha.tipo];
                   return (
                     <TableRow key={campanha.id}>
@@ -475,8 +460,12 @@ export default function CampanhasPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <TipoIcon className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm capitalize">{campanha.tipo}</span>
+                          {TipoIcon ? (
+                            <TipoIcon className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Megaphone className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span className="text-sm capitalize">{campanha.tipo.replace('_', ' ')}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -491,17 +480,17 @@ export default function CampanhasPage() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Users className="h-3 w-3" />
-                            <span>{formatNumber(campanha.metricas?.totalContatos || 0)} contatos</span>
+                            <span>0 contatos</span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <TrendingUp className="h-3 w-3" />
-                            <span>{formatPercentage(campanha.metricas?.taxaConversao || 0)} conversão</span>
+                            <span>0% conversão</span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {new Date(campanha.dataCriacao).toLocaleDateString('pt-BR')}
+                          {new Date(campanha.createdAt).toLocaleDateString('pt-BR')}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -520,12 +509,22 @@ export default function CampanhasPage() {
                               <Pencil className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleGerenciarContatos(campanha)}>
+                              <Users className="mr-2 h-4 w-4" />
+                              Gerenciar Contatos
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                }) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      {isLoading ? 'Carregando campanhas...' : 'Nenhuma campanha encontrada.'}
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           )}
@@ -552,8 +551,12 @@ export default function CampanhasPage() {
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Tipo</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    {React.createElement(tipoIcons[viewingCampanha.tipo], { className: "h-4 w-4" })}
-                    <span className="text-sm capitalize">{viewingCampanha.tipo}</span>
+                    {tipoIcons[viewingCampanha.tipo] ? (
+                      React.createElement(tipoIcons[viewingCampanha.tipo], { className: "h-4 w-4" })
+                    ) : (
+                      <Megaphone className="h-4 w-4" />
+                    )}
+                    <span className="text-sm capitalize">{viewingCampanha.tipo.replace('_', ' ')}</span>
                   </div>
                 </div>
                 <div>
@@ -572,19 +575,19 @@ export default function CampanhasPage() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                   <div className="text-center p-3 border rounded">
                     <div className="text-2xl font-bold text-blue-600">
-                      {formatNumber(viewingCampanha.metricas?.totalContatos || 0)}
+                      0
                     </div>
                     <div className="text-xs text-muted-foreground">Contatos</div>
                   </div>
                   <div className="text-center p-3 border rounded">
                     <div className="text-2xl font-bold text-green-600">
-                      {formatPercentage(viewingCampanha.metricas?.taxaConversao || 0)}
+                      0%
                     </div>
                     <div className="text-xs text-muted-foreground">Taxa Conversão</div>
                   </div>
                   <div className="text-center p-3 border rounded">
                     <div className="text-2xl font-bold text-purple-600">
-                      {viewingCampanha.sequencia?.length || 0}
+                      0
                     </div>
                     <div className="text-xs text-muted-foreground">Etapas</div>
                   </div>
@@ -604,18 +607,89 @@ export default function CampanhasPage() {
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Criada em</Label>
                   <p className="text-sm mt-1">
-                    {new Date(viewingCampanha.dataCriacao).toLocaleString('pt-BR')}
+                    {new Date(viewingCampanha.createdAt).toLocaleString('pt-BR')}
                   </p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Atualizada em</Label>
                   <p className="text-sm mt-1">
-                    {new Date(viewingCampanha.dataAtualizacao).toLocaleString('pt-BR')}
+                    {new Date(viewingCampanha.updatedAt).toLocaleString('pt-BR')}
                   </p>
                 </div>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Gerenciar Contatos Dialog */}
+      <Dialog open={contatosDialogOpen} onOpenChange={setContatosDialogOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Gerenciar Contatos - {gerenciandoContatos?.nome}
+            </DialogTitle>
+            <DialogDescription>
+              Adicione, visualize ou remova contatos desta campanha
+            </DialogDescription>
+          </DialogHeader>
+
+          {gerenciandoContatos && (
+            <div className="space-y-6">
+              {/* Ações rápidas */}
+              <div className="flex gap-2">
+                <Button className="flex-1">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Contatos
+                </Button>
+                <Button variant="outline" className="flex-1">
+                  <Users className="h-4 w-4 mr-2" />
+                  Importar Lista
+                </Button>
+              </div>
+
+              {/* Estatísticas */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="text-2xl font-bold text-blue-600">0</div>
+                    <div className="text-xs text-muted-foreground">Total de Contatos</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="text-2xl font-bold text-green-600">0</div>
+                    <div className="text-xs text-muted-foreground">Processados</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="text-2xl font-bold text-orange-600">0</div>
+                    <div className="text-xs text-muted-foreground">Pendentes</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Lista de contatos */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Contatos da Campanha</h3>
+                <div className="border rounded-lg">
+                  <div className="p-8 text-center text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="mb-2">Nenhum contato adicionado ainda</p>
+                    <p className="text-sm">Comece adicionando contatos para esta campanha</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setContatosDialogOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -21,16 +21,41 @@ export async function fetchCampaigns(filters: CampaignFilters = {}): Promise<Cam
   try {
     console.log('fetchCampaigns called with filters:', filters)
 
-    // Mock data para demonstração
-    const mockResponse: CampaignsResponse = {
-      campaigns: [],
-      total: 0,
-      page: 1,
-      limit: 20,
-      hasMore: false
+    const response = await apiClient.request<{ 
+      success: boolean; 
+      data: {
+        campanhas: Campaign[]
+        total: number
+        page: number
+        limit: number
+        totalPages: number
+      }
+    }>(CAMPAIGNS_ENDPOINT, {
+      method: 'GET',
+    })
+
+    console.log('Raw API response:', response)
+
+    // A API retorna { success: true, data: { campanhas: [...], total, page, limit, totalPages } }
+    const campaigns = response.data?.campanhas || []
+    const total = response.data?.total || 0
+    const page = response.data?.page || 1
+    const limit = response.data?.limit || 20
+    const totalPages = response.data?.totalPages || 1
+    
+    console.log('Extracted campaigns:', campaigns)
+    console.log('Pagination info:', { total, page, limit, totalPages })
+    
+    const campaignsResponse: CampaignsResponse = {
+      campaigns,
+      total,
+      page,
+      limit,
+      hasMore: page < totalPages
     }
 
-    return mockResponse
+    console.log('Final campaigns response:', campaignsResponse)
+    return campaignsResponse
   } catch (error) {
     console.error('Error fetching campaigns:', error)
     throw new Error('Falha ao buscar campanhas')
@@ -49,11 +74,13 @@ export async function fetchCampaign(id: string): Promise<Campaign> {
 
 export async function createCampaign(data: CreateCampaignData): Promise<Campaign> {
   try {
-    const response = await apiClient.request<Campaign>(CAMPAIGNS_ENDPOINT, {
+    const response = await apiClient.request<{ success: boolean; data: Campaign }>(CAMPAIGNS_ENDPOINT, {
       method: 'POST',
       body: JSON.stringify(data)
     })
-    return response
+    
+    // A API retorna { success: true, data: Campaign }
+    return response.data
   } catch (error) {
     console.error('Error creating campaign:', error)
     throw new Error('Falha ao criar campanha')

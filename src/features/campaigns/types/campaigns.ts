@@ -4,81 +4,31 @@ export interface Campaign {
   nome: string
   empresaId: string
   descricao?: string
-  tipo: 'scraping_web' | 'lista_importada' | 'api_externa' | 'manual' | 'email' | 'sms' | 'whatsapp' | 'linkedin' | 'phone' | 'mixed'
-  status: 'rascunho' | 'ativa' | 'pausada' | 'concluida' | 'cancelada' | 'draft' | 'scheduled' | 'active' | 'paused' | 'completed' | 'cancelled'
-
-  // Configurações da campanha
-  configuracao: {
-    autoStart: boolean
-    allowManualTrigger: boolean
-    maxContacts: number
-    dailyLimit?: number
-    timezone: string
-    workingHours?: {
-      start: string // HH:mm format
-      end: string   // HH:mm format
-      days: number[] // 0-6 (Sunday-Saturday)
-    }
+  tipo: 'scraping_web' | 'lista_importada' | 'api_externa' | 'manual'
+  status: 'rascunho' | 'ativa' | 'pausada' | 'concluida' | 'cancelada'
+  dataInicio?: string | null
+  dataFim?: string | null
+  budgetMaximoCentavos?: number | null
+  custoPorLeadCentavos?: number | null
+  metaLeads?: number | null
+  configuracao?: {
+    palavras_chave?: string[]
+    localizacao?: string
   }
-
-  // Targeting e segmentação
-  targeting: {
-    segmentoIds?: string[]
-    leadFilters?: {
-      status?: string[]
-      origem?: string[]
-      tags?: string[]
-      scoreMinimo?: number
-      scoreMaximo?: number
-      dataInicio?: string
-      dataFim?: string
-    }
-    companyFilters?: {
-      tamanhoEmpresa?: string[]
-      segmento?: string[]
-      status?: string[]
-      localizacao?: string[]
-    }
-    customFilters?: Array<{
-      field: string
-      operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'not_in'
-      value: any
-    }>
-  }
-
-  // Métricas e performance
-  metricas: {
-    totalContatos: number
-    contatosProcessados: number
-    contatosRestantes: number
-    taxaAbertura?: number
-    taxaClique?: number
-    taxaResposta?: number
-    taxaConversao?: number
-    leads_gerados: number
-    reunioesAgendadas: number
-    vendas: number
-    valorVendas: number
-    custoTotal: number
-    roi: number
-  }
-
-  // Sequência de mensagens/ações
-  sequencia: CampaignStep[]
-
-  // Metadados
   criadoPor: string
-  responsavelId?: string
-  empresaId?: string
-  tags?: string[]
+  createdAt: string
+  updatedAt: string
+  targetType?: string
+  companyContext?: string | null
+  contactOrderingStrategy?: string
+  messageDelaySeconds?: number
+  typingDelaySeconds?: number
+  randomizeDelays?: boolean
+  delayVariationPercent?: number
+  sendingStartHour?: string
+  sendingEndHour?: string
+  timezone?: string
 
-  // Datas
-  dataCriacao: string
-  dataAtualizacao: string
-  dataInicio?: string
-  dataFim?: string
-  ultimaExecucao?: string
-  proximaExecucao?: string
 }
 
 export interface CampaignStep {
@@ -148,13 +98,12 @@ export interface CampaignFilters {
 export interface CreateCampaignData {
   nome: string
   descricao?: string
-  tipo: Campaign['tipo']
-  configuracao: Campaign['configuracao']
-  targeting: Campaign['targeting']
-  sequencia: Omit<CampaignStep, 'id' | 'estatisticas'>[]
-  responsavelId?: string
-  tags?: string[]
-  dataInicio?: string
+  tipo: 'scraping_web' | 'lista_importada' | 'api_externa' | 'manual'
+  configuracoes?: {
+    palavras_chave?: string[]
+    localizacao?: string
+    [key: string]: any // Para permitir outras configurações específicas por tipo
+  }
 }
 
 export interface UpdateCampaignData extends Partial<CreateCampaignData> {
@@ -242,22 +191,7 @@ export interface CampaignContact {
 }
 
 // Template Types
-export interface CampaignTemplate {
-  id: string
-  nome: string
-  descricao: string
-  tipo: Campaign['tipo']
-  categoria: string
-  sequencia: Omit<CampaignStep, 'id' | 'estatisticas'>[]
-  configuracaoPadrao: Campaign['configuracao']
-  targeting: Campaign['targeting']
-  tags: string[]
-  isPublic: boolean
-  usageCount: number
-  rating: number
-  criadoPor: string
-  dataCriacao: string
-}
+
 
 // Analytics Types
 export interface CampaignAnalytics {
@@ -328,17 +262,7 @@ export interface CampaignIntegration {
 }
 
 // A/B Testing Types
-export interface CampaignVariant {
-  id: string
-  campaignId: string
-  nome: string
-  percentualTrafico: number
-  sequencia: CampaignStep[]
-  metricas: Campaign['metricas']
-  isWinner?: boolean
-  isActive: boolean
-  dataCriacao: string
-}
+
 
 // Novos tipos baseados no swagger para contatos de campanha
 export interface AddContactsToCampaignRequest {

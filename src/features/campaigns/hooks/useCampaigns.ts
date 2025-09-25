@@ -10,8 +10,6 @@ import type {
   CampaignAnalytics,
   CampaignContact,
   CampaignExecution,
-  CampaignTemplate,
-  CampaignVariant,
   CampaignIntegration,
   CampaignContactsParams
 } from '../types/campaigns'
@@ -27,7 +25,6 @@ const QUERY_KEYS = {
   campaignContacts: (id: string) => ['campaigns', id, 'contacts'] as const,
   campaignExecutions: (id: string) => ['campaigns', id, 'executions'] as const,
   campaignTemplates: ['campaigns', 'templates'] as const,
-  campaignVariants: (id: string) => ['campaigns', id, 'variants'] as const,
   campaignIntegrations: (id: string) => ['campaigns', id, 'integrations'] as const,
 }
 
@@ -102,15 +99,7 @@ export function useCampaignTemplates(filters?: { tipo?: string; categoria?: stri
   })
 }
 
-// Campaign Variants Hook (A/B Testing)
-export function useCampaignVariants(campaignId: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.campaignVariants(campaignId),
-    queryFn: () => campaignService.fetchCampaignVariants(campaignId),
-    enabled: !!campaignId,
-    staleTime: 5 * 60 * 1000,
-  })
-}
+
 
 // Campaign Integrations Hook
 export function useCampaignIntegrations(campaignId: string) {
@@ -410,31 +399,7 @@ export function useRemoveContactFromCampaign() {
   })
 }
 
-// A/B Testing
-export function useCreateCampaignVariant() {
-  const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: ({ campaignId, variant }: {
-      campaignId: string;
-      variant: Omit<CampaignVariant, 'id' | 'campaignId' | 'dataCriacao'>
-    }) => campaignService.createCampaignVariant(campaignId, variant),
-    onSuccess: (_, { campaignId }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.campaignVariants(campaignId) })
-      toast({
-        title: 'Variante criada',
-        description: 'A variante da campanha foi criada para teste A/B.',
-      })
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Erro ao criar variante',
-        description: error.message || 'Ocorreu um erro inesperado.',
-        variant: 'destructive',
-      })
-    },
-  })
-}
 
 // Test Campaign
 export function useTestCampaign() {

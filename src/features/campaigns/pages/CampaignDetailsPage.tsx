@@ -100,9 +100,9 @@ export default function CampaignDetailsPage() {
             <CardTitle className="text-sm font-medium">Total de Contatos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{campaign.metricas.totalContatos}</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-gray-500">
-              {campaign.metricas.contatosProcessados} processados
+              0 processados
             </p>
           </CardContent>
         </Card>
@@ -113,10 +113,10 @@ export default function CampaignDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {campaign.metricas.taxaConversao?.toFixed(1) || '0.0'}%
+              0.0%
             </div>
             <p className="text-xs text-gray-500">
-              {campaign.metricas.leads_gerados} leads gerados
+              0 leads gerados
             </p>
           </CardContent>
         </Card>
@@ -127,10 +127,10 @@ export default function CampaignDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {campaign.metricas.roi.toFixed(1)}x
+              0.0x
             </div>
             <p className="text-xs text-gray-500">
-              R$ {campaign.metricas.valorVendas.toLocaleString()} em vendas
+              R$ 0 em vendas
             </p>
           </CardContent>
         </Card>
