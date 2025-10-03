@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from './SessionContext';
-import { getOrCreateDeviceId, getDeviceFingerprint, clearDeviceData } from '@/shared/utils/device';
+import { getOrCreateDeviceId, generateDeviceFingerprint, clearDeviceData } from '@/shared/utils/device';
 import type { User, ComputedPermissions, LoginCredentials, ClientType } from '../types';
 import apiClient from '../services/client';
 import { fetchUserPermissions } from '../../features/authentication/services/permissions';
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Add device information for session management
       const deviceId = getOrCreateDeviceId();
-      const fingerprint = getDeviceFingerprint();
+      const fingerprint = await generateDeviceFingerprint('web');
       const clientType: ClientType = getClientType();
 
       const loginData = {

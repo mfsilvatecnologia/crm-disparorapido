@@ -338,3 +338,101 @@ export interface SessionState {
   lastValidation: number
   isStale: boolean
 }
+
+// ============================================
+// Additional Types from Spec 003
+// ============================================
+
+// Device Types
+export interface Device {
+  device_id: string;                       // UUID único do dispositivo
+  device_fingerprint: string;              // Fingerprint atual do dispositivo
+  fingerprint_history: FingerprintEntry[]; // Histórico de fingerprints
+  user_id: string;                         // UUID do último usuário (relacionamento)
+  browser_info: BrowserInfo;               // Informações do navegador
+  hardware_info: HardwareInfo;             // Informações de hardware
+  first_seen_at: Date;                     // Data da primeira vez visto
+  last_seen_at: Date;                      // Data da última vez visto
+}
+
+export interface FingerprintEntry {
+  fingerprint: string;
+  recorded_at: Date;
+  changed_reason: string | null;
+}
+
+export interface BrowserInfo {
+  user_agent: string;
+  language: string;
+  languages: string[];
+  platform: string;
+  vendor: string;
+}
+
+export interface HardwareInfo {
+  hardware_concurrency: number;
+  device_memory?: number;
+  screen_resolution: string;
+  screen_color_depth: number;
+  timezone: string;
+  timezone_offset: number;
+}
+
+// Token Types
+export interface AuthToken {
+  token_type: TokenType;                   // Tipo do token
+  token_value: string;                     // Token JWT criptografado
+  session_id: string;                      // UUID da sessão (relacionamento)
+  device_id: string;                       // UUID do dispositivo para validação
+  issued_at: Date;                         // Data de emissão
+  expires_at: Date;                        // Data de expiração
+  is_revoked: boolean;                     // Se foi revogado
+  revoked_at: Date | null;                 // Data da revogação
+  revoked_reason: string | null;           // Motivo da revogação
+}
+
+export type TokenType = 'access' | 'refresh';
+
+// JWT Payload (decodificado)
+export interface JWTPayload {
+  sub: string;                             // user_id
+  email: string;
+  empresa_id: string;
+  device_id: string;
+  session_id: string;
+  role: string;
+  type: TokenType;
+  iat: number;                             // Issued at (Unix timestamp)
+  exp: number;                             // Expiration (Unix timestamp)
+}
+
+// Company Types (aliases for Organization)
+export type Company = Organization;
+export type CompanyPlan = 'freemium' | 'basico' | 'premium' | 'enterprise';
+export type CompanyStatus = 'active' | 'suspended' | 'cancelled';
+
+// Plan Limits Constant
+export const PLAN_LIMITS: Record<CompanyPlan, number> = {
+  freemium: 1,
+  basico: 2,
+  premium: 5,
+  enterprise: 10
+};
+
+// Session Event Types (extended from SessionAction)
+export type SessionEventType =
+  | 'login_attempt'
+  | 'login_success'
+  | 'login_failure'
+  | 'logout'
+  | 'token_refresh'
+  | 'session_expired'
+  | 'session_revoked'
+  | 'session_suspicious'
+  | 'fingerprint_mismatch'
+  | 'license_limit_reached';
+
+export type EventResult = 'success' | 'failure' | 'warning';
+
+// Session Types (alias for compatibility)
+export type Session = UserSession;

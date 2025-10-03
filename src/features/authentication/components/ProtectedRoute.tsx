@@ -3,9 +3,8 @@
 
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
-import { usePermissions } from '../../hooks/usePermissions'
-import { useSession } from '../../contexts/SessionContext'
+import { useAuth } from '../contexts/AuthContext'
+import { usePermissions } from '../hooks/usePermissions'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -26,7 +25,6 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading: authLoading, user, token } = useAuth()
   const { hasPermission, hasRole, isLoading: permLoading, permissions } = usePermissions()
-  const { isValidSession, session } = useSession()
   const location = useLocation()
 
   // Debug logging for admin route access
@@ -37,8 +35,6 @@ export function ProtectedRoute({
         isAuthenticated,
         user: user ? { id: user.id, role: user.role, email: user.email } : null,
         token: token ? 'present' : 'missing',
-        isValidSession,
-        session: session ? { status: session.status, session_id: session.session_id } : null,
         permissions: permissions ? Object.keys(permissions).filter(key => permissions[key as keyof typeof permissions]) : null,
         authLoading,
         permLoading,
@@ -46,7 +42,7 @@ export function ProtectedRoute({
         requiredRole
       });
     }
-  }, [location.pathname, isAuthenticated, user, token, isValidSession, session, permissions, authLoading, permLoading]);
+  }, [location.pathname, isAuthenticated, user, token, permissions, authLoading, permLoading]);
 
   // Show loading state while checking authentication and permissions
   if (authLoading || permLoading) {
@@ -64,14 +60,8 @@ export function ProtectedRoute({
     return <Navigate to={fallbackPath} state={{ from: location }} replace />
   }
 
-  // Check session validity requirement
-  if (requireAuth && requireValidSession && !isValidSession) {
-    console.log('ProtectedRoute: Valid session required but session is invalid, redirecting to login', {
-      isValidSession,
-      session: session ? { status: session.status, session_id: session.session_id } : null
-    });
-    return <Navigate to="/login" state={{ from: location, sessionExpired: true }} replace />
-  }
+  // Session validation is handled by AuthContext
+  // No need for separate session check here
 
   // Check specific permission requirement
   if (requiredPermission && !hasPermission(requiredPermission)) {
