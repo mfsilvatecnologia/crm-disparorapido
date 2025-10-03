@@ -4,6 +4,109 @@
 
 O LeadsRápido é uma aplicação CRM para gestão de leads e scraping de dados, desenvolvida com React, TypeScript e arquitetura feature-based.
 
+
+## ⚡ Princípios Anti-Entropia
+
+**CUIDADO COM ENTROPIA**: Código cresce exponencialmente se não controlado.
+
+### 🎯 Regras de Ouro:
+
+1. **Código > Documentação**
+   - ✅ JSDoc inline no código
+   - ✅ Nomes autoexplicativos
+   - ❌ Duplicação de informação
+   - ❌ Docs teóricos sem ação prática
+
+2. **YAGNI (You Aren't Gonna Need It)**
+   - ✅ Implemente apenas o necessário AGORA
+   - ❌ Não criar "por precaução"
+   - ❌ Não antecipar features futuras
+
+3. **DRY (Don't Repeat Yourself)**
+   - ✅ Uma fonte de verdade
+   - ✅ Referenciar specs existentes
+   - ❌ Copiar/colar código
+   - ❌ Duplicar informação entre arquivos
+
+4. **Commits Focados**
+   - ✅ 1 feature = 1 commit (ou poucos commits lógicos)
+   - ✅ Mensagem concisa (max 10 linhas)
+   - ❌ Commits gigantes (>500 linhas código)
+   - ❌ Mensagens verbosas (>20 linhas)
+
+5. **Documentação com Propósito**
+
+   **Documentação Teórica** (Limite: ~100 linhas):
+   - ✅ README.md essencial
+   - ✅ .env.example atualizado
+   - ❌ Guias abstratos que ninguém lê
+   - ❌ CHANGELOGs manuais
+   - ❌ Arquitetura genérica sem ação
+
+   **Documentação Executável** (Sem limite rígido):
+   - ✅ **tasks.md** com instruções detalhadas
+   - ✅ **Contratos de API** (Zod schemas)
+   - ✅ **Guias step-by-step** executáveis
+   - ✅ **Critério**: Se remover = não executável
+   - ⚠️ **Se > 500 linhas**: Considere quebrar em partes lógicas
+
+### 📊 Limites e Ações:
+
+| Tipo | Limite | Ação se Exceder |
+|------|--------|-----------------|
+| Código | 500 linhas/commit | Split em múltiplos commits |
+| Docs Teóricos | ~100 linhas | Simplificar ou deletar |
+| Docs Executáveis | Use bom senso | Quebrar em partes lógicas se > 500 linhas |
+| Mensagem commit | 15 linhas | Resumir drasticamente |
+| Arquivos/commit | 8 arquivos | Agrupar logicamente |
+
+### ✅ Exemplo BOM (Low Entropy):
+
+**Código com JSDoc**:
+```typescript
+/**
+ * Session limits config from ENV
+ * @default freemium=1, pro=5, enterprise=10
+ */
+export const sessionLimits = {
+  freemium: parseInt(process.env.PLAN_FREEMIUM || '1'),
+  enterprise: parseInt(process.env.PLAN_ENTERPRISE || '10')
+};
+```
+
+**Doc Executável (tasks.md)**:
+```markdown
+### T001: Setup Feature Directory
+**Files**: `src/features/auth/{components,hooks,services,types}`
+**Command**: `mkdir -p src/features/auth/{components,hooks,services,types}`
+**Test**: Verify all dirs created with `ls -la src/features/auth/`
+```
+
+### ❌ Exemplo RUIM (High Entropy):
+
+**Doc Teórico Gigante**:
+```markdown
+<!-- 357 linhas de LICENSING_CONFIG.md explicando teoria -->
+# Licensing Configuration Guide
+## Overview
+## Architecture Philosophy
+## Deployment Strategies (todas as possibilidades)
+### Development (20 cenários)
+### Staging (15 cenários)
+### Production (30 cenários)
+## Troubleshooting (100+ problemas hipotéticos)
+...
+```
+
+**Doc Executável com Duplicação**:
+```markdown
+<!-- Copia/cola TODO o código da spec em vez de referenciar -->
+### T001: Create User model
+Implementation:
+[500 linhas de código copiado da spec]
+<!-- Deveria: "See data-model.md for User interface" -->
+```
+
 ## Arquitetura do Projeto
 
 ### Estrutura Feature-Based

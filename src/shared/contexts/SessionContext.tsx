@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getOrCreateDeviceId, getDeviceFingerprint } from '@/shared/utils/device'
+import { getOrCreateDeviceId, generateDeviceFingerprint } from '@/shared/utils/device'
 import { getCurrentSession } from '@/features/authentication/services/sessions'
 import type { SessionContext as SessionContextType, UserSession } from '../types'
 
@@ -15,8 +15,12 @@ export interface SessionProviderProps {
 
 export function SessionProvider({ children }: SessionProviderProps) {
   const [deviceId] = useState(getOrCreateDeviceId())
-  const [fingerprint] = useState(getDeviceFingerprint())
+  const [fingerprint, setFingerprint] = useState<string>('')
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    generateDeviceFingerprint('web').then(setFingerprint)
+  }, [])
 
   // Query current session information
   const { data: session, isLoading, error } = useQuery({

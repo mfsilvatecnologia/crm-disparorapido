@@ -26,3 +26,6 @@ backend_nodejs/
 .env
 .env*
 .env.example
+
+# Local Netlify folder
+.netlify

@@ -35,6 +35,9 @@ importers:
       '@fastify/swagger-ui':
         specifier: ^5.0.1
         version: 5.2.3
+      '@fingerprintjs/fingerprintjs-pro':
+        specifier: ^3.12.2
+        version: 3.12.2
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.62.0(react@18.3.1))
@@ -882,6 +885,9 @@ packages:
 
   '@fastify/swagger@9.5.1':
     resolution: {integrity: sha512-EGjYLA7vDmCPK7XViAYMF6y4+K3XUy5soVTVxsyXolNe/Svb4nFQxvtuQvvoQb2Gzc9pxiF3+ZQN/iZDHhKtTg==}
+
+  '@fingerprintjs/fingerprintjs-pro@3.12.2':
+    resolution: {integrity: sha512-YkdyQzq2I4mz1F/VNGB8PwfDUVKxQG9oP24nHzkfMcxpQ/wgcMwmZA+P60AxYq1cgocHypKWzxyTSVcWpcUTaQ==}
 
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
@@ -5008,6 +5014,8 @@ snapshots:
       yaml: 2.8.1
     transitivePeerDependencies:
       - supports-color
+
+  '@fingerprintjs/fingerprintjs-pro@3.12.2': {}
 
   '@floating-ui/core@1.7.3':
     dependencies:

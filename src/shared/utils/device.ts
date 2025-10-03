@@ -1,169 +1,164 @@
-// Device Management Utilities
-// For session tracking and device fingerprinting with API-first architecture
+/**
+ * Device ID and Fingerprinting Utilities
+ * Implements device identification and fingerprinting for session management
+ */
+
+import type { BrowserInfo, HardwareInfo } from '../types';
+
+const DEVICE_ID_KEY = 'leadsrapido_device_id';
 
 /**
- * Gets or creates a unique device ID for session management
- * Stores the ID in localStorage for persistence across browser sessions
+ * Get or create device ID from localStorage
+ * Returns a persistent UUID for this device/browser
  */
 export function getOrCreateDeviceId(): string {
-  const key = import.meta.env.VITE_DEVICE_ID_KEY || 'leadsrapido_device_id'
-  let deviceId = localStorage.getItem(key)
+  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
 
   if (!deviceId) {
-    deviceId = crypto.randomUUID()
-    localStorage.setItem(key, deviceId)
+    deviceId = crypto.randomUUID();
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
   }
 
-  return deviceId
+  return deviceId;
 }
 
 /**
- * Generates a device fingerprint based on browser characteristics
- * Used for additional security validation in session management
+ * Clear device ID from localStorage
+ * Used during logout or device reset
  */
-export function getDeviceFingerprint(): string {
-  try {
-    // Create canvas fingerprint
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      throw new Error('Canvas context not available')
-    }
-
-    ctx.textBaseline = 'top'
-    ctx.font = '14px Arial'
-    ctx.fillStyle = 'rgba(102, 204, 0, 0.7)'
-    ctx.fillText('Device fingerprint', 2, 2)
-
-    const canvasFingerprint = canvas.toDataURL()
-
-    // Collect browser characteristics
-    const fingerprint = [
-      navigator.userAgent,
-      navigator.language,
-      navigator.languages?.join(',') || '',
-      screen.width + 'x' + screen.height,
-      screen.colorDepth,
-      new Date().getTimezoneOffset().toString(),
-      navigator.hardwareConcurrency?.toString() || '',
-      navigator.deviceMemory?.toString() || '',
-      canvasFingerprint
-    ].join('|')
-
-    // Create hash of fingerprint data
-    return btoa(fingerprint).slice(0, 32)
-  } catch (error) {
-    console.warn('Error generating device fingerprint:', error)
-    // Fallback to simpler fingerprint
-    return btoa([
-      navigator.userAgent,
-      screen.width + 'x' + screen.height,
-      new Date().getTimezoneOffset()
-    ].join('|')).slice(0, 32)
-  }
+export function clearDeviceId(): void {
+  localStorage.removeItem(DEVICE_ID_KEY);
 }
 
 /**
- * Gets current device information for session context
- */
-export function getDeviceInfo() {
-  return {
-    userAgent: navigator.userAgent,
-    language: navigator.language,
-    platform: navigator.platform,
-    screenResolution: `${screen.width}x${screen.height}`,
-    colorDepth: screen.colorDepth,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    timezoneOffset: new Date().getTimezoneOffset()
-  }
-}
-
-/**
- * Clears device-related data from localStorage
- * Used during logout or when resetting session
+ * Clear all device data from localStorage
+ * Alias for clearDeviceId for backward compatibility
  */
 export function clearDeviceData(): void {
-  const keys = [
-    import.meta.env.VITE_DEVICE_ID_KEY || 'leadsrapido_device_id',
-    import.meta.env.VITE_AUTH_TOKEN_KEY || 'leadsrapido_auth_token',
-    import.meta.env.VITE_REFRESH_TOKEN_KEY || 'leadsrapido_refresh_token'
-  ]
-
-  keys.forEach(key => {
-    localStorage.removeItem(key)
-  })
+  clearDeviceId();
 }
 
 /**
- * Validates if current device matches stored fingerprint
- * Used for detecting device changes in security-sensitive operations
+ * Collect browser information for fingerprinting
  */
-export function validateDeviceFingerprint(storedFingerprint: string): boolean {
-  const currentFingerprint = getDeviceFingerprint()
-  return currentFingerprint === storedFingerprint
+export function collectBrowserInfo(): BrowserInfo {
+  return {
+    user_agent: navigator.userAgent,
+    language: navigator.language,
+    languages: Array.from(navigator.languages || [navigator.language]),
+    platform: navigator.platform,
+    vendor: navigator.vendor || 'unknown'
+  };
 }
 
 /**
- * Gets the current client type based on environment
+ * Collect hardware information for fingerprinting
  */
-export function getClientType(): 'web' | 'extension' {
-  // Check if running in Chrome extension context
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
-    return 'extension'
-  }
-
-  // Check for other extension indicators
-  if (window.location.protocol === 'chrome-extension:' ||
-      window.location.protocol === 'moz-extension:') {
-    return 'extension'
-  }
-
-  return 'web'
-}
-
-/**
- * Detects significant device/browser changes that might indicate security risk
- */
-export function detectDeviceChanges(sessionInfo: {
-  device_fingerprint: string
-  user_agent: string
-  ip_address?: string
-}): {
-  fingerprintChanged: boolean
-  userAgentChanged: boolean
-  riskLevel: 'low' | 'medium' | 'high'
-} {
-  const currentFingerprint = getDeviceFingerprint()
-  const currentUserAgent = navigator.userAgent
-
-  const fingerprintChanged = currentFingerprint !== sessionInfo.device_fingerprint
-  const userAgentChanged = currentUserAgent !== sessionInfo.user_agent
-
-  let riskLevel: 'low' | 'medium' | 'high' = 'low'
-
-  if (fingerprintChanged && userAgentChanged) {
-    riskLevel = 'high'
-  } else if (fingerprintChanged || userAgentChanged) {
-    riskLevel = 'medium'
-  }
+export function collectHardwareInfo(): HardwareInfo {
+  const screen = window.screen;
 
   return {
-    fingerprintChanged,
-    userAgentChanged,
-    riskLevel
+    hardware_concurrency: navigator.hardwareConcurrency || 0,
+    device_memory: (navigator as any).deviceMemory,
+    screen_resolution: `${screen.width}x${screen.height}`,
+    screen_color_depth: screen.colorDepth,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timezone_offset: new Date().getTimezoneOffset()
+  };
+}
+
+/**
+ * Generate canvas fingerprint
+ * Returns a hash based on canvas rendering differences
+ */
+function generateCanvasFingerprint(): string {
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return 'no-canvas';
+
+    canvas.width = 200;
+    canvas.height = 50;
+
+    // Draw text with different fonts and styles
+    ctx.textBaseline = 'top';
+    ctx.font = '14px "Arial"';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('LeadsRapido 🚀', 2, 15);
+    ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+    ctx.fillText('LeadsRapido 🚀', 4, 17);
+
+    return canvas.toDataURL();
+  } catch (e) {
+    return 'canvas-error';
   }
 }
 
-// Global window interface for Chrome extension access
-declare global {
-  interface Window {
-    getDeviceId: () => string
-    getDeviceFingerprint: () => string
+/**
+ * Get WebGL vendor information
+ */
+function getWebGLVendor(): string {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+    if (!gl) return 'no-webgl';
+
+    const debugInfo = (gl as any).getExtension('WEBGL_debug_renderer_info');
+    if (debugInfo) {
+      return (gl as any).getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+    }
+
+    return 'no-debug-info';
+  } catch (e) {
+    return 'webgl-error';
   }
 }
 
-// Expose functions for Chrome extension access
-if (typeof window !== 'undefined') {
-  window.getDeviceId = getOrCreateDeviceId
-  window.getDeviceFingerprint = getDeviceFingerprint
+/**
+ * Simple hash function for fingerprint generation
+ */
+async function hashString(str: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex.substring(0, 16);
+}
+
+/**
+ * Generate device fingerprint using multiple components
+ * Format: fp_{clientType}_{hash}
+ */
+export async function generateDeviceFingerprint(
+  clientType: 'web' | 'extension' = 'web'
+): Promise<string> {
+  const browserInfo = collectBrowserInfo();
+  const hardwareInfo = collectHardwareInfo();
+  const canvasFingerprint = generateCanvasFingerprint();
+  const webglVendor = getWebGLVendor();
+
+  // Combine all components
+  const components = {
+    userAgent: browserInfo.user_agent,
+    language: browserInfo.language,
+    platform: browserInfo.platform,
+    hardwareConcurrency: hardwareInfo.hardware_concurrency,
+    deviceMemory: hardwareInfo.device_memory,
+    screenResolution: hardwareInfo.screen_resolution,
+    colorDepth: hardwareInfo.screen_color_depth,
+    timezone: hardwareInfo.timezone,
+    canvas: canvasFingerprint,
+    webgl: webglVendor
+  };
+
+  const componentString = JSON.stringify(components);
+  const hash = await hashString(componentString);
+
+  return `fp_${clientType}_${hash}`;
 }

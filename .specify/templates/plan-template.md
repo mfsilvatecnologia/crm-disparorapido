@@ -1,68 +1,44 @@
-# Plano de Implementação: [NOME DA FEATURE]
 
-**Branch**: `feature/[nome-feature]` | **Data**: [DATA] | **Spec**: [link]
-**Input**: Especificação da feature em `/specs/[nome-feature]/spec.md`
+# Implementation Plan: [FEATURE]
 
-## Fluxo de Execução (comando /plan)
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+
+## Execution Flow (/plan command scope)
 ```
-1. Carregar spec da feature do Input
-   → Se não existir: ERRO "Spec não encontrada em {path}"
-2. Preencher Contexto Técnico (detectar dúvidas, stack, dependências)
-   → Detectar tipo de projeto (React/TypeScript, Vite, Tailwind)
-   → Definir estrutura de arquivos (src/components, src/pages, hooks, etc)
-3. Avaliar seção de Checagem da Constituição
-   → Se houver violações: Documentar no tracking de complexidade
-   → Se não justificar: ERRO "Simplifique a abordagem"
-   → Atualizar progresso: Checagem inicial
-4. Executar Fase 0 → research.md
-   → Se restarem dúvidas: ERRO "Resolva pendências primeiro"
-5. Executar Fase 1 → contratos, data-model.md, quickstart.md, instruções para Copilot
-6. Reavaliar Constituição
-   → Se surgirem novas violações: Refatorar design, voltar à Fase 1
-   → Atualizar progresso: Pós-design
-7. Planejar Fase 2 → Descrever abordagem de geração de tasks (NÃO criar tasks.md ainda)
-8. PARAR - Pronto para comando /tasks
-```
-
-**IMPORTANTE**: O comando /plan PARA no passo 7. As fases seguintes são executadas por outros comandos:
-- Fase 2: /tasks gera o arquivo tasks.md
-- Fase 3-4: Execução da implementação (manual ou via ferramentas)
-
-## Resumo
-[Resumo da necessidade principal + abordagem técnica baseada na spec]
-
-## Contexto Técnico
-**Linguagem/Versão**: TypeScript 5+, React 18+  
-**Dependências Principais**: React, Vite, Tailwind, Supabase, [outras se necessário]  
-**Armazenamento**: Supabase (quando aplicável)  
-**Testes**: Jest, React Testing Library  
-**Plataforma Alvo**: Web moderna (Chrome, Firefox, Edge)
-
-## Estrutura Recomendada
-```
-src/
-  components/
-  pages/
-  hooks/
-  contexts/
-  lib/
+1. Load feature spec from Input path
+   → If not found: ERROR "No feature spec at {path}"
+2. Fill Technical Context (scan for NEEDS CLARIFICATION)
+   → Detect Project Type from file system structure or context (web=frontend+backend, mobile=app+api)
+   → Set Structure Decision based on project type
+3. Fill the Constitution Check section based on the content of the constitution document.
+4. Evaluate Constitution Check section below
+   → If violations exist: Document in Complexity Tracking
+   → If no justification possible: ERROR "Simplify approach first"
+   → Update Progress Tracking: Initial Constitution Check
+5. Execute Phase 0 → research.md
+   → If NEEDS CLARIFICATION remain: ERROR "Resolve unknowns"
+6. Execute Phase 1 → contracts, data-model.md, quickstart.md, agent-specific template file (e.g., `CLAUDE.md` for Claude Code, `.github/copilot-instructions.md` for GitHub Copilot, `GEMINI.md` for Gemini CLI, `QWEN.md` for Qwen Code or `AGENTS.md` for opencode).
+7. Re-evaluate Constitution Check section
+   → If new violations: Refactor design, return to Phase 1
+   → Update Progress Tracking: Post-Design Constitution Check
+8. Plan Phase 2 → Describe task generation approach (DO NOT create tasks.md)
+9. STOP - Ready for /tasks command
 ```
 
-## Comandos Úteis
-- Instalar dependências: `pnpm install` ou `bun install`
-- Rodar dev: `pnpm dev` ou `bun run dev`
-- Rodar testes: `pnpm test` ou `bun test`
-- Lint: `pnpm lint` ou `bun run lint`
+**IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by other commands:
+- Phase 2: /tasks command creates tasks.md
+- Phase 3-4: Implementation execution (manual or via tools)
 
-## Checagem da Constituição
-- [ ] Componentização e reutilização
-- [ ] Testes automatizados (TDD)
-- [ ] Uso de Tailwind para estilos
-- [ ] Padronização de código (ESLint/Prettier)
-- [ ] Logs e tratamento de erros
+## Summary
+[Extract from feature spec: primary requirement + technical approach from research]
 
-## Observações
-[Espaço para dúvidas, riscos, dependências externas, etc]
+## Technical Context
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
 **Project Type**: [single/web/mobile - determines source structure]  
 **Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
 **Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
@@ -71,35 +47,7 @@ src/
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**Simplicity**:
-- Projects: [#] (max 3 - e.g., api, cli, tests)
-- Using framework directly? (no wrapper classes)
-- Single data model? (no DTOs unless serialization differs)
-- Avoiding patterns? (no Repository/UoW without proven need)
-
-**Architecture**:
-- EVERY feature as library? (no direct app code)
-- Libraries listed: [name + purpose for each]
-- CLI per library: [commands with --help/--version/--format]
-- Library docs: llms.txt format planned?
-
-**Testing (NON-NEGOTIABLE)**:
-- RED-GREEN-Refactor cycle enforced? (test MUST fail first)
-- Git commits show tests before implementation?
-- Order: Contract→Integration→E2E→Unit strictly followed?
-- Real dependencies used? (actual DBs, not mocks)
-- Integration tests for: new libraries, contract changes, shared schemas?
-- FORBIDDEN: Implementation before test, skipping RED phase
-
-**Observability**:
-- Structured logging included?
-- Frontend logs → backend? (unified stream)
-- Error context sufficient?
-
-**Versioning**:
-- Version number assigned? (MAJOR.MINOR.BUILD)
-- BUILD increments on every change?
-- Breaking changes handled? (parallel tests, migration plan)
+[Gates determined based on constitution file]
 
 ## Project Structure
 
@@ -115,8 +63,14 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 ```
-# Option 1: Single project (DEFAULT)
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
 ├── models/
 ├── services/
@@ -128,7 +82,7 @@ tests/
 ├── integration/
 └── unit/
 
-# Option 2: Web application (when "frontend" + "backend" detected)
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
 backend/
 ├── src/
 │   ├── models/
@@ -143,15 +97,16 @@ frontend/
 │   └── services/
 └── tests/
 
-# Option 3: Mobile + API (when "iOS/Android" detected)
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
 api/
 └── [same as backend above]
 
 ios/ or android/
-└── [platform-specific structure]
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -197,7 +152,8 @@ ios/ or android/
    - Quickstart test = story validation steps
 
 5. **Update agent file incrementally** (O(1) operation):
-   - Run `/scripts/bash/update-agent-context.sh claude` for your AI assistant
+   - Run `.specify/scripts/bash/update-agent-context.sh claude`
+     **IMPORTANT**: Execute it exactly as specified above. Do not add or remove any arguments.
    - If exists: Add only NEW tech from current plan
    - Preserve manual additions between markers
    - Update recent changes (keep last 3)
@@ -210,7 +166,7 @@ ios/ or android/
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
 
 **Task Generation Strategy**:
-- Load `/templates/tasks-template.md` as base
+- Load `.specify/templates/tasks-template.md` as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
 - Each contract → contract test task [P]
 - Each entity → model creation task [P] 

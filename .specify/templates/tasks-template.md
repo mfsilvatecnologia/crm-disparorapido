@@ -1,43 +1,43 @@
-# Tasks: [NOME DA FEATURE]
+# Tasks: [FEATURE NAME]
 
-**Input**: Documentos de design em `/specs/[nome-feature]/`
-**Pré-requisitos**: plan.md (obrigatório), research.md, data-model.md, contracts/
+**Input**: Design documents from `/specs/[###-feature-name]/`
+**Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
 
-## Fluxo de Execução (main)
+## Execution Flow (main)
 ```
-1. Carregar plan.md da feature
-   → Se não existir: ERRO "Plano de implementação não encontrado"
-   → Extrair: stack, libs, estrutura
-2. Carregar docs opcionais:
-   → data-model.md: Extrair entidades → modelar tasks
-   → contracts/: Cada arquivo → task de teste de contrato
-   → research.md: Decisões → tasks de setup
-3. Gerar tasks por categoria:
-   → Setup: criar componente, hook, contexto, dependências
-   → Testes: unitários (Jest/RTL), integração (fluxos críticos)
-   → Core: lógica do componente, integração com API/Supabase
-   → Integração: autenticação, contexto global, logging
-   → Polish: refino visual, docs, cobertura de testes
-4. Regras:
-   → Arquivos diferentes = marcar [P] para paralelo
-   → Mesmo arquivo = sequencial (sem [P])
-   → Testes antes da implementação (TDD)
-5. Numerar tasks sequencialmente (T001, T002...)
-6. Gerar grafo de dependências
-7. Exemplos de execução paralela
-8. Validar completude:
-   → Todos componentes testados?
-   → Hooks/contextos cobertos?
-   → Integrações implementadas?
-9. Return: SUCCESS (tasks prontas para execução)
+1. Load plan.md from feature directory
+   → If not found: ERROR "No implementation plan found"
+   → Extract: tech stack, libraries, structure
+2. Load optional design documents:
+   → data-model.md: Extract entities → model tasks
+   → contracts/: Each file → contract test task
+   → research.md: Extract decisions → setup tasks
+3. Generate tasks by category:
+   → Setup: project init, dependencies, linting
+   → Tests: contract tests, integration tests
+   → Core: models, services, CLI commands
+   → Integration: DB, middleware, logging
+   → Polish: unit tests, performance, docs
+4. Apply task rules:
+   → Different files = mark [P] for parallel
+   → Same file = sequential (no [P])
+   → Tests before implementation (TDD)
+5. Number tasks sequentially (T001, T002...)
+6. Generate dependency graph
+7. Create parallel execution examples
+8. Validate task completeness:
+   → All contracts have tests?
+   → All entities have models?
+   → All endpoints implemented?
+9. Return: SUCCESS (tasks ready for execution)
 ```
 
-## Formato: `[ID] [P?] Descrição`
-- **[P]**: Pode rodar em paralelo (arquivos diferentes, sem dependências)
-- Incluir caminhos exatos dos arquivos (ex: `src/components/MeuComponente.tsx`)
+## Format: `[ID] [P?] Description`
+- **[P]**: Can run in parallel (different files, no dependencies)
+- Include exact file paths in descriptions
 
-## Convenções de Caminho
-- Projeto único: `src/`, testes juntos ou em `__tests__` ao lado do arquivo
+## Path Conventions
+- **Single project**: `src/`, `tests/` at repository root
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure

@@ -1,47 +1,43 @@
-# LeadsRápido Frontend Constitution
+# [PROJECT_NAME] Constitution
+<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
 
-## Princípios Fundamentais
+## Core Principles
 
-### I. Componentização e Reutilização
-Todo novo recurso deve ser implementado como componente React reutilizável, preferencialmente em `src/components/` ou `src/pages/`.
-- Componentes devem ser funcionais, com tipagem TypeScript.
-- Hooks customizados devem ser criados em `src/hooks/`.
+### [PRINCIPLE_1_NAME]
+<!-- Example: I. Library-First -->
+[PRINCIPLE_1_DESCRIPTION]
+<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
 
-### II. Estado e Contexto
-Estados globais devem ser gerenciados via React Context API ou bibliotecas aprovadas (ex: Zustand, Redux), sempre tipados.
-Evitar prop drilling excessivo.
+### [PRINCIPLE_2_NAME]
+<!-- Example: II. CLI Interface -->
+[PRINCIPLE_2_DESCRIPTION]
+<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
 
-### III. Testes Primeiro (TDD)
-Todo componente, hook ou utilitário deve ter testes automatizados (Jest/React Testing Library) antes da implementação final.
-- Cobertura mínima: 80% linhas/branches.
-- Testes de integração para fluxos críticos (ex: login, dashboard).
+### [PRINCIPLE_3_NAME]
+<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
+[PRINCIPLE_3_DESCRIPTION]
+<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
 
-### IV. Padronização Visual e Estilo
-Utilizar Tailwind CSS para todos os estilos.
-- Proibido CSS inline ou arquivos CSS avulsos (exceto resets globais).
-- Seguir design tokens definidos no projeto.
+### [PRINCIPLE_4_NAME]
+<!-- Example: IV. Integration Testing -->
+[PRINCIPLE_4_DESCRIPTION]
+<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
 
-### V. Observabilidade e Qualidade
-Logs de erro devem ser centralizados (ex: Sentry, console.error padronizado).
-Utilizar ESLint, Prettier e Husky para garantir qualidade e padronização de código.
+### [PRINCIPLE_5_NAME]
+<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
+[PRINCIPLE_5_DESCRIPTION]
+<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
 
-### VI. Simplicidade e Clareza
-Evitar abstrações desnecessárias.
-Priorizar legibilidade e documentação em comentários JSDoc.
+## [SECTION_2_NAME]
+<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
 
-## Requisitos de Stack e Segurança
-- React 18+, TypeScript 5+, Vite, Tailwind, Supabase.
-- Proibido dependências não auditadas ou sem aprovação.
-- Dados sensíveis nunca devem ser expostos no frontend.
+[SECTION_2_CONTENT]
+<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
 
-## Fluxo de Desenvolvimento
-1. Criar branch a partir de `main` (`feature/nome` ou `fix/nome`).
-2. Especificar feature usando `/specs` e templates.
-3. Planejar implementação com `/plan`.
-4. Implementar com TDD, commitando frequentemente.
-5. Abrir PR com descrição clara, checklist de testes e screenshots.
-6. Revisão obrigatória por pelo menos 1 dev.
-7. Merge apenas se CI/CD aprovar (build, lint, test).
+## [SECTION_3_NAME]
+<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+
+[SECTION_3_CONTENT]
 <!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
 
 ## Governance

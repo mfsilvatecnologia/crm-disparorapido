@@ -10,7 +10,8 @@ afterAll(() => server.close())
 // Mock de device.ts
 vi.mock('../shared/utils/device', () => ({
   getOrCreateDeviceId: vi.fn(() => 'mock-device-id'),
-  getDeviceFingerprint: vi.fn(() => 'mock-fingerprint'),
+  generateDeviceFingerprint: vi.fn(async () => 'mock-fingerprint'),
+  clearDeviceData: vi.fn(),
   getDeviceInfo: vi.fn(() => ({
     userAgent: 'Test User Agent',
     language: 'en-US',
@@ -20,7 +21,6 @@ vi.mock('../shared/utils/device', () => ({
     timezone: 'UTC',
     timezoneOffset: 0
   })),
-  clearDeviceData: vi.fn(),
   validateDeviceFingerprint: vi.fn(() => true),
   getClientType: vi.fn(() => 'web'),
   detectDeviceChanges: vi.fn(() => ({
