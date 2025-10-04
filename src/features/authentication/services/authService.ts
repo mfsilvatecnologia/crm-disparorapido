@@ -110,7 +110,7 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
 
     // Store tokens in localStorage
     authStorage.setAccessToken(validatedResponse.data.token);
-    authStorage.setRefreshToken(validatedResponse.data.refreshToken);
+    authStorage.setRefreshToken(validatedResponse.data.refresh_token);
     authStorage.setSessionId(validatedResponse.data.session.id);
     authStorage.updateLastActivity();
 

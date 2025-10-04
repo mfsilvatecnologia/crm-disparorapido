@@ -43,15 +43,13 @@ export type LoginRequest = z.infer<typeof LoginRequestSchema>;
  */
 export const LoginResponseDataSchema = z.object({
   token: JWTTokenSchema,
-  refreshToken: JWTTokenSchema,
+  refresh_token: JWTTokenSchema,
   user: UserSchema,
   empresa: CompanySchema,
   session: z.object({
     id: z.string().uuid(),
     device_id: DeviceIdSchema,
-    client_type: ClientTypeSchema,
     expires_at: z.string().datetime(),
-    time_to_expiration_minutes: z.number(),
   }),
 });
 

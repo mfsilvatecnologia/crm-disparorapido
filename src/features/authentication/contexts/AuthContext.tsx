@@ -11,6 +11,7 @@ import { decodeJWT, isTokenExpired } from '@/shared/utils/token';
 import { getOrCreateDeviceId, generateDeviceFingerprint } from '@/shared/utils/device';
 import type { LoginRequest, LoginResponse } from '../contracts/auth-contracts';
 import type { SessionLimitError } from '@/shared/services/schemas';
+import { tokenRefreshManager } from '../services/tokenRefreshService';
 
 /**
  * Session Limit Error type for when max sessions is reached
@@ -58,6 +59,77 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [sessionLimitError, setSessionLimitError] = useState<SessionLimitError['data'] | null>(null);
 
   /**
+   * Refresh User Data
+   * Fetches updated user information from token
+   */
+  const refreshUser = useCallback(async () => {
+    try {
+      const token = authStorage.getAccessToken();
+
+      if (!token || isTokenExpired(token)) {
+        setUser(null);
+        return;
+      }
+
+      const payload: JWTPayload = decodeJWT(token);
+
+      const userData: User = {
+        id: payload.sub,
+        email: payload.email,
+        role: payload.role,
+        empresa_id: payload.empresa_id,
+        ativo: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      setUser(userData);
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      setUser(null);
+    }
+  }, []);
+
+  /**
+   * Logout Method
+   * Clears auth state and tokens
+   */
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+
+    try {
+      const deviceId = getOrCreateDeviceId();
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+      // Call logout API (best effort - don't fail if it errors)
+      try {
+        const token = authStorage.getAccessToken();
+        if (token) {
+          await fetch(`${API_BASE_URL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ device_id: deviceId }),
+          });
+        }
+      } catch (error) {
+        console.warn('Logout API call failed:', error);
+      }
+
+      // Para o gerenciador de refresh
+      tokenRefreshManager.stop();
+
+      // Clear local state regardless of API call result
+      authStorage.clearTokens();
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  /**
    * Initialize auth state from localStorage
    * Runs once on mount
    */
@@ -94,6 +166,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
 
         setUser(userData);
+
+        // Inicia o gerenciador de refresh automático
+        tokenRefreshManager.start(
+          (newToken) => {
+            console.log('[Auth] Token refreshed automaticamente');
+            // Atualiza o user com o novo token
+            refreshUser();
+          },
+          (error) => {
+            console.error('[Auth] Erro no refresh automático:', error);
+            // Em caso de erro no refresh, faz logout
+            logout();
+          }
+        );
       } catch (error) {
         console.error('Failed to initialize auth:', error);
         authStorage.clearTokens();
@@ -103,7 +189,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     initializeAuth();
-  }, []);
+
+    // Cleanup: para o refresh manager quando o componente desmontar
+    return () => {
+      tokenRefreshManager.stop();
+    };
+  }, [refreshUser, logout]);
 
   /**
    * Login Method
@@ -152,87 +243,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Store tokens
       authStorage.setAccessToken(data.data.token);
-      authStorage.setRefreshToken(data.data.refreshToken);
+      authStorage.setRefreshToken(data.data.refresh_token);
       authStorage.setSessionId(data.data.session.id);
       authStorage.updateLastActivity();
 
       // Set user from response
       setUser(data.data.user);
+
+      // Inicia o gerenciador de refresh automático após login bem-sucedido
+      tokenRefreshManager.start(
+        (newToken) => {
+          console.log('[Auth] Token refreshed automaticamente');
+          refreshUser();
+        },
+        (error) => {
+          console.error('[Auth] Erro no refresh automático:', error);
+          logout();
+        }
+      );
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
-  }, []);
-
-  /**
-   * Logout Method
-   * Clears auth state and tokens
-   */
-  const logout = useCallback(async () => {
-    setIsLoading(true);
-
-    try {
-      const deviceId = getOrCreateDeviceId();
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-      // Call logout API (best effort - don't fail if it errors)
-      try {
-        const token = authStorage.getAccessToken();
-        if (token) {
-          await fetch(`${API_BASE_URL}/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ device_id: deviceId }),
-          });
-        }
-      } catch (error) {
-        console.warn('Logout API call failed:', error);
-      }
-
-      // Clear local state regardless of API call result
-      authStorage.clearTokens();
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * Refresh User Data
-   * Fetches updated user information from token
-   */
-  const refreshUser = useCallback(async () => {
-    try {
-      const token = authStorage.getAccessToken();
-
-      if (!token || isTokenExpired(token)) {
-        setUser(null);
-        return;
-      }
-
-      const payload: JWTPayload = decodeJWT(token);
-
-      const userData: User = {
-        id: payload.sub,
-        email: payload.email,
-        role: payload.role,
-        empresa_id: payload.empresa_id,
-        ativo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      setUser(userData);
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
-      setUser(null);
-    }
-  }, []);
+  }, [refreshUser, logout]);
 
   /**
    * Clear session limit error
