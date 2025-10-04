@@ -10,6 +10,17 @@ import { authStorage } from '@/shared/utils/storage';
 import { decodeJWT, isTokenExpired } from '@/shared/utils/token';
 import { getOrCreateDeviceId, generateDeviceFingerprint } from '@/shared/utils/device';
 import type { LoginRequest, LoginResponse } from '../contracts/auth-contracts';
+import type { SessionLimitError } from '@/shared/services/schemas';
+
+/**
+ * Session Limit Error type for when max sessions is reached
+ */
+export class SessionLimitExceededError extends Error {
+  constructor(public data: SessionLimitError['data']) {
+    super('SESSION_LIMIT_EXCEEDED');
+    this.name = 'SessionLimitExceededError';
+  }
+}
 
 /**
  * Auth Context Value Interface
@@ -21,6 +32,8 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  sessionLimitError: SessionLimitError['data'] | null;
+  clearSessionLimitError: () => void;
 }
 
 /**
@@ -42,6 +55,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionLimitError, setSessionLimitError] = useState<SessionLimitError['data'] | null>(null);
 
   /**
    * Initialize auth state from localStorage
@@ -113,7 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
 
       // Call login API
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -124,6 +138,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Login failed' }));
+
+        // Handle SESSION_LIMIT_EXCEEDED (409)
+        if (response.status === 409 && errorData.error === 'SESSION_LIMIT_EXCEEDED') {
+          setSessionLimitError(errorData.data);
+          throw new SessionLimitExceededError(errorData.data);
+        }
+
         throw new Error(errorData.error || errorData.message || 'Login failed');
       }
 
@@ -154,7 +175,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       const deviceId = getOrCreateDeviceId();
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
       // Call logout API (best effort - don't fail if it errors)
       try {
@@ -214,6 +235,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   /**
+   * Clear session limit error
+   */
+  const clearSessionLimitError = useCallback(() => {
+    setSessionLimitError(null);
+  }, []);
+
+  /**
    * Context Value
    */
   const value: AuthContextType = {
@@ -223,6 +251,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     logout,
     refreshUser,
+    sessionLimitError,
+    clearSessionLimitError,
   };
 
   return (

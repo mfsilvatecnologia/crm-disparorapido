@@ -3,7 +3,7 @@
  */
 
 export async function debugApiConnection() {
-  const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  const baseURL = import.meta.env.VITE_API_BASE_URL;
   const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('leadsrapido_auth_token');
   
   console.log('🔍 Debug API Connection:');

@@ -2,10 +2,21 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from './SessionContext';
 import { getOrCreateDeviceId, generateDeviceFingerprint, clearDeviceData } from '@/shared/utils/device';
-import type { User, ComputedPermissions, LoginCredentials, ClientType } from '../types';
+import type { User, ComputedPermissions, LoginCredentials } from '../types';
+import { ClientType } from '@/features/authentication/types/auth';
 import apiClient from '../services/client';
 import { fetchUserPermissions } from '../../features/authentication/services/permissions';
-import type { AuthResponse } from '../types/schemas';
+import type { AuthResponse, SessionLimitError } from '../services/schemas';
+
+/**
+ * Session Limit Error type for when max sessions is reached
+ */
+export class SessionLimitExceededError extends Error {
+  constructor(public data: SessionLimitError['data']) {
+    super('SESSION_LIMIT_EXCEEDED');
+    this.name = 'SessionLimitExceededError';
+  }
+}
 
 interface Empresa {
   id: string;
@@ -27,6 +38,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   refreshPermissions: () => Promise<void>;
+  sessionLimitError: SessionLimitError['data'] | null;
+  clearSessionLimitError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,6 +71,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<ComputedPermissions | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionLimitError, setSessionLimitError] = useState<SessionLimitError['data'] | null>(null);
   const queryClientInstance = useQueryClient();
 
   const isAuthenticated = !!user;
@@ -70,11 +84,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userData = localStorage.getItem(USER_KEY);
         const empresaData = localStorage.getItem(EMPRESA_KEY);
 
-        if (savedToken && userData && savedRefreshToken) {
+        if (savedToken && userData) {
           const parsedUser = JSON.parse(userData);
           setUser(parsedUser);
           setToken(savedToken);
-          setRefreshToken(savedRefreshToken);
+          setRefreshToken(savedRefreshToken); // Pode ser null
           apiClient.setAccessToken(savedToken);
 
           // Load empresa if available
@@ -130,36 +144,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response: AuthResponse = await apiClient.login(loginData);
 
       // Store tokens and user data
-      const accessToken = response.data.token || response.data.access_token;
-      const userRefreshToken = response.data.refresh_token;
+      const accessToken = response.data.token;
 
       localStorage.setItem(TOKEN_KEY, accessToken);
       localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
-      if (userRefreshToken) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, userRefreshToken);
+
+      // Store session ID if available
+      if (response.data.session?.id) {
+        localStorage.setItem('session_id', response.data.session.id);
       }
 
       // Store empresa data if available
       if (response.data.empresa) {
         localStorage.setItem(EMPRESA_KEY, JSON.stringify(response.data.empresa));
-        setEmpresa(response.data.empresa);
+        setEmpresa({
+          id: response.data.empresa.id,
+          nome: response.data.empresa.nome,
+          cnpj: response.data.empresa.cnpj,
+        });
       }
 
       // Update API client and state
       apiClient.setAccessToken(accessToken);
-      setUser(response.data.user);
+      setUser({
+        ...response.data.user,
+        created_at: response.data.user.createdAt || new Date().toISOString(),
+        updated_at: response.data.user.updatedAt || new Date().toISOString(),
+      } as User);
       setToken(accessToken);
-      setRefreshToken(userRefreshToken || null);
+      setRefreshToken(null); // API não retorna refresh token no login
 
       // Fetch and set permissions
       const permissionsResponse = await fetchUserPermissions(accessToken);
       setPermissions(permissionsResponse.data.permissions);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
+      console.error('Error details:', {
+        status: error?.status,
+        data: error?.data,
+        name: error?.name,
+        message: error?.message
+      });
+
+      // Handle SESSION_LIMIT_EXCEEDED (409)
+      if (error?.status === 409 && error?.data?.error === 'SESSION_LIMIT_EXCEEDED') {
+        setSessionLimitError(error.data.data);
+        throw new SessionLimitExceededError(error.data.data);
+      }
+
       throw error;
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const clearSessionLimitError = () => {
+    setSessionLimitError(null);
   };
 
   const logout = async () => {
@@ -192,7 +232,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshAuth = async () => {
     if (!refreshToken) {
       console.warn('No refresh token available for auth refresh');
-      return;
+      // Fazer logout quando não há refresh token para evitar loop infinito
+      await logout();
+      throw new Error('No refresh token available');
     }
 
     try {
@@ -200,8 +242,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response: AuthResponse = await apiClient.refresh(refreshToken);
 
       // Update tokens and user data
-      const newAccessToken = response.data.token || response.data.access_token;
-      const newRefreshToken = response.data.refresh_token;
+      const newAccessToken = response.data.token;
 
       if (newAccessToken) {
         localStorage.setItem(TOKEN_KEY, newAccessToken);
@@ -209,21 +250,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setToken(newAccessToken);
       }
 
-      if (newRefreshToken) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
-        setRefreshToken(newRefreshToken);
-      }
-
       // Update user data if provided
       if (response.data.user) {
         localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
-        setUser(response.data.user);
+        setUser({
+          ...response.data.user,
+          created_at: response.data.user.created_at || response.data.user.createdAt || new Date().toISOString(),
+          updated_at: response.data.user.updated_at || response.data.user.updatedAt || new Date().toISOString(),
+        } as User);
       }
 
       // Update empresa data if provided
       if (response.data.empresa) {
         localStorage.setItem(EMPRESA_KEY, JSON.stringify(response.data.empresa));
-        setEmpresa(response.data.empresa);
+        setEmpresa({
+          id: response.data.empresa.id,
+          nome: response.data.empresa.nome,
+          cnpj: response.data.empresa.cnpj,
+        });
       }
 
       // Invalidate related queries to refresh data
@@ -290,6 +334,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     refreshAuth,
     refreshPermissions,
+    sessionLimitError,
+    clearSessionLimitError,
   };
 
   return (
@@ -313,12 +359,16 @@ export function useAuth(): AuthContextType {
 
 // Helper function to determine client type
 function getClientType(): ClientType {
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
-    return 'extension';
+  // Check if running in Chrome extension context
+  if (typeof window !== 'undefined') {
+    const globalThis = window as any;
+    if (globalThis.chrome?.runtime?.id) {
+      return ClientType.EXTENSION;
+    }
+    if (window.location.protocol === 'chrome-extension:' ||
+        window.location.protocol === 'moz-extension:') {
+      return ClientType.EXTENSION;
+    }
   }
-  if (window.location.protocol === 'chrome-extension:' ||
-      window.location.protocol === 'moz-extension:') {
-    return 'extension';
-  }
-  return 'web';
+  return ClientType.WEB;
 }

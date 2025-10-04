@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../services/client';
-import { useAuth } from '../../features/authentication/hooks/useAuth';
+import { useAuth } from './AuthContext';
 import type { Organization } from '../types';
 
 interface OrganizationContextType {

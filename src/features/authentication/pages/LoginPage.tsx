@@ -9,10 +9,11 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { useAuth } from '@/shared/contexts/AuthContext';
+import { useAuth, SessionLimitExceededError } from '@/shared/contexts/AuthContext';
 import { useToast } from '@/shared/hooks/use-toast';
 import { ConnectionStatus } from '@/shared/components/common/ConnectionStatus';
 import { useConnectivity } from '@/shared/hooks/useConnectivity';
+import { ActiveSessionsManager } from '../components/ActiveSessionsManager';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -22,13 +23,15 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, sessionLimitError, clearSessionLimitError } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const connectivity = useConnectivity();
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [showSessionManager, setShowSessionManager] = useState(false);
+  const [pendingLoginData, setPendingLoginData] = useState<LoginForm | null>(null);
 
   const {
     register,
@@ -86,6 +89,13 @@ export default function LoginPage() {
         description: "Bem-vindo ao LeadCRM!",
       });
     } catch (error: unknown) {
+      // Se for erro de limite de sessões, mostra o gerenciador
+      if (error instanceof SessionLimitExceededError) {
+        setPendingLoginData(data); // Guarda os dados para retry após revogar
+        setShowSessionManager(true);
+        return;
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login. Tente novamente.';
       setLoginError(errorMessage);
       toast({
@@ -94,6 +104,27 @@ export default function LoginPage() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleSessionRevoked = async () => {
+    // Após revogar uma sessão, tenta fazer login novamente
+    if (pendingLoginData) {
+      setShowSessionManager(false);
+      clearSessionLimitError();
+
+      // Aguarda um pouco para garantir que a sessão foi revogada
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Tenta login novamente
+      await onSubmit(pendingLoginData);
+      setPendingLoginData(null);
+    }
+  };
+
+  const handleCloseSessionManager = () => {
+    setShowSessionManager(false);
+    setPendingLoginData(null);
+    clearSessionLimitError();
   };
 
   if (isLoading) {
@@ -267,6 +298,14 @@ export default function LoginPage() {
           </Card>
         </div>
       </div>
+
+      {/* Session Manager Modal */}
+      <ActiveSessionsManager
+        open={showSessionManager}
+        onClose={handleCloseSessionManager}
+        forceSelection={true}
+        onSessionRevoked={handleSessionRevoked}
+      />
     </div>
   );
 }

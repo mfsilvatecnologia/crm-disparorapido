@@ -3,8 +3,7 @@ import { Toaster as Sonner } from "@/shared/components/ui/sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./shared/contexts/AuthContext";
-import { useAuth } from "./features/authentication/hooks/useAuth";
+import { AuthProvider, useAuth } from "./shared/contexts/AuthContext";
 import { OrganizationProvider } from "./shared/contexts/OrganizationContext";
 import { AppLayout } from "./shared/components/layout/AppLayout";
 // Feature imports
@@ -36,7 +35,7 @@ const queryClient = new QueryClient({
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -44,51 +43,53 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  
+
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function AppRoutes() {
   return (
-    <Routes>
-      {/* Public Landing Page */}
-      <Route path="/" element={<LoginPage />} />
-      
-      {/* Auth */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/nova-senha" element={<NewPasswordPage />} />
-      
-      {/* Protected App Routes */}
-      <Route path="/app" element={
-        <PrivateRoute>
-          <OrganizationProvider>
-            <AppLayout />
-          </OrganizationProvider>
-        </PrivateRoute>
-      }>
-        <Route index element={<Dashboard />} />
-        <Route path="leads" element={<LeadsPage />} />
-        <Route path="workers" element={<WorkerMonitorPage />} />
-        <Route path="search-terms" element={<SearchTermsPage />} />
-        <Route path="scraping" element={<ScrapingPage />} />
-        <Route path="empresas" element={<EmpresasPage />} />
-        <Route path="campanhas" element={<CampanhasPage />} />
-        <Route path="segments" element={<SegmentosPage />} />
-        <Route path="pipeline" element={<PipelinePage />} />
-        <Route path="sales-tools" element={<div className="p-6">Ferramentas de Vendas - Em desenvolvimento</div>} />
-        <Route path="billing" element={<div className="p-6">Cobrança - Em desenvolvimento</div>} />
-        <Route path="profile" element={<UserProfilePage />} />
-        <Route path="users" element={<UsersPage />} />
-        <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
-        <Route path="admin" element={<AdminPage />} />
-        <Route path="admin/organizations" element={<div className="p-6">Admin - Organizações - Em desenvolvimento</div>} />
-        <Route path="empresas/cadastro" element={<CadastroEmpresaPage />} />
-      </Route>
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <BrowserRouter>
+      <Routes>
+        {/* Public Landing Page */}
+        <Route path="/" element={<LoginPage />} />
+
+        {/* Auth */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/nova-senha" element={<NewPasswordPage />} />
+
+        {/* Protected App Routes */}
+        <Route path="/app" element={
+          <PrivateRoute>
+            <OrganizationProvider>
+              <AppLayout />
+            </OrganizationProvider>
+          </PrivateRoute>
+        }>
+          <Route index element={<Dashboard />} />
+          <Route path="leads" element={<LeadsPage />} />
+          <Route path="workers" element={<WorkerMonitorPage />} />
+          <Route path="search-terms" element={<SearchTermsPage />} />
+          <Route path="scraping" element={<ScrapingPage />} />
+          <Route path="empresas" element={<EmpresasPage />} />
+          <Route path="campanhas" element={<CampanhasPage />} />
+          <Route path="segments" element={<SegmentosPage />} />
+          <Route path="pipeline" element={<PipelinePage />} />
+          <Route path="sales-tools" element={<div className="p-6">Ferramentas de Vendas - Em desenvolvimento</div>} />
+          <Route path="billing" element={<div className="p-6">Cobrança - Em desenvolvimento</div>} />
+          <Route path="profile" element={<UserProfilePage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
+          <Route path="admin" element={<AdminPage />} />
+          <Route path="admin/organizations" element={<div className="p-6">Admin - Organizações - Em desenvolvimento</div>} />
+          <Route path="empresas/cadastro" element={<CadastroEmpresaPage />} />
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
@@ -98,9 +99,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <AppRoutes />
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

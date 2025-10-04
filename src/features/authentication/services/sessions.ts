@@ -2,13 +2,19 @@
 // Handles session management API calls to the REST backend
 
 import { getOrCreateDeviceId } from '@/shared/utils/device'
+import { apiClient } from '@/shared/services/client'
+import type {
+  ActiveSession,
+  RevokeOtherSessions,
+  DeleteSession
+} from '@/shared/services/schemas'
 import type {
   CompanySessionsResponse,
   TerminateSessionRequest,
   SessionInfo
-} from '../../types/auth'
+} from '../types/auth'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /**
  * Fetches all sessions for the company
@@ -137,6 +143,72 @@ export async function getCurrentSession(
   )
 
   return currentSession || null
+}
+
+/**
+ * Gets all active sessions for current user
+ */
+export async function getActiveSessions(managementToken?: string): Promise<ActiveSession[]> {
+  const config: RequestInit = {
+    method: 'GET',
+  }
+
+  // Usa X-Management-Token header conforme documentação do backend
+  if (managementToken) {
+    config.headers = {
+      'X-Management-Token': managementToken
+    }
+  }
+
+  const response = await apiClient.request<{ success: boolean; data: { sessions: ActiveSession[] } }>(
+    '/api/v1/sessions/active',
+    config
+  )
+  return response.data?.sessions || []
+}
+
+/**
+ * Revokes all other sessions keeping current device
+ */
+export async function revokeOtherSessions(data: RevokeOtherSessions, managementToken?: string): Promise<void> {
+  const config: RequestInit = {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }
+
+  // Usa X-Management-Token header conforme documentação do backend
+  if (managementToken) {
+    config.headers = {
+      'X-Management-Token': managementToken
+    }
+  }
+
+  await apiClient.request(
+    '/api/v1/sessions/revoke-others',
+    config
+  )
+}
+
+/**
+ * Deletes a specific session
+ */
+export async function deleteSession(sessionId: string, data: DeleteSession, managementToken?: string): Promise<void> {
+  const config: RequestInit = {
+    method: 'DELETE',
+    body: JSON.stringify(data)
+  }
+
+  // Usa X-Management-Token header conforme documentação do backend
+  if (managementToken) {
+    config.headers = {
+      'X-Management-Token': managementToken
+    }
+  }
+
+  await apiClient.request(
+    `/api/v1/sessions/${sessionId}`,
+    config
+  )
 }
 
 /**

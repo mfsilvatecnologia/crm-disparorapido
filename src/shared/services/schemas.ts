@@ -84,7 +84,7 @@ export type ApiKey = z.infer<typeof ApiKeySchema>;
 // User and Auth schemas
 export const UserSchema = z.object({
   id: z.string(),
-  sub: z.string().optional(),
+  sub: z.string(),
   email: z.string().email(),
   name: z.string().optional(),
   nome: z.string().optional(),
@@ -92,15 +92,19 @@ export const UserSchema = z.object({
   cargo: z.string().optional(),
   ativo: z.boolean().optional(),
   ultimoLogin: z.string().optional(),
-  createdAt: z.string().optional(), // Adicionado para suportar o formato da API
-  roles: z.array(z.string()).optional(),
+  createdAt: z.string().optional(),
+  created_at: z.string().optional(), // Suporta snake_case
+  updated_at: z.string().optional(), // Suporta snake_case
+  empresa_id: z.string(), // ID da empresa do usuário (obrigatório na resposta de login)
+  roles: z.array(z.string()),
   role: z.union([
     z.enum(['admin', 'org_admin', 'agent', 'viewer', 'user', 'usuario']),
     z.string() // Permite qualquer string para ser mais flexível
   ]).optional(),
   user_metadata: z.object({
+    empresa_id: z.string().optional(),
     role: z.string().optional(),
-  }).optional(),
+  }),
   organizationId: z.string().optional(),
   avatar: z.string().optional(),
   updatedAt: z.string().optional(),
@@ -109,6 +113,9 @@ export const UserSchema = z.object({
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  device_id: z.string(),
+  device_fingerprint: z.string(),
+  client_type: z.enum(['web', 'extension']),
 });
 
 export const ResetPasswordSchema = z.object({
@@ -408,19 +415,26 @@ export const CreateEmailTemplateSchema = z.object({
 export const AuthResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
-    user: UserSchema,
     token: z.string(),
-    expiresIn: z.string().optional(), // Pode ser string ou não existir
+    user: UserSchema,
     empresa: z.object({
       id: z.string(),
       nome: z.string(),
       cnpj: z.string(),
-    }).optional(), // Empresa is optional in auth response
+    }),
+    session: z.object({
+      id: z.string(),
+      device_id: z.string(),
+      expires_at: z.string(),
+    }).nullable(),
   }),
   message: z.string(),
-  error: z.string().optional(),
   timestamp: z.string(),
-  trace: z.any().optional(),
+  trace: z.object({
+    trace_id: z.string(),
+    span_id: z.string(),
+    requestId: z.string(),
+  }).optional(),
 });
 
 // Organization schemas
@@ -768,6 +782,51 @@ export type ScrapingTemplate = z.infer<typeof ScrapingTemplateSchema>;
 export type ScrapingStats = z.infer<typeof ScrapingStatsSchema>;
 export type WorkerStatus = z.infer<typeof WorkerStatusSchema>;
 export type WorkerStats = z.infer<typeof WorkerStatsSchema>;
+
+// Session Management schemas
+export const ActiveSessionSchema = z.object({
+  id: z.string(),
+  device_id: z.string(),
+  client_type: z.enum(['web', 'extension']),
+  last_activity: z.string(),
+  created_at: z.string(),
+  ip_address: z.string().optional(),
+  user_agent: z.string().optional(),
+});
+
+export const SessionLimitErrorSchema = z.object({
+  success: z.literal(false),
+  error: z.literal('SESSION_LIMIT_EXCEEDED'),
+  message: z.string(),
+  data: z.object({
+    current_sessions: z.number(),
+    max_sessions: z.number(),
+    active_sessions: z.array(ActiveSessionSchema),
+    action_required: z.literal('CHOOSE_SESSION_TO_CLOSE'),
+    management_token: z.string(),
+    management_token_expires_in: z.number(),
+    allowed_operations: z.array(z.enum(['delete', 'revoke'])),
+  }),
+  timestamp: z.string(),
+});
+
+export const RevokeOtherSessionsSchema = z.object({
+  user_id: z.string(),
+  keep_device_id: z.string(),
+  reason: z.enum(['logout_other_devices', 'security', 'user_request']),
+  revoked_by: z.string(),
+});
+
+export const DeleteSessionSchema = z.object({
+  device_id: z.string(),
+  reason: z.enum(['user_logout', 'security', 'expired']),
+  revoked_by: z.string(),
+});
+
+export type ActiveSession = z.infer<typeof ActiveSessionSchema>;
+export type SessionLimitError = z.infer<typeof SessionLimitErrorSchema>;
+export type RevokeOtherSessions = z.infer<typeof RevokeOtherSessionsSchema>;
+export type DeleteSession = z.infer<typeof DeleteSessionSchema>;
 
 // Lead DTOs
 export const CreateLeadDTOSchema = z.object({

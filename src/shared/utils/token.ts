@@ -94,3 +94,20 @@ export function isValidTokenFormat(token: string): boolean {
   const parts = token.split('.');
   return parts.length === 3;
 }
+
+/**
+ * Extract user_id from management token
+ * Management tokens contain user_id in the payload for session management
+ * @param managementToken - Management JWT token
+ * @returns user_id string or null if not found
+ */
+export function extractUserIdFromManagementToken(managementToken: string): string | null {
+  try {
+    const payload = decodeJWT(managementToken);
+    // Management token pode ter user_id, userId ou sub como identificador
+    return payload.user_id || payload.userId || payload.sub || null;
+  } catch (e) {
+    console.error('Failed to extract user_id from management token:', e);
+    return null;
+  }
+}
