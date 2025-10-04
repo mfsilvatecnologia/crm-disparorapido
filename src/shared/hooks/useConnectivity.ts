@@ -22,9 +22,14 @@ export function useConnectivity() {
   });
 
   useEffect(() => {
-    // Get initial status
-    const currentStatus = healthCheckService.getHealthStatus();
-    updateStateFromHealth(currentStatus);
+    // Perform immediate check on mount
+    const performInitialCheck = async () => {
+      setState(prev => ({ ...prev, isChecking: true }));
+      const status = await healthCheckService.performHealthCheck();
+      updateStateFromHealth(status);
+    };
+
+    performInitialCheck();
 
     // Subscribe to status changes
     const unsubscribe = healthCheckService.addStatusListener((status: HealthStatus) => {

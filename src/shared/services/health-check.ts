@@ -43,11 +43,8 @@ class HealthCheckService {
       clearInterval(this.checkInterval);
     }
 
-    // Initial check (only if not recently checked)
-    const timeSinceLastCheck = Date.now() - this.healthStatus.lastCheck.getTime();
-    if (timeSinceLastCheck > 30000) { // Only if last check was >30s ago
-      this.performHealthCheck();
-    }
+    // Always perform initial check immediately
+    this.performHealthCheck();
 
     // Periodic checks (less frequent)
     this.checkInterval = setInterval(() => {
