@@ -18,6 +18,13 @@ import { EmpresasPage, CadastroEmpresaPage } from "./features/companies";
 import { SegmentosPage } from "./features/segments";
 import { PipelinePage } from "./features/pipeline";
 import { CampanhasPage } from "./features/campaigns";
+import { 
+  PricingPage, 
+  CheckoutPage, 
+  SubscriptionManagementPage, 
+  CreditPackagesPage, 
+  MarketplacePage 
+} from "./features/sales/pages";
 import { NotFound } from "./shared/pages";
 
 const queryClient = new QueryClient({
@@ -60,6 +67,10 @@ function AppRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/nova-senha" element={<NewPasswordPage />} />
 
+        {/* Public Sales Routes */}
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+
         {/* Protected App Routes */}
         <Route path="/app" element={
           <PrivateRoute>
@@ -79,6 +90,12 @@ function AppRoutes() {
           <Route path="pipeline" element={<PipelinePage />} />
           <Route path="sales-tools" element={<div className="p-6">Ferramentas de Vendas - Em desenvolvimento</div>} />
           <Route path="billing" element={<div className="p-6">Cobrança - Em desenvolvimento</div>} />
+          
+          {/* Sales & Subscriptions Routes */}
+          <Route path="subscription" element={<SubscriptionManagementPage />} />
+          <Route path="credits" element={<CreditPackagesPage />} />
+          <Route path="marketplace" element={<MarketplacePage />} />
+          
           <Route path="profile" element={<UserProfilePage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />

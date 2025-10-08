@@ -18,6 +18,7 @@ import { useOrganization } from '@/shared/contexts/OrganizationContext';
 import { OrganizationSwitcher } from '@/shared/components/common/OrganizationSwitcher';
 import { useQueryClient } from '@tanstack/react-query';
 import { leadKeys } from '@/features/leads/hooks/useLeads';
+import { CreditsBadge } from '@/features/sales/components/navigation';
 
 export function AppHeader() {
   const { user, logout } = useAuth();
@@ -74,6 +75,9 @@ export function AppHeader() {
           <Button variant="ghost" size="icon" onClick={handleRefresh}>
             <RefreshCw className="h-5 w-5" />
           </Button>
+
+          {/* Credits Badge */}
+          <CreditsBadge />
 
           {/* Organization Info */}
           <div className="hidden md:flex items-center gap-3">

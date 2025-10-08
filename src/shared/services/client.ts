@@ -1005,6 +1005,59 @@ class ApiClient {
   async getWorkerStats(workerName: string): Promise<WorkerStats> {
     return this.request(`/api/v1/workers/${workerName}/stats`, {}, WorkerStatsSchema);
   }
+
+  // ========== Métodos auxiliares para compatibilidade ==========
+  
+  /**
+   * Método auxiliar para requisições GET
+   */
+  async get<T = any>(url: string, schema?: z.ZodSchema<T>): Promise<T> {
+    return this.request<T>(url, { method: 'GET' }, schema);
+  }
+
+  /**
+   * Método auxiliar para requisições POST
+   */
+  async post<T = any>(url: string, data?: any, schema?: z.ZodSchema<T>): Promise<T> {
+    return this.request<T>(url, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }, schema);
+  }
+
+  /**
+   * Método auxiliar para requisições PUT
+   */
+  async put<T = any>(url: string, data?: any, schema?: z.ZodSchema<T>): Promise<T> {
+    return this.request<T>(url, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    }, schema);
+  }
+
+  /**
+   * Método auxiliar para requisições PATCH
+   */
+  async patch<T = any>(url: string, data?: any, schema?: z.ZodSchema<T>): Promise<T> {
+    return this.request<T>(url, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    }, schema);
+  }
+
+  /**
+   * Método auxiliar para requisições DELETE
+   */
+  async delete<T = any>(url: string, schema?: z.ZodSchema<T>): Promise<T> {
+    return this.request<T>(url, { method: 'DELETE' }, schema);
+  }
+
+  /**
+   * Obtém o token de acesso atual
+   */
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
 }
 
 export const apiClient = new ApiClient();

@@ -17,7 +17,9 @@ import {
   Map,
   User,
   Target,
-  Mail
+  Mail,
+  ShoppingCart,
+  Coins
 } from 'lucide-react';
 import {
   Sidebar,
@@ -95,6 +97,27 @@ const navigationItems = [
     url: '/app/sales-tools',
     icon: Phone,
     description: 'Call center e e-mails'
+  },
+];
+
+const salesItems = [
+  {
+    title: 'Marketplace',
+    url: '/app/marketplace',
+    icon: ShoppingCart,
+    description: 'Comprar leads verificados'
+  },
+  {
+    title: 'Créditos',
+    url: '/app/credits',
+    icon: Coins,
+    description: 'Gerenciar créditos'
+  },
+  {
+    title: 'Assinatura',
+    url: '/app/subscription',
+    icon: CreditCard,
+    description: 'Gerenciar assinatura'
   },
 ];
 
@@ -184,6 +207,30 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      className={getNavClassName(item.url)}
+                      title={!open ? item.description : undefined}
+                      onClick={handleNavClick}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {open && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Sales & Credits */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Vendas</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {salesItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

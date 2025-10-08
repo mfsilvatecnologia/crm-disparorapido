@@ -5,6 +5,7 @@ import { getOrCreateDeviceId, generateDeviceFingerprint, clearDeviceData } from 
 import type { User, ComputedPermissions, LoginCredentials } from '../types';
 import { ClientType } from '@/features/authentication/types/auth';
 import apiClient from '../services/client';
+import { apiClient as libApiClient } from '@/lib/api-client';
 import { fetchUserPermissions } from '../../features/authentication/services/permissions';
 import type { AuthResponse, SessionLimitError } from '../services/schemas';
 
@@ -90,6 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setToken(savedToken);
           setRefreshToken(savedRefreshToken); // Pode ser null
           apiClient.setAccessToken(savedToken);
+          libApiClient.setAccessToken(savedToken); // Sync with lib api client
 
           // Load empresa if available
           if (empresaData) {
@@ -166,6 +168,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Update API client and state
       apiClient.setAccessToken(accessToken);
+      libApiClient.setAccessToken(accessToken); // Sync with lib api client
       setUser({
         ...response.data.user,
         created_at: response.data.user.createdAt || new Date().toISOString(),
@@ -217,6 +220,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Reset API client and state
       apiClient.setAccessToken(null);
+      libApiClient.setAccessToken(null); // Sync with lib api client
       setUser(null);
       setEmpresa(null);
       setToken(null);
@@ -247,6 +251,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (newAccessToken) {
         localStorage.setItem(TOKEN_KEY, newAccessToken);
         apiClient.setAccessToken(newAccessToken);
+        libApiClient.setAccessToken(newAccessToken); // Sync with lib api client
         setToken(newAccessToken);
       }
 

@@ -1,0 +1,237 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Products API",
+    "description": "API para gerenciamento de planos de assinatura",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/products": {
+      "get": {
+        "summary": "Listar todos os produtos/planos ativos",
+        "description": "Retorna lista de planos disponíveis para assinatura, ordenados por position",
+        "tags": ["Products"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "description": "Incluir planos inativos (apenas para admin)",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de produtos retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "summary": "Obter detalhes de um produto específico",
+        "tags": ["Products"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID do produto",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produto encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Produto não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "priceMonthly",
+          "billingCycle",
+          "features",
+          "maxSessions",
+          "trialDays",
+          "isActive",
+          "isMostPopular",
+          "position"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID único do produto"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50,
+            "description": "Nome do plano",
+            "example": "Plano Pro"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Descrição do plano",
+            "example": "Para equipes que precisam de mais poder"
+          },
+          "priceMonthly": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Preço mensal em centavos",
+            "example": 19900
+          },
+          "billingCycle": {
+            "type": "string",
+            "enum": ["weekly", "biweekly", "monthly", "quarterly", "semiannually", "yearly"],
+            "description": "Ciclo de cobrança padrão",
+            "example": "monthly"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Lista de features incluídas",
+            "example": [
+              "Até 10.000 leads",
+              "5 usuários simultâneos",
+              "Relatórios avançados",
+              "Suporte prioritário"
+            ]
+          },
+          "maxSessions": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Limite de sessões simultâneas",
+            "example": 5
+          },
+          "maxLeads": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "description": "Limite de leads (null = ilimitado)",
+            "example": 10000
+          },
+          "trialDays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 90,
+            "description": "Duração do trial em dias (0 = sem trial)",
+            "example": 14
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Se o plano está disponível para venda",
+            "example": true
+          },
+          "isMostPopular": {
+            "type": "boolean",
+            "description": "Badge de 'mais popular'",
+            "example": true
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Ordem de exibição",
+            "example": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data de criação"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data de última atualização"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["success", "error"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "example": "PRODUCT_NOT_FOUND"
+              },
+              "message": {
+                "type": "string",
+                "example": "Produto não encontrado"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
