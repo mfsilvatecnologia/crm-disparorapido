@@ -1,0 +1,838 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Credits & Marketplace API",
+    "version": "1.0.0",
+    "description": "API para sistema de créditos e marketplace de leads"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Desenvolvimento"
+    },
+    {
+      "url": "https://api.leadsrapido.com/api/v1",
+      "description": "Produção"
+    }
+  ],
+  "paths": {
+    "/credits/balance": {
+      "get": {
+        "summary": "Consultar saldo de créditos",
+        "description": "Retorna saldo atual e estatísticas de uso de créditos da empresa",
+        "operationId": "getCreditBalance",
+        "tags": ["Credits"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "empresaId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID da empresa"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saldo de créditos retornado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditBalanceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/credits/packages": {
+      "get": {
+        "summary": "Listar pacotes de créditos",
+        "description": "Lista todos os pacotes de créditos disponíveis para compra",
+        "operationId": "getCreditPackages",
+        "tags": ["Credits"],
+        "responses": {
+          "200": {
+            "description": "Lista de pacotes retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CreditPackage"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credits/purchase-lead": {
+      "post": {
+        "summary": "Comprar acesso a lead",
+        "description": "Compra acesso a um lead usando créditos da empresa",
+        "operationId": "purchaseLead",
+        "tags": ["Credits", "Marketplace"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseLeadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead comprado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseLeadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saldo insuficiente ou lead já comprado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "insufficient_balance": {
+                    "summary": "Saldo insuficiente",
+                    "value": {
+                      "success": false,
+                      "error": "Saldo insuficiente. Necessário: R$ 0,30, Disponível: R$ 0,15"
+                    }
+                  },
+                  "already_purchased": {
+                    "summary": "Lead já comprado",
+                    "value": {
+                      "success": false,
+                      "error": "Empresa já possui acesso a este lead"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "description": "Lead não disponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Lead não está disponível para compra"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leads/marketplace": {
+      "get": {
+        "summary": "Listar leads do marketplace",
+        "description": "Lista leads disponíveis com preview mascarado",
+        "operationId": "getMarketplaceLeads",
+        "tags": ["Marketplace"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "segmento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por segmento"
+          },
+          {
+            "name": "cidade",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por cidade"
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 2
+            },
+            "description": "Filtrar por estado (UF)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Número da página"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "Itens por página"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de leads com preview",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "pagination"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LeadPreview"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/leads/{leadId}/preview": {
+      "get": {
+        "summary": "Preview de lead específico",
+        "description": "Retorna preview mascarado de um lead",
+        "operationId": "getLeadPreview",
+        "tags": ["Marketplace"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID do lead"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preview do lead",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LeadPreview"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/leads/purchased": {
+      "get": {
+        "summary": "Listar leads comprados",
+        "description": "Lista todos os leads já comprados pela empresa",
+        "operationId": "getPurchasedLeads",
+        "tags": ["Marketplace"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "empresaId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID da empresa"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de leads comprados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PurchasedLead"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "CreditBalanceResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "empresaId",
+              "empresaNome",
+              "saldoCreditosCentavos",
+              "saldoFormatado",
+              "estatisticas"
+            ],
+            "properties": {
+              "empresaId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "empresaNome": {
+                "type": "string",
+                "example": "Tech Solutions LTDA"
+              },
+              "saldoCreditosCentavos": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 15000,
+                "description": "Saldo em centavos"
+              },
+              "saldoFormatado": {
+                "type": "string",
+                "example": "R$ 150,00"
+              },
+              "ultimaTransacao": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "tipo": {
+                    "type": "string",
+                    "enum": ["compra", "uso", "bonus", "reembolso"]
+                  },
+                  "quantidade": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "descricao": {
+                    "type": "string"
+                  }
+                }
+              },
+              "estatisticas": {
+                "type": "object",
+                "required": ["totalComprado", "totalGasto", "totalBonusRecebido"],
+                "properties": {
+                  "totalComprado": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 25000
+                  },
+                  "totalGasto": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 10000
+                  },
+                  "totalBonusRecebido": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1000
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreditPackage": {
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "preco_centavos",
+          "quantidade_creditos",
+          "bonus_creditos",
+          "ativo",
+          "destaque"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "10000000-0000-0000-0000-000000000003"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Pacote Pro"
+          },
+          "descricao": {
+            "type": "string",
+            "nullable": true,
+            "example": "Mais popular - 750 leads + 50 bônus"
+          },
+          "preco_centavos": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 25000
+          },
+          "precoFormatado": {
+            "type": "string",
+            "example": "R$ 250,00"
+          },
+          "quantidade_creditos": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 24750
+          },
+          "bonus_creditos": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1650
+          },
+          "leadsInclusos": {
+            "type": "integer",
+            "example": 750,
+            "description": "Número aproximado de leads que podem ser comprados"
+          },
+          "bonusLeads": {
+            "type": "integer",
+            "nullable": true,
+            "example": 50,
+            "description": "Leads bônus inclusos"
+          },
+          "custoPorLead": {
+            "type": "string",
+            "example": "R$ 0,33",
+            "description": "Custo médio por lead"
+          },
+          "ativo": {
+            "type": "boolean",
+            "example": true
+          },
+          "destaque": {
+            "type": "boolean",
+            "example": true
+          },
+          "economia": {
+            "type": "string",
+            "nullable": true,
+            "example": "34% de desconto"
+          }
+        }
+      },
+      "PurchaseLeadRequest": {
+        "type": "object",
+        "required": ["empresaId", "leadId", "userId"],
+        "properties": {
+          "empresaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoAcesso": {
+            "type": "string",
+            "enum": ["comprado", "trial", "bonus"],
+            "default": "comprado"
+          },
+          "limiteVisualizacoes": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 999
+          }
+        }
+      },
+      "PurchaseLeadResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "required": ["leadAcessoId", "custoCreditos", "saldoRestante", "leadData"],
+            "properties": {
+              "leadAcessoId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "acesso_456"
+              },
+              "custoCreditos": {
+                "type": "integer",
+                "example": 30,
+                "description": "Créditos debitados"
+              },
+              "saldoRestante": {
+                "type": "integer",
+                "example": 14970,
+                "description": "Saldo após compra"
+              },
+              "leadData": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "empresaNome": {
+                    "type": "string",
+                    "example": "Padaria Central"
+                  },
+                  "segmento": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "Alimentação"
+                  },
+                  "cidade": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "São Paulo"
+                  },
+                  "telefone": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "(11) 98765-4321"
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "contato@padariacentral.com"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "LeadPreview": {
+        "type": "object",
+        "required": ["id", "empresaNome", "custoCreditosCentavos", "statusMarketplace"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "empresaNome": {
+            "type": "string",
+            "example": "Padaria Central"
+          },
+          "segmento": {
+            "type": "string",
+            "nullable": true,
+            "example": "Alimentação"
+          },
+          "cidade": {
+            "type": "string",
+            "nullable": true,
+            "example": "São Paulo"
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true,
+            "example": "SP"
+          },
+          "telefone": {
+            "type": "string",
+            "nullable": true,
+            "example": "(11) 9876-****",
+            "description": "Telefone mascarado"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "example": "***@***.com",
+            "description": "Email mascarado"
+          },
+          "custoCreditosCentavos": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 30
+          },
+          "custoFormatado": {
+            "type": "string",
+            "example": "R$ 0,30"
+          },
+          "statusMarketplace": {
+            "type": "string",
+            "enum": ["publico", "vendido", "privado", "indisponivel"],
+            "example": "publico"
+          }
+        }
+      },
+      "PurchasedLead": {
+        "type": "object",
+        "required": [
+          "id",
+          "leadData",
+          "tipoAcesso",
+          "custoPago",
+          "dataCompra",
+          "visualizacoesCount",
+          "limiteVisualizacoes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID do registro de acesso"
+          },
+          "leadData": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "empresaNome": {
+                "type": "string"
+              },
+              "segmento": {
+                "type": "string",
+                "nullable": true
+              },
+              "cidade": {
+                "type": "string",
+                "nullable": true
+              },
+              "telefone": {
+                "type": "string",
+                "nullable": true,
+                "description": "Telefone completo (sem máscara)"
+              },
+              "email": {
+                "type": "string",
+                "nullable": true,
+                "description": "Email completo (sem máscara)"
+              }
+            }
+          },
+          "tipoAcesso": {
+            "type": "string",
+            "enum": ["comprado", "trial", "bonus"]
+          },
+          "custoPago": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Créditos pagos pelo lead"
+          },
+          "dataCompra": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "visualizacoesCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limiteVisualizacoes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "required": ["page", "limit", "total", "totalPages"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 150
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 8
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["success", "error"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "example": "Erro ao processar requisição"
+          }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Token de autenticação inválido ou ausente",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": "Token inválido ou expirado"
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Recurso não encontrado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": "Recurso não encontrado"
+            }
+          }
+        }
+      }
+    }
+  }
+}

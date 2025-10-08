@@ -33,6 +33,10 @@ export default function LoginPage() {
   const [showSessionManager, setShowSessionManager] = useState(false);
   const [pendingLoginData, setPendingLoginData] = useState<LoginForm | null>(null);
 
+  // Captura o parâmetro de redirect da URL
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || '/app';
+
   const {
     register,
     handleSubmit,
@@ -76,8 +80,8 @@ export default function LoginPage() {
   }, [isAuthenticated]);
   
   if (shouldRedirect) {
-    // Redirecionando para o dashboard da aplicação em vez da home
-    return <Navigate to="/app" replace />;
+    // Redireciona para a URL especificada no parâmetro redirect ou para /app
+    return <Navigate to={redirectUrl} replace />;
   }
 
   const onSubmit = async (data: LoginForm) => {
