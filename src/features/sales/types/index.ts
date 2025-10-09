@@ -56,6 +56,60 @@ export {
   isCorruptedPayment,
 } from './guards';
 
+// Product types
+export {
+  BillingCycle,
+  BillingCycleLabels,
+  type Product,
+  type CreateProductDTO,
+  type UpdateProductDTO,
+  type ProductWithComputed,
+  formatPrice,
+  getBillingCycleLabel,
+  getTrialLabel,
+} from './product.types';
+
+// Subscription types
+export {
+  SubscriptionStatus,
+  SubscriptionStatusColors,
+  SubscriptionStatusLabels,
+  type Subscription,
+  type SubscriptionWithRelations,
+  type SubscriptionWithComputed,
+  type CreateTrialSubscriptionDTO,
+  type CancelSubscriptionDTO,
+  isTrialActive,
+  getDaysRemainingInTrial,
+  calculateNextDueDate,
+  canCancelSubscription,
+} from './subscription.types';
+
+// Lead/Marketplace types
+export {
+  MarketplaceStatus,
+  AccessType,
+  InterestLevel,
+  MarketplaceStatusColors,
+  MarketplaceStatusLabels,
+  AccessTypeColors,
+  AccessTypeLabels,
+  type LeadSegmento,
+  type Lead,
+  type LeadFull,
+  type LeadAccess,
+  type LeadAccessWithComputed,
+  type LeadWithAccess,
+  type LeadSearchFilters,
+  isAccessExpired,
+  getDaysUntilExpiration,
+  isViewLimitReached,
+  getRemainingViews,
+  canAccessLead,
+  maskPhone,
+  maskEmail,
+} from './lead.types';
+
 // Legacy types (for backwards compatibility)
 export {
   LegacyPaymentStatus,

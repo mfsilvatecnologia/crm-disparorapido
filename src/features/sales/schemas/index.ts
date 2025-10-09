@@ -31,3 +31,51 @@ export {
   financialSummaryParamsSchema,
   financialSummarySchema,
 } from './financial.schema';
+
+// Subscription schemas
+export {
+  subscriptionStatusSchema,
+  subscriptionSchema,
+  subscriptionsSchema,
+  createSubscriptionSchema,
+  cancelSubscriptionSchema,
+  updatePaymentMethodSchema,
+  validateSubscription,
+  validateSubscriptions,
+  validateCreateSubscription,
+  validateCancelSubscription,
+  type SubscriptionSchema,
+  type CreateSubscriptionSchema,
+  type CancelSubscriptionSchema,
+  type UpdatePaymentMethodSchema,
+} from './subscription.schema';
+
+// Lead/Marketplace schemas
+export {
+  marketplaceStatusSchema,
+  accessTypeSchema,
+  interestLevelSchema,
+  leadSegmentoSchema,
+  ufSchema,
+  phoneSchema,
+  emailSchema,
+  leadSchema,
+  leadFullSchema,
+  leadsSchema,
+  leadAccessSchema,
+  leadSearchFiltersSchema,
+  grantTrialAccessSchema,
+  recordLeadViewSchema,
+  validateLead,
+  validateLeadFull,
+  validateLeads,
+  validateLeadAccess,
+  validateLeadSearchFilters,
+  validateGrantTrialAccess,
+  type LeadSchema,
+  type LeadFullSchema,
+  type LeadAccessSchema,
+  type LeadSearchFiltersSchema,
+  type GrantTrialAccessSchema,
+  type RecordLeadViewSchema,
+} from './lead.schema';
