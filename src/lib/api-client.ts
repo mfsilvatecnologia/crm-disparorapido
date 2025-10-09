@@ -46,6 +46,21 @@ class ApiClient {
     this.setupInterceptors();
   }
 
+  private getErrorMessage(data: any, fallback: string): string {
+    // Se data.error é uma string diretamente
+    if (typeof data?.error === 'string') {
+      return data.error;
+    }
+    
+    // Se data.error é um objeto com message
+    if (data?.error?.message) {
+      return data.error.message;
+    }
+    
+    // Fallback
+    return fallback;
+  }
+
   private setupInterceptors() {
     // Request interceptor - Add auth token
     this.client.interceptors.request.use(
@@ -76,7 +91,7 @@ class ApiClient {
               throw new ApiClientError(
                 401,
                 data?.error?.code || 'UNAUTHORIZED',
-                data?.error?.message || 'Sessão expirada. Faça login novamente.',
+                this.getErrorMessage(data, 'Sessão expirada. Faça login novamente.'),
                 data?.error?.details
               );
 
@@ -84,7 +99,7 @@ class ApiClient {
               throw new ApiClientError(
                 403,
                 data?.error?.code || 'FORBIDDEN',
-                data?.error?.message || 'Você não tem permissão para acessar este recurso.',
+                this.getErrorMessage(data, 'Você não tem permissão para acessar este recurso.'),
                 data?.error?.details
               );
 
@@ -92,7 +107,7 @@ class ApiClient {
               throw new ApiClientError(
                 404,
                 data?.error?.code || 'NOT_FOUND',
-                data?.error?.message || 'Recurso não encontrado.',
+                this.getErrorMessage(data, 'Recurso não encontrado.'),
                 data?.error?.details
               );
 
@@ -100,7 +115,7 @@ class ApiClient {
               throw new ApiClientError(
                 422,
                 data?.error?.code || 'VALIDATION_ERROR',
-                data?.error?.message || 'Dados inválidos.',
+                this.getErrorMessage(data, 'Dados inválidos.'),
                 data?.error?.details
               );
 
@@ -108,7 +123,7 @@ class ApiClient {
               throw new ApiClientError(
                 429,
                 data?.error?.code || 'RATE_LIMIT',
-                data?.error?.message || 'Muitas requisições. Tente novamente em alguns segundos.',
+                this.getErrorMessage(data, 'Muitas requisições. Tente novamente em alguns segundos.'),
                 data?.error?.details
               );
 
@@ -119,7 +134,7 @@ class ApiClient {
               throw new ApiClientError(
                 status,
                 data?.error?.code || 'SERVER_ERROR',
-                data?.error?.message || 'Erro no servidor. Tente novamente mais tarde.',
+                this.getErrorMessage(data, 'Erro no servidor. Tente novamente mais tarde.'),
                 data?.error?.details
               );
 
@@ -127,7 +142,7 @@ class ApiClient {
               throw new ApiClientError(
                 status,
                 data?.error?.code || 'UNKNOWN_ERROR',
-                data?.error?.message || 'Erro desconhecido. Tente novamente.',
+                this.getErrorMessage(data, 'Erro desconhecido. Tente novamente.'),
                 data?.error?.details
               );
           }
