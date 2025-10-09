@@ -1,11 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '../../../../shared/services/client';
-import { PurchaseCreditPackageSchema } from '../../schemas/credit.schema';
 
 interface PurchaseCreditPackageResponse {
   paymentUrl: string;
   transacaoId: string;
+}
+
+interface PurchaseCreditPackageParams {
+  packageId: string;
+  paymentMethod: 'credit_card' | 'pix' | 'boleto';
 }
 
 /**
@@ -15,12 +19,11 @@ export function usePurchaseCreditPackage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: PurchaseCreditPackageSchema) => {
-      const response = await apiClient.post<PurchaseCreditPackageResponse>(
-        '/credits/packages/purchase',
+    mutationFn: async (data: PurchaseCreditPackageParams) => {
+      return await apiClient.post<PurchaseCreditPackageResponse>(
+        '/api/v1/credits/packages/purchase',
         data
       );
-      return response.data;
     },
     onSuccess: () => {
       // Invalida queries relacionadas a créditos

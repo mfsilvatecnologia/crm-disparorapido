@@ -63,3 +63,31 @@ export const creditBalanceSchema = z.object({
   balance: z.number().int().nonnegative(),
   lastUpdated: z.string().datetime(),
 });
+
+/**
+ * Credit Package Schema
+ */
+export const creditPackageSchema = z.object({
+  id: z.string().min(1),
+  nome: z.string().min(1),
+  descricao: z.string().optional().nullable(),
+  preco_centavos: z.number().int().positive(),
+  precoFormatado: z.string().min(1),
+  quantidade_creditos: z.number().int().positive(),
+  bonus_creditos: z.number().int().min(0),
+  leadsInclusos: z.number().int().optional(),
+  bonusLeads: z.number().int().optional().nullable(),
+  custoPorLead: z.string().optional(),
+  ativo: z.boolean(),
+  destaque: z.boolean(),
+  economia: z.string().optional().nullable(),
+  // Preserve optional metadata returned by API
+  metadata: z
+    .object({
+      creditos_total: z.number().int().optional(),
+      custo_por_credito: z.number().optional(),
+      // Accept and ignore extra metadata fields while preserving known ones
+    })
+    .partial()
+    .optional(),
+});

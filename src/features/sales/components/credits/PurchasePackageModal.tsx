@@ -17,7 +17,11 @@ export function PurchasePackageModal({
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const purchaseMutation = usePurchaseCreditPackage();
 
-  const totalCredits = pkg.creditosTotal;
+  // Derive computed fields from backend payload
+  const creditos = pkg.quantidade_creditos;
+  const bonus = pkg.bonus_creditos;
+  const totalCredits = pkg.metadata?.creditos_total ?? (creditos + bonus);
+  const bonusPercentual = creditos > 0 ? Math.round((bonus / creditos) * 100) : 0;
 
   const handlePurchase = async () => {
     if (!acceptedTerms) {
@@ -27,7 +31,8 @@ export function PurchasePackageModal({
     try {
       // Chama backend que retorna URL de pagamento
       const response = await purchaseMutation.mutateAsync({
-        pacoteId: pkg.id,
+        packageId: pkg.id,
+        paymentMethod: 'pix',
       });
 
       // Redireciona para a URL de pagamento retornada pelo backend
@@ -78,15 +83,15 @@ export function PurchasePackageModal({
             <div className="flex justify-between">
               <span className="text-gray-600">Créditos:</span>
               <span className="font-semibold text-gray-900">
-                {pkg.creditos.toLocaleString('pt-BR')}
+                {creditos.toLocaleString('pt-BR')}
               </span>
             </div>
 
-            {pkg.bonusPercentual > 0 && (
+            {bonusPercentual > 0 && (
               <div className="flex justify-between">
-                <span className="text-green-600">Bônus ({pkg.bonusPercentual}%):</span>
+                <span className="text-green-600">Bônus ({bonusPercentual}%):</span>
                 <span className="font-semibold text-green-600">
-                  +{(pkg.creditosTotal - pkg.creditos).toLocaleString('pt-BR')}
+                  +{(totalCredits - creditos).toLocaleString('pt-BR')}
                 </span>
               </div>
             )}
@@ -101,7 +106,7 @@ export function PurchasePackageModal({
             <div className="flex justify-between border-t-2 border-gray-400 pt-2">
               <span className="text-lg font-bold text-gray-900">Valor:</span>
               <span className="text-2xl font-bold text-gray-900">
-                {formatPrice(pkg.preco)}
+                {formatPrice(pkg.preco_centavos)}
               </span>
             </div>
           </div>

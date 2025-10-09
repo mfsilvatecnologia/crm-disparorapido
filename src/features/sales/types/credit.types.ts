@@ -71,3 +71,27 @@ export interface CreditBalance {
   balance: number;                   // Current credit balance
   lastUpdated: string;               // ISO 8601 datetime of last update
 }
+
+/**
+ * Credit Package
+ * Available package for purchasing credits
+ */
+export interface CreditPackage {
+  id: string;
+  nome: string;
+  descricao?: string | null;
+  preco_centavos: number;
+  precoFormatado: string;
+  quantidade_creditos: number;
+  bonus_creditos: number;
+  leadsInclusos?: number;
+  bonusLeads?: number | null;
+  custoPorLead?: string;
+  ativo: boolean;
+  destaque: boolean;
+  economia?: string | null;
+  metadata?: {
+    creditos_total?: number;
+    custo_por_credito?: number;
+  };
+}
