@@ -1,20 +1,33 @@
 /**
- * Index file for Sales Schemas
- * 
- * Re-exports all schemas for easier importing
+ * Schemas Export Index
+ * Central export for all validation schemas
  */
 
-// Product schemas
-export * from './product.schema';
-
-// Subscription schemas
-export * from './subscription.schema';
-
 // Payment schemas
-export * from './payment.schema';
+export {
+  paymentStatusSchema,
+  paymentMethodSchema,
+  paymentSchema,
+  paymentListParamsSchema,
+  paginationMetaSchema,
+  paymentListResponseSchema,
+  paymentActionParamsSchema,
+  paymentActionResponseSchema,
+  paymentDetailsResponseSchema,
+} from './payment.schema';
 
 // Credit schemas
-export * from './credit.schema';
+export {
+  creditTransactionTypeSchema,
+  relatedEntityTypeSchema,
+  creditTransactionSchema,
+  creditTransactionListParamsSchema,
+  creditTransactionListResponseSchema,
+  creditBalanceSchema,
+} from './credit.schema';
 
-// Lead schemas
-export * from './lead.schema';
+// Financial schemas
+export {
+  financialSummaryParamsSchema,
+  financialSummarySchema,
+} from './financial.schema';

@@ -1,130 +1,46 @@
 /**
  * Credits API Client
- * 
- * API methods for credit system operations
+ * API functions for credit endpoints
  */
 
 import { apiClient } from '@/lib/api-client';
-import type { 
-  CreditBalance, 
-  CreditPackage,
-  CreditTransaction,
-  PurchaseLeadResponse 
-} from '../types';
-import type {
-  PurchaseCreditPackageSchema,
-  PurchaseLeadSchema,
-  CreditTransactionFiltersSchema
-} from '../schemas';
 import {
-  validateCreditBalance,
-  validateCreditPackage,
-  validateCreditTransaction
+  CreditBalance,
+  CreditTransactionListParams,
+  CreditTransactionListResponse,
+} from '../types';
+import {
+  creditBalanceSchema,
+  creditTransactionListResponseSchema,
 } from '../schemas';
 
 /**
- * Standard API response envelope
- */
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
-/**
- * Base path for credits API
- */
-const BASE_PATH = '/api/v1/credits';
-
-/**
- * Fetch credit balance for current company
+ * Fetch current credit balance
  */
 export async function fetchCreditBalance(): Promise<CreditBalance> {
-  const response = await apiClient.get<ApiResponse<CreditBalance>>(`${BASE_PATH}/balance`);
-  const data = response.data;
-  
-  // Validate response
-  const validation = validateCreditBalance(data);
-  if (!validation.success) {
-    throw new Error('Invalid credit balance data from API');
-  }
-  
-  return data;
+  const response = await apiClient.get<unknown>('/credits/balance');
+  return creditBalanceSchema.parse(response) as CreditBalance;
 }
 
-/**
- * Fetch available credit packages
- */
-export async function fetchCreditPackages(): Promise<CreditPackage[]> {
-  const response = await apiClient.get<ApiResponse<CreditPackage[]>>(`${BASE_PATH}/packages`);
-  const data = response.data;
-  
-  // Validate each package
-  data.forEach(pkg => {
-    const validation = validateCreditPackage(pkg);
-    if (!validation.success) {
-      throw new Error('Invalid credit package data from API');
-    }
-  });
-  
-  return data;
-}
+// Alias for backward compatibility
+export const getCreditBalance = fetchCreditBalance;
 
 /**
- * Purchase credit package
- */
-export async function purchaseCreditPackage(
-  purchaseData: PurchaseCreditPackageSchema
-): Promise<{
-  transactionId: string;
-  paymentUrl?: string;
-  boletoUrl?: string;
-  pixQrCode?: string;
-}> {
-  const response = await apiClient.post<ApiResponse<{
-    transactionId: string;
-    paymentUrl?: string;
-    boletoUrl?: string;
-    pixQrCode?: string;
-  }>>(`${BASE_PATH}/purchase`, purchaseData);
-  
-  return response.data;
-}
-
-/**
- * Fetch credit transaction history
+ * Fetch paginated credit transaction list with filters
  */
 export async function fetchCreditTransactions(
-  filters?: CreditTransactionFiltersSchema
-): Promise<{
-  transactions: CreditTransaction[];
-  total: number;
-  page: number;
-  limit: number;
-}> {
-  const params = filters ? new URLSearchParams(filters as any).toString() : '';
-  const url = params ? `${BASE_PATH}/transactions?${params}` : `${BASE_PATH}/transactions`;
-  
-  const response = await apiClient.get<ApiResponse<{
-    transactions: CreditTransaction[];
-    total: number;
-    page: number;
-    limit: number;
-  }>>(url);
-  
-  return response.data;
+  params: CreditTransactionListParams
+): Promise<CreditTransactionListResponse> {
+  const response = await apiClient.get<unknown>('/credits/transactions', { params });
+  return creditTransactionListResponseSchema.parse(response) as CreditTransactionListResponse;
 }
 
-/**
- * Purchase lead access with credits
- */
-export async function purchaseLeadAccess(
-  purchaseData: PurchaseLeadSchema
-): Promise<PurchaseLeadResponse> {
-  const response = await apiClient.post<ApiResponse<PurchaseLeadResponse>>(
-    `${BASE_PATH}/purchase-lead`,
-    purchaseData
-  );
-  
-  return response.data;
-}
+// Alias for backward compatibility
+export const getCreditTransactions = fetchCreditTransactions;
+
+export const creditsApi = {
+  fetchCreditBalance,
+  getCreditBalance,
+  fetchCreditTransactions,
+  getCreditTransactions,
+};

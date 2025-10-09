@@ -1,20 +1,73 @@
 /**
- * Index file for Sales Types
- * 
- * Re-exports all types for easier importing
+ * Types Export Index
+ * Central export for all type definitions
  */
 
-// Product types
-export * from './product.types';
-
-// Subscription types
-export * from './subscription.types';
-
 // Payment types
-export * from './payment.types';
+export type {
+  PaymentStatus,
+  PaymentMethod,
+  Payment,
+  PaymentListParams,
+  PaginationMeta,
+  PaymentListResponse,
+  PaymentActionParams,
+  PaymentActionResponse,
+  PaymentDetailsResponse,
+} from './payment.types';
 
 // Credit types
-export * from './credit.types';
+export type {
+  CreditTransactionType,
+  RelatedEntityType,
+  CreditTransaction,
+  CreditTransactionListParams,
+  CreditTransactionListResponse,
+  CreditBalance,
+} from './credit.types';
 
-// Lead types
-export * from './lead.types';
+// Financial types
+export type {
+  FinancialSummaryParams,
+  FinancialSummary,
+} from './financial.types';
+
+// Filter types
+export type {
+  PaymentFilters,
+  CreditTransactionFilters,
+  FinancialSummaryFilters,
+} from './filters.types';
+
+// Component props types
+export type {
+  PaymentCardProps,
+  PaymentStatusBadgeProps,
+  PaymentActionsProps,
+  CreditTransactionCardProps,
+  FinancialSummaryCardProps,
+  PaginationProps,
+} from './components.types';
+
+// Type guards
+export {
+  isPayment,
+  isCreditTransaction,
+  isCorruptedPayment,
+} from './guards';
+
+// Legacy types (for backwards compatibility)
+export {
+  LegacyPaymentStatus,
+  LegacyPaymentMethod,
+  type PaymentHistory,
+  type PaymentHistoryWithRelations,
+  type CreatePaymentDTO,
+  type PaymentHistoryWithComputed,
+  LegacyPaymentStatusColors,
+  LegacyPaymentStatusLabels,
+  LegacyPaymentMethodLabels,
+  isPaymentOverdue,
+  getDaysUntilDue,
+  formatPaymentAmount,
+} from './payment.types';
