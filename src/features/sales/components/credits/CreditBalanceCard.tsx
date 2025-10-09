@@ -15,8 +15,7 @@ export function CreditBalanceCard({
     return new Intl.NumberFormat('pt-BR').format(amount);
   };
 
-  // Use saldoCreditosCentavos or fallback to saldoAtual for compatibility
-  const currentBalance = balance.saldoCreditosCentavos ?? balance.saldoAtual ?? 0;
+  const currentBalance = balance.balance;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -57,25 +56,10 @@ export function CreditBalanceCard({
         </div>
       </div>
 
-      {/* Estatísticas */}
-      <div className="mb-6 grid grid-cols-3 gap-4 border-t border-gray-200 pt-4">
-        <div>
-          <div className="text-xs text-gray-600">Comprados</div>
-          <div className="mt-1 text-lg font-semibold text-gray-900">
-            {formatCredits(balance.estatisticas.totalComprado)}
-          </div>
-        </div>
-        <div>
-          <div className="text-xs text-gray-600">Gastos</div>
-          <div className="mt-1 text-lg font-semibold text-gray-900">
-            {formatCredits(balance.estatisticas.totalGasto)}
-          </div>
-        </div>
-        <div>
-          <div className="text-xs text-gray-600">Bônus</div>
-          <div className="mt-1 text-lg font-semibold text-green-600">
-            {formatCredits(balance.estatisticas.totalBonusRecebido)}
-          </div>
+      {/* Last Updated */}
+      <div className="mb-6 border-t border-gray-200 pt-4">
+        <div className="text-xs text-gray-500">
+          Atualizado em: {new Date(balance.lastUpdated).toLocaleString('pt-BR')}
         </div>
       </div>
 

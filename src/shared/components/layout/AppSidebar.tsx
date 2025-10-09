@@ -19,7 +19,10 @@ import {
   Target,
   Mail,
   ShoppingCart,
-  Coins
+  Coins,
+  Receipt,
+  TrendingUp,
+  ArrowRightLeft
 } from 'lucide-react';
 import {
   Sidebar,
@@ -118,6 +121,27 @@ const salesItems = [
     url: '/app/subscription',
     icon: CreditCard,
     description: 'Gerenciar assinatura'
+  },
+];
+
+const financialItems = [
+  {
+    title: 'Dashboard',
+    url: '/app/financial',
+    icon: TrendingUp,
+    description: 'Visão geral financeira'
+  },
+  {
+    title: 'Pagamentos',
+    url: '/app/payments',
+    icon: Receipt,
+    description: 'Histórico de pagamentos'
+  },
+  {
+    title: 'Transações',
+    url: '/app/credits/transactions',
+    icon: ArrowRightLeft,
+    description: 'Transações de crédito'
   },
 ];
 
@@ -231,6 +255,30 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {salesItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      className={getNavClassName(item.url)}
+                      title={!open ? item.description : undefined}
+                      onClick={handleNavClick}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {open && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Financial */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Financeiro</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {financialItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

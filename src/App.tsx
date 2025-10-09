@@ -23,7 +23,11 @@ import {
   CheckoutPage, 
   SubscriptionManagementPage, 
   CreditPackagesPage, 
-  MarketplacePage 
+  MarketplacePage,
+  PaymentHistoryPage,
+  PaymentDetailsPage,
+  CreditTransactionsPage,
+  FinancialDashboardPage
 } from "./features/sales/pages";
 import { NotFound } from "./shared/pages";
 
@@ -95,6 +99,12 @@ function AppRoutes() {
           <Route path="subscription" element={<SubscriptionManagementPage />} />
           <Route path="credits" element={<CreditPackagesPage />} />
           <Route path="marketplace" element={<MarketplacePage />} />
+          
+          {/* Payments & Financial Routes */}
+          <Route path="payments" element={<PaymentHistoryPage />} />
+          <Route path="payments/:id" element={<PaymentDetailsPage />} />
+          <Route path="credits/transactions" element={<CreditTransactionsPage />} />
+          <Route path="financial" element={<FinancialDashboardPage />} />
           
           <Route path="profile" element={<UserProfilePage />} />
           <Route path="users" element={<UsersPage />} />

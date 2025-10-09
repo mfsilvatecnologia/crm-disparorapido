@@ -1,83 +1,200 @@
 /**
  * Payment Types
- * 
+ *
  * TypeScript interfaces for payment history and transactions
  */
 
+// ============================================================================
+// Legacy Payment Types (existing system)
+// ============================================================================
+
 /**
- * Payment status enum
+ * Legacy Payment status enum
+ * @deprecated Use PaymentStatus type for new features
  */
-export enum PaymentStatus {
+export enum LegacyPaymentStatus {
   /** Payment pending confirmation */
   PENDING = 'pending',
-  
+
   /** Payment confirmed by gateway */
   CONFIRMED = 'confirmed',
-  
+
   /** Payment received and processed */
   RECEIVED = 'received',
-  
+
   /** Payment overdue */
   OVERDUE = 'overdue',
-  
+
   /** Payment refunded */
   REFUNDED = 'refunded'
 }
 
 /**
- * Payment method enum
+ * Legacy Payment method enum
+ * @deprecated Use PaymentMethod type for new features
  */
-export enum PaymentMethod {
+export enum LegacyPaymentMethod {
   /** Credit card */
   CREDIT_CARD = 'CREDIT_CARD',
-  
+
   /** Bank slip (boleto) */
   BOLETO = 'BOLETO',
-  
+
   /** PIX instant payment */
   PIX = 'PIX'
 }
 
+// ============================================================================
+// New Payment Types (Feature 005: Payments, Subscriptions, Credits Management)
+// ============================================================================
+
 /**
- * Payment History interface
+ * Payment Status
+ * - pending: Payment initiated but not yet processed
+ * - completed: Payment successfully processed
+ * - failed: Payment processing failed
+ * - cancelled: Payment manually cancelled before completion
+ * - refunded: Completed payment that was refunded
+ */
+export type PaymentStatus =
+  | 'pending'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'refunded';
+
+/**
+ * Payment Method
+ * - credit_card: Credit or debit card payment
+ * - pix: Brazilian instant payment system
+ * - boleto: Brazilian bank slip payment
+ */
+export type PaymentMethod =
+  | 'credit_card'
+  | 'pix'
+  | 'boleto';
+
+/**
+ * Payment Entity
+ * Represents a single payment transaction
+ */
+export interface Payment {
+  id: string;
+  amount: number;                    // Amount in cents (e.g., 9900 = R$ 99,00)
+  status: PaymentStatus;
+  method: PaymentMethod;
+  createdAt: string;                 // ISO 8601 datetime
+  updatedAt: string;                 // ISO 8601 datetime
+  description: string;               // Human-readable description
+  subscriptionId?: string;           // Related subscription (if applicable)
+  metadata?: Record<string, unknown>; // Additional custom data
+}
+
+/**
+ * Payment List Query Parameters
+ * Used for filtering and pagination
+ */
+export interface PaymentListParams {
+  page?: number;                     // Page number (1-indexed)
+  limit?: number;                    // Items per page (default: 10)
+  status?: PaymentStatus;            // Filter by payment status
+  startDate?: string;                // Filter by date range start (ISO 8601)
+  endDate?: string;                  // Filter by date range end (ISO 8601)
+}
+
+/**
+ * Pagination Metadata
+ * Standard pagination response structure
+ */
+export interface PaginationMeta {
+  currentPage: number;               // Current page number
+  totalPages: number;                // Total number of pages
+  totalItems: number;                // Total number of items
+  itemsPerPage: number;              // Items per page
+}
+
+/**
+ * Payment List Response
+ * Backend API response for GET /api/payments
+ */
+export interface PaymentListResponse {
+  payments: Payment[];
+  pagination: PaginationMeta;
+}
+
+/**
+ * Payment Action Parameters
+ * Used for cancel/refund operations
+ */
+export interface PaymentActionParams {
+  reason?: string;                   // Optional reason for action
+}
+
+/**
+ * Payment Action Response
+ * Backend API response for POST /api/payments/:id/cancel or /refund
+ */
+export interface PaymentActionResponse {
+  success: boolean;
+  payment: Payment;                  // Updated payment object
+  message?: string;                  // Optional success/error message
+}
+
+/**
+ * Payment Details Response
+ * Backend API response for GET /api/payments/:id
+ */
+export interface PaymentDetailsResponse extends Payment {
+  // Additional fields for detailed view (if any)
+  transactionId?: string;            // External transaction ID (e.g., from payment gateway)
+  receiptUrl?: string;               // URL to payment receipt
+}
+
+// ============================================================================
+// Legacy Payment History Interface (preserved for backwards compatibility)
+// ============================================================================
+
+/**
+ * Legacy Payment History interface
+ * @deprecated Use Payment interface for new features
  */
 export interface PaymentHistory {
   /** Unique identifier */
   id: string;
-  
+
   /** Related subscription ID */
   subscriptionId: string;
-  
+
   /** Payment amount in centavos */
   amount: number;
-  
+
   /** Payment status */
-  status: PaymentStatus;
-  
+  status: LegacyPaymentStatus;
+
   /** Payment method used */
-  paymentMethod: PaymentMethod | null;
-  
+  paymentMethod: LegacyPaymentMethod | null;
+
   /** Due date */
   dueDate: string;
-  
+
   /** Payment date (null if not paid) */
   paidAt: string | null;
-  
+
   /** Asaas payment ID */
   asaasPaymentId: string | null;
-  
+
   /** Invoice URL (if available) */
   invoiceUrl: string | null;
-  
+
   /** Boleto barcode (if payment method is boleto) */
   boletoBarcode: string | null;
-  
+
   /** PIX QR code (if payment method is PIX) */
   pixQrCode: string | null;
-  
+
   /** Creation timestamp */
   createdAt: string;
-  
+
   /** Last update timestamp */
   updatedAt: string;
 }
@@ -132,34 +249,34 @@ export interface PaymentHistoryWithComputed extends PaymentHistory {
 }
 
 /**
- * Payment status colors
+ * Legacy Payment status colors
  */
-export const PaymentStatusColors: Record<PaymentStatus, string> = {
-  [PaymentStatus.PENDING]: 'yellow',
-  [PaymentStatus.CONFIRMED]: 'blue',
-  [PaymentStatus.RECEIVED]: 'green',
-  [PaymentStatus.OVERDUE]: 'red',
-  [PaymentStatus.REFUNDED]: 'gray'
+export const LegacyPaymentStatusColors: Record<LegacyPaymentStatus, string> = {
+  [LegacyPaymentStatus.PENDING]: 'yellow',
+  [LegacyPaymentStatus.CONFIRMED]: 'blue',
+  [LegacyPaymentStatus.RECEIVED]: 'green',
+  [LegacyPaymentStatus.OVERDUE]: 'red',
+  [LegacyPaymentStatus.REFUNDED]: 'gray'
 };
 
 /**
- * Payment status labels in Portuguese
+ * Legacy Payment status labels in Portuguese
  */
-export const PaymentStatusLabels: Record<PaymentStatus, string> = {
-  [PaymentStatus.PENDING]: 'Pendente',
-  [PaymentStatus.CONFIRMED]: 'Confirmado',
-  [PaymentStatus.RECEIVED]: 'Recebido',
-  [PaymentStatus.OVERDUE]: 'Atrasado',
-  [PaymentStatus.REFUNDED]: 'Reembolsado'
+export const LegacyPaymentStatusLabels: Record<LegacyPaymentStatus, string> = {
+  [LegacyPaymentStatus.PENDING]: 'Pendente',
+  [LegacyPaymentStatus.CONFIRMED]: 'Confirmado',
+  [LegacyPaymentStatus.RECEIVED]: 'Recebido',
+  [LegacyPaymentStatus.OVERDUE]: 'Atrasado',
+  [LegacyPaymentStatus.REFUNDED]: 'Reembolsado'
 };
 
 /**
- * Payment method labels in Portuguese
+ * Legacy Payment method labels in Portuguese
  */
-export const PaymentMethodLabels: Record<PaymentMethod, string> = {
-  [PaymentMethod.CREDIT_CARD]: 'Cartão de Crédito',
-  [PaymentMethod.BOLETO]: 'Boleto Bancário',
-  [PaymentMethod.PIX]: 'PIX'
+export const LegacyPaymentMethodLabels: Record<LegacyPaymentMethod, string> = {
+  [LegacyPaymentMethod.CREDIT_CARD]: 'Cartão de Crédito',
+  [LegacyPaymentMethod.BOLETO]: 'Boleto Bancário',
+  [LegacyPaymentMethod.PIX]: 'PIX'
 };
 
 /**

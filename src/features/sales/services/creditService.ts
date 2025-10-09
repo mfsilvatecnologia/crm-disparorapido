@@ -4,12 +4,10 @@
  * Business logic for credit system operations
  */
 
-import {
+import type {
   CreditTransaction,
   CreditBalance,
   CreditTransactionType,
-  formatCreditsAsCurrency,
-  calculateLeadsFromCredits
 } from '../types';
 
 /**
@@ -19,21 +17,35 @@ export function filterByType(
   transactions: CreditTransaction[],
   types: CreditTransactionType[]
 ): CreditTransaction[] {
-  return transactions.filter(t => types.includes(t.tipo));
+  return transactions.filter(t => types.includes(t.type));
 }
 
 /**
- * Get purchase transactions
+ * Get earned credit transactions
  */
-export function getPurchases(transactions: CreditTransaction[]): CreditTransaction[] {
-  return filterByType(transactions, [CreditTransactionType.COMPRA]);
+export function getEarnedTransactions(transactions: CreditTransaction[]): CreditTransaction[] {
+  return filterByType(transactions, ['earned']);
 }
 
 /**
- * Get usage transactions
+ * Get spent credit transactions
  */
-export function getUsage(transactions: CreditTransaction[]): CreditTransaction[] {
-  return filterByType(transactions, [CreditTransactionType.USO]);
+export function getSpentTransactions(transactions: CreditTransaction[]): CreditTransaction[] {
+  return filterByType(transactions, ['spent']);
+}
+
+/**
+ * Get bonus credit transactions
+ */
+export function getBonusTransactions(transactions: CreditTransaction[]): CreditTransaction[] {
+  return filterByType(transactions, ['bonus']);
+}
+
+/**
+ * Get refund credit transactions
+ */
+export function getRefundTransactions(transactions: CreditTransaction[]): CreditTransaction[] {
+  return filterByType(transactions, ['refund']);
 }
 
 /**
@@ -41,43 +53,51 @@ export function getUsage(transactions: CreditTransaction[]): CreditTransaction[]
  */
 export function sortByDate(transactions: CreditTransaction[]): CreditTransaction[] {
   return [...transactions].sort((a, b) => 
-    new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime()
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
 
 /**
- * Calculate total credits purchased
+ * Calculate total credits earned
  */
-export function calculateTotalPurchased(transactions: CreditTransaction[]): number {
-  return getPurchases(transactions).reduce((sum, t) => sum + t.quantidade, 0);
+export function calculateTotalEarned(transactions: CreditTransaction[]): number {
+  return getEarnedTransactions(transactions).reduce((sum, t) => sum + t.amount, 0);
 }
 
 /**
- * Calculate total credits used
+ * Calculate total credits spent
  */
-export function calculateTotalUsed(transactions: CreditTransaction[]): number {
-  return Math.abs(getUsage(transactions).reduce((sum, t) => sum + t.quantidade, 0));
+export function calculateTotalSpent(transactions: CreditTransaction[]): number {
+  return Math.abs(getSpentTransactions(transactions).reduce((sum, t) => sum + t.amount, 0));
+}
+
+/**
+ * Calculate total bonus credits
+ */
+export function calculateTotalBonus(transactions: CreditTransaction[]): number {
+  return getBonusTransactions(transactions).reduce((sum, t) => sum + t.amount, 0);
 }
 
 /**
  * Check if has sufficient balance
  */
 export function hasSufficientBalance(balance: CreditBalance, cost: number): boolean {
-  const currentBalance = balance.saldoCreditosCentavos ?? balance.saldoAtual ?? 0;
-  return currentBalance >= cost;
+  return balance.balance >= cost;
 }
 
 /**
  * Estimate leads that can be purchased
+ * @param balance Current credit balance
+ * @param avgCostPerLead Average cost per lead in credits (default: 100)
+ * @returns Estimated number of leads that can be purchased
  */
-export function estimateLeadsPurchasable(balance: CreditBalance): number {
-  const currentBalance = balance.saldoCreditosCentavos ?? balance.saldoAtual ?? 0;
-  const avgCost = balance.estatisticas?.creditoMedioPorLead ?? 0;
-  
-  if (avgCost === 0) {
-    // If no average cost, use a default estimate (e.g., 100 centavos per lead)
-    return Math.floor(currentBalance / 100);
-  }
-  
-  return Math.floor(currentBalance / avgCost);
+export function estimateLeadsPurchasable(balance: CreditBalance, avgCostPerLead = 100): number {
+  return Math.floor(balance.balance / avgCostPerLead);
+}
+
+/**
+ * Format credit amount for display
+ */
+export function formatCreditAmount(amount: number): string {
+  return new Intl.NumberFormat('pt-BR').format(amount);
 }

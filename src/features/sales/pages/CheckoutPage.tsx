@@ -18,6 +18,7 @@ export function CheckoutPage() {
   
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('selection');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const { data: products, isLoading: productsLoading } = useProducts();
   const trialMutation = useTrialActivation();
@@ -50,20 +51,27 @@ export function CheckoutPage() {
   const handleConfirm = async () => {
     if (!selectedProduct || !isAuthenticated) return;
 
+    // Limpa erro anterior
+    setErrorMessage('');
+
     try {
       await trialMutation.mutateAsync({
         produtoId: selectedProduct.id,
       });
       
       setCurrentStep('success');
-    } catch (error) {
-      console.error('Erro ao ativar trial:', error);
-      // Erro já tratado pelo hook com toast
+    } catch (error: any) {
+      // O api-client já extraiu a mensagem correta da API
+      if (error?.message) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('Ocorreu um erro inesperado. Tente novamente.');
+      }
     }
   };
 
   const handleGoToDashboard = () => {
-    navigate('/dashboard');
+    navigate('/app');
   };
 
   if (productsLoading) {
@@ -139,9 +147,13 @@ export function CheckoutPage() {
           {currentStep === 'confirmation' && (
             <CheckoutConfirmation
               product={selectedProduct}
-              onCancel={() => setCurrentStep('selection')}
+              onCancel={() => {
+                setErrorMessage('');
+                setCurrentStep('selection');
+              }}
               onConfirm={handleConfirm}
               isLoading={trialMutation.isPending}
+              errorMessage={errorMessage}
             />
           )}
 
