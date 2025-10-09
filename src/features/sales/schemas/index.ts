@@ -24,6 +24,7 @@ export {
   creditTransactionListParamsSchema,
   creditTransactionListResponseSchema,
   creditBalanceSchema,
+  creditPackageSchema,
 } from './credit.schema';
 
 // Financial schemas

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSubscription } from '../hooks/subscriptions/useSubscription';
 import { useProduct } from '../hooks/subscriptions/useProduct';
 import { usePaymentHistory } from '../hooks/payments/usePaymentHistory';
-import { PaymentStatus } from '../types/payment.types';
+import { LegacyPaymentStatus } from '../types/payment.types';
 import { SubscriptionDetails } from '../components/subscriptions/SubscriptionDashboard/SubscriptionDetails';
 import { CancelDialog } from '../components/subscriptions/SubscriptionDashboard/CancelDialog';
 import { TrialBanner } from '../components/subscriptions/TrialBanner';
@@ -112,18 +112,18 @@ export function SubscriptionManagementPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            payment.status === PaymentStatus.RECEIVED || payment.status === PaymentStatus.CONFIRMED
+                            payment.status === LegacyPaymentStatus.RECEIVED || payment.status === LegacyPaymentStatus.CONFIRMED
                               ? 'bg-green-100 text-green-800'
-                              : payment.status === PaymentStatus.PENDING
+                              : payment.status === LegacyPaymentStatus.PENDING
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {payment.status === PaymentStatus.RECEIVED || payment.status === PaymentStatus.CONFIRMED
+                          {payment.status === LegacyPaymentStatus.RECEIVED || payment.status === LegacyPaymentStatus.CONFIRMED
                             ? 'Pago'
-                            : payment.status === PaymentStatus.PENDING
+                            : payment.status === LegacyPaymentStatus.PENDING
                             ? 'Pendente'
-                            : payment.status === PaymentStatus.OVERDUE
+                            : payment.status === LegacyPaymentStatus.OVERDUE
                             ? 'Atrasado'
                             : payment.status}
                         </span>

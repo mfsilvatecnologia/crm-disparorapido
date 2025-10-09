@@ -1,6 +1,6 @@
 import { Subscription } from '../../../types/subscription.types';
 import { Product } from '../../../types/product.types';
-import { PaymentHistory, PaymentStatus } from '../../../types/payment.types';
+import { PaymentHistory, LegacyPaymentStatus } from '../../../types/payment.types';
 import { BillingCycle } from '../../../types/product.types';
 import { StatusBadge } from './StatusBadge';
 import { formatPrice, getBillingCycleLabel } from '../../../services/productService';
@@ -207,18 +207,18 @@ export function SubscriptionDetails({
                   </div>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      payment.status === PaymentStatus.RECEIVED || payment.status === PaymentStatus.CONFIRMED
+                      payment.status === LegacyPaymentStatus.RECEIVED || payment.status === LegacyPaymentStatus.CONFIRMED
                         ? 'bg-green-100 text-green-800'
-                        : payment.status === PaymentStatus.PENDING
+                        : payment.status === LegacyPaymentStatus.PENDING
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {payment.status === PaymentStatus.RECEIVED || payment.status === PaymentStatus.CONFIRMED
+                    {payment.status === LegacyPaymentStatus.RECEIVED || payment.status === LegacyPaymentStatus.CONFIRMED
                       ? 'Pago'
-                      : payment.status === PaymentStatus.PENDING
+                      : payment.status === LegacyPaymentStatus.PENDING
                       ? 'Pendente'
-                      : payment.status === PaymentStatus.REFUNDED
+                      : payment.status === LegacyPaymentStatus.REFUNDED
                       ? 'Reembolsado'
                       : 'Atrasado'}
                   </span>

@@ -18,6 +18,7 @@ export type {
 
 // Credit types
 export type {
+  CreditPackage,
   CreditTransactionType,
   RelatedEntityType,
   CreditTransaction,

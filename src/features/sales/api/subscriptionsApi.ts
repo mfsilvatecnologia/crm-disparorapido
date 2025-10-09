@@ -49,7 +49,7 @@ export async function createTrialSubscription(
  */
 export async function fetchCurrentSubscription(): Promise<Subscription | null> {
   try {
-    const response = await apiClient.get<ApiResponse<Subscription>>(`${BASE_PATH}/current`);
+    const response = await apiClient.get<ApiResponse<Subscription>>(`${BASE_PATH}/user/active`);
     
     // Extract data from response envelope
     const data = response.data;
