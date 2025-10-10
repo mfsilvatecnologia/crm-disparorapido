@@ -18,6 +18,9 @@ import { EmpresasPage, CadastroEmpresaPage } from "./features/companies";
 import { SegmentosPage } from "./features/segments";
 import { PipelinePage } from "./features/pipeline";
 import { CampanhasPage } from "./features/campaigns";
+import { StageConfigPage } from "./features/campaign-stages/pages/StageConfigPage";
+import { CampaignFunnelPage } from "./features/campaign-stages/pages/CampaignFunnelPage";
+import { CampaignDashboard } from "./features/campaign-stages/components/metrics/CampaignDashboard";
 import { 
   PricingPage, 
   CheckoutPage, 
@@ -30,6 +33,7 @@ import {
   FinancialDashboardPage
 } from "./features/sales/pages";
 import { NotFound } from "./shared/pages";
+import { BillingConfigPage } from "./features/campaign-stages/pages/BillingConfigPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,8 +96,10 @@ function AppRoutes() {
           <Route path="campanhas" element={<CampanhasPage />} />
           <Route path="segments" element={<SegmentosPage />} />
           <Route path="pipeline" element={<PipelinePage />} />
+          <Route path="campaigns/:id/funnel" element={<CampaignFunnelPage />} />
+          <Route path="campaigns/:id/metrics" element={<CampaignDashboard />} />
           <Route path="sales-tools" element={<div className="p-6">Ferramentas de Vendas - Em desenvolvimento</div>} />
-          <Route path="billing" element={<div className="p-6">Cobrança - Em desenvolvimento</div>} />
+          <Route path="billing" element={<BillingConfigPage />} />
           
           {/* Sales & Subscriptions Routes */}
           <Route path="subscription" element={<SubscriptionManagementPage />} />
@@ -109,6 +115,7 @@ function AppRoutes() {
           <Route path="profile" element={<UserProfilePage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
+          <Route path="settings/campaign-stages" element={<StageConfigPage />} />
           <Route path="admin" element={<AdminPage />} />
           <Route path="admin/organizations" element={<div className="p-6">Admin - Organizações - Em desenvolvimento</div>} />
           <Route path="empresas/cadastro" element={<CadastroEmpresaPage />} />

@@ -26,13 +26,15 @@ interface ApiResponse<T> {
  */
 const BASE_PATH = '/api/v1/licencas';
 
+const SUBSCRIPTIONS_PATH = '/api/v1/subscriptions';
+
 /**
  * Create a trial subscription
  */
 export async function createTrialSubscription(
   data: CreateSubscriptionSchema
 ): Promise<Subscription> {
-  const response = await apiClient.post<ApiResponse<Subscription>>(`${BASE_PATH}/trial`, data);
+  const response = await apiClient.post<ApiResponse<Subscription>>(`${SUBSCRIPTIONS_PATH}/trial`, data);
   const result = response.data;
   
   // Validate response
@@ -45,22 +47,40 @@ export async function createTrialSubscription(
 }
 
 /**
+ * API response for subscription list
+ */
+interface SubscriptionListResponse {
+  success: boolean;
+  data: Subscription[];
+  total: number;
+}
+
+/**
  * Fetch current company subscription
  */
 export async function fetchCurrentSubscription(): Promise<Subscription | null> {
   try {
-    const response = await apiClient.get<ApiResponse<Subscription>>(`${BASE_PATH}/user/active`);
+    const response = await apiClient.get<SubscriptionListResponse>(`${BASE_PATH}/user/active`);
     
     // Extract data from response envelope
-    const data = response.data;
+    const subscriptions = response.data;
+    
+    // Return null if no subscriptions found
+    if (!subscriptions || subscriptions.length === 0) {
+      return null;
+    }
+    
+    // Get the first subscription
+    const subscription = subscriptions[0];
     
     // Validate response
-    const validation = validateSubscription(data);
+    const validation = validateSubscription(subscription);
     if (!validation.success) {
+      console.error('Invalid subscription data from API:', validation.error);
       throw new Error('Invalid subscription data from API');
     }
     
-    return data;
+    return subscription;
   } catch (error: any) {
     // Return null if no subscription found (404)
     if (error.status === 404) {

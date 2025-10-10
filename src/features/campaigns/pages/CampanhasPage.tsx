@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQueryClient } from '@tanstack/react-query';
@@ -26,7 +27,8 @@ import {
   Clock,
   Target,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Kanban
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -94,6 +96,7 @@ const statusColors = {
 
 export default function CampanhasPage() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -107,6 +110,8 @@ export default function CampanhasPage() {
   const [editingCampanha, setEditingCampanha] = useState<Campaign | null>(null);
   const [viewingCampanha, setViewingCampanha] = useState<Campaign | null>(null);
   const [gerenciandoContatos, setGerenciandoContatos] = useState<Campaign | null>(null);
+
+  const CampaignContactsManagerLazy = React.lazy(() => import('../components/CampaignContactsManager').then(m => ({ default: m.CampaignContactsManager })));
 
   // Preparar filtros
   const filters: CampaignFilters = {
@@ -552,6 +557,14 @@ export default function CampanhasPage() {
                               <Users className="mr-2 h-4 w-4" />
                               Gerenciar Contatos
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/app/campaigns/${campanha.id}/funnel`)}>
+                              <Kanban className="mr-2 h-4 w-4" />
+                              Funil
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/app/campaigns/${campanha.id}/metrics`)}>
+                              <TrendingUp className="mr-2 h-4 w-4" />
+                              Métricas
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -676,50 +689,10 @@ export default function CampanhasPage() {
 
           {gerenciandoContatos && (
             <div className="space-y-6">
-              {/* Ações rápidas */}
-              <div className="flex gap-2">
-                <Button className="flex-1" onClick={handleAdicionarContatos}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Contatos
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  <Users className="h-4 w-4 mr-2" />
-                  Importar Lista
-                </Button>
-              </div>
-
-              {/* Estatísticas */}
-              <div className="grid grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="text-2xl font-bold text-blue-600">0</div>
-                    <div className="text-xs text-muted-foreground">Total de Contatos</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="text-2xl font-bold text-green-600">0</div>
-                    <div className="text-xs text-muted-foreground">Processados</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="text-2xl font-bold text-orange-600">0</div>
-                    <div className="text-xs text-muted-foreground">Pendentes</div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Lista de contatos */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Contatos da Campanha</h3>
-                <div className="border rounded-lg">
-                  <div className="p-8 text-center text-muted-foreground">
-                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="mb-2">Nenhum contato adicionado ainda</p>
-                    <p className="text-sm">Comece adicionando contatos para esta campanha</p>
-                  </div>
-                </div>
+                <Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Carregando contatos...</div>}>
+                  <CampaignContactsManagerLazy campaignId={gerenciandoContatos.id} />
+                </Suspense>
               </div>
             </div>
           )}
