@@ -7,7 +7,7 @@
 import { 
   Subscription,
   SubscriptionStatus,
-  isTrialActive,
+  isTrialSubscription,
   getDaysRemainingInTrial,
   canCancelSubscription,
   SubscriptionStatusColors,

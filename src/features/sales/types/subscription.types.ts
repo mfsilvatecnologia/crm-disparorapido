@@ -11,67 +11,121 @@ export enum SubscriptionStatus {
   /** In trial period */
   TRIALING = 'trialing',
   
+  /** Legacy trial status */
+  TRIAL = 'trial',
+  
   /** Active subscription with payments up to date */
-  ACTIVE = 'active',
+  ACTIVE = 'ativa',
+  
+  /** Legacy active status */
+  ACTIVE_EN = 'active',
   
   /** Payment overdue */
   PAST_DUE = 'past_due',
   
   /** Subscription canceled */
-  CANCELED = 'canceled',
+  CANCELED = 'cancelada',
+  
+  /** Legacy canceled status */
+  CANCELED_EN = 'canceled',
   
   /** Subscription suspended (e.g., fraud) */
-  SUSPENDED = 'suspended',
+  SUSPENDED = 'suspensa',
+  
+  /** Legacy suspended status */
+  SUSPENDED_EN = 'suspended',
   
   /** Trial or subscription expired */
-  EXPIRED = 'expired'
+  EXPIRED = 'expirada',
+  
+  /** Legacy expired status */
+  EXPIRED_EN = 'expired'
 }
 
 /**
  * Subscription interface
  */
+/**
+ * Subscription type matching the current API response
+ */
 export interface Subscription {
   /** Unique identifier */
   id: string;
   
-  /** User ID */
-  userId: string;
+  /** Company/Enterprise ID */
+  empresaId: string;
   
   /** Product/Plan ID */
   produtoId: string;
   
-  /** License start date */
-  dataInicio: string;
+  /** Asaas subscription ID */
+  asaasSubscriptionId: string | null;
   
-  /** License expiration date */
-  dataExpiracao: string;
+  /** Current subscription status */
+  status: 'trialing' | 'trial' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
   
-  /** Current license status */
-  status: 'trial' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
+  /** Billing cycle */
+  billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
   
-  /** License type */
-  tipo: 'trial' | 'paga' | 'vitalicia';
+  /** Billing cycle description */
+  billingCycleDescription: string;
   
-  /** Amount paid (null for trial) */
-  valorPago: number | null;
+  /** Subscription value */
+  value: number;
   
-  /** Asaas payment ID */
-  asaasPaymentId: string | null;
+  /** Formatted value string */
+  valueFormatted: string;
   
-  /** Billing day (null for trial) */
-  diaCobranca: number | null;
+  /** Whether subscription has trial */
+  hasTrial: boolean;
   
-  /** Days remaining until expiration */
-  diasRestantes: number;
+  /** Trial days count */
+  trialDays: number | null;
   
-  /** Whether the license is currently active */
-  isActive: boolean;
+  /** Trial end date */
+  trialEndDate: string | null;
   
-  /** Whether the license is expiring soon */
-  isExpirando: boolean;
+  /** Whether currently in trial */
+  isInTrial: boolean;
   
-  /** Status description (e.g., "Expirando em 6 dias") */
-  descricaoStatus: string;
+  /** Next due date */
+  nextDueDate: string | null;
+  
+  /** First payment date */
+  firstPaymentDate: string | null;
+  
+  /** Last payment date */
+  lastPaymentDate: string | null;
+  
+  /** Maximum payments */
+  maxPayments: number | null;
+  
+  /** Payments count */
+  paymentsCount: number;
+  
+  /** Remaining payments */
+  remainingPayments: number | null;
+  
+  /** Subscription description */
+  description: string | null;
+  
+  /** External reference */
+  externalReference: string | null;
+  
+  /** Metadata object */
+  metadata: Record<string, any>;
+  
+  /** Start date */
+  startDate: string;
+  
+  /** End date */
+  endDate: string | null;
+  
+  /** Canceled date */
+  canceledAt: string | null;
+  
+  /** Suspended date */
+  suspendedAt: string | null;
   
   /** Creation timestamp */
   createdAt: string;
@@ -79,29 +133,15 @@ export interface Subscription {
   /** Last update timestamp */
   updatedAt: string;
   
-  // Backward compatibility fields (optional)
-  /** @deprecated Use userId */
-  companyId?: string;
-  /** @deprecated Use produtoId */
-  productId?: string;
-  /** @deprecated Use dataInicio */
-  trialStart?: string | null;
-  /** @deprecated Use dataExpiracao */
-  trialEnd?: string | null;
-  /** @deprecated Use dataExpiracao */
-  nextDueDate?: string | null;
-  /** @deprecated Use valorPago */
-  amount?: number;
-  /** Billing cycle */
-  billingCycle?: string;
-  /** @deprecated Use asaasPaymentId */
-  asaasSubscriptionId?: string | null;
-  /** Cancellation reason (if canceled) */
-  cancellationReason?: string | null;
-  /** Cancellation date */
-  canceledAt?: string | null;
-  /** Soft delete timestamp */
-  deletedAt?: string | null;
+  // For backward compatibility and trial creation
+  /** Asaas invoice URL for trial activation */
+  asaasInvoiceUrl?: string | null;
+  
+  /** First charge date (after trial) */
+  firstChargeDate?: string;
+  
+  /** Next steps instructions from API */
+  nextSteps?: string[];
 }
 
 /**
@@ -169,11 +209,16 @@ export interface SubscriptionWithComputed extends Subscription {
  */
 export const SubscriptionStatusColors: Record<SubscriptionStatus, string> = {
   [SubscriptionStatus.TRIALING]: 'blue',
+  [SubscriptionStatus.TRIAL]: 'blue',
   [SubscriptionStatus.ACTIVE]: 'green',
+  [SubscriptionStatus.ACTIVE_EN]: 'green',
   [SubscriptionStatus.PAST_DUE]: 'yellow',
   [SubscriptionStatus.CANCELED]: 'red',
+  [SubscriptionStatus.CANCELED_EN]: 'red',
   [SubscriptionStatus.SUSPENDED]: 'orange',
-  [SubscriptionStatus.EXPIRED]: 'gray'
+  [SubscriptionStatus.SUSPENDED_EN]: 'orange',
+  [SubscriptionStatus.EXPIRED]: 'gray',
+  [SubscriptionStatus.EXPIRED_EN]: 'gray'
 };
 
 /**
@@ -181,43 +226,39 @@ export const SubscriptionStatusColors: Record<SubscriptionStatus, string> = {
  */
 export const SubscriptionStatusLabels: Record<SubscriptionStatus, string> = {
   [SubscriptionStatus.TRIALING]: 'Em período de teste',
+  [SubscriptionStatus.TRIAL]: 'Em período de teste',
   [SubscriptionStatus.ACTIVE]: 'Ativa',
+  [SubscriptionStatus.ACTIVE_EN]: 'Ativa',
   [SubscriptionStatus.PAST_DUE]: 'Pagamento atrasado',
   [SubscriptionStatus.CANCELED]: 'Cancelada',
+  [SubscriptionStatus.CANCELED_EN]: 'Cancelada',
   [SubscriptionStatus.SUSPENDED]: 'Suspensa',
-  [SubscriptionStatus.EXPIRED]: 'Expirada'
+  [SubscriptionStatus.SUSPENDED_EN]: 'Suspensa',
+  [SubscriptionStatus.EXPIRED]: 'Expirada',
+  [SubscriptionStatus.EXPIRED_EN]: 'Expirada'
 };
 
 /**
  * Helper function to check if subscription is in trial
  */
-export function isTrialActive(subscription: Subscription): boolean {
-  // Use new field names with fallback to old ones
-  const status = subscription.status;
-  const tipo = subscription.tipo;
-  
-  return (status === 'trial' || tipo === 'trial') && subscription.diasRestantes > 0;
+export function isTrialSubscription(subscription: Subscription): boolean {
+  return subscription.isInTrial || subscription.status === 'trialing' || subscription.status === 'trial';
 }
 
 /**
  * Helper function to calculate days remaining in trial
  */
 export function getDaysRemainingInTrial(subscription: Subscription): number {
-  // Use the diasRestantes field directly from API
-  if (subscription.diasRestantes !== undefined) {
-    return subscription.diasRestantes;
-  }
-  
-  // Fallback to calculation for backward compatibility
-  const expirationDate = subscription.dataExpiracao || subscription.trialEnd;
-  if (!expirationDate) return 0;
+  if (!subscription.trialEndDate) return 0;
   
   const now = new Date();
-  const expiration = new Date(expirationDate);
-  const diff = expiration.getTime() - now.getTime();
+  const trialEnd = new Date(subscription.trialEndDate);
+  const diff = trialEnd.getTime() - now.getTime();
   
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
+
+
 
 /**
  * Helper function to calculate next due date

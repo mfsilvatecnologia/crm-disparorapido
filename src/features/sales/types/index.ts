@@ -80,7 +80,7 @@ export {
   type SubscriptionWithComputed,
   type CreateTrialSubscriptionDTO,
   type CancelSubscriptionDTO,
-  isTrialActive,
+  isTrialSubscription,
   getDaysRemainingInTrial,
   calculateNextDueDate,
   canCancelSubscription,
