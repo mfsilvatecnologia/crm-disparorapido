@@ -1,13 +1,16 @@
 import { Product } from '../../../types/product.types';
+import { Subscription } from '../../../types/subscription.types';
 import { formatPrice, getBillingCycleLabel } from '../../../services/productService';
+import { TrialInstructions } from '../TrialInstructions';
 
 interface PlanSelectionProps {
   product: Product;
+  subscription?: Subscription;
   onEdit?: () => void;
   onContinue?: () => void;
 }
 
-export function PlanSelection({ product, onEdit, onContinue }: PlanSelectionProps) {
+export function PlanSelection({ product, subscription, onEdit, onContinue }: PlanSelectionProps) {
   const hasTrial = product.trialDays > 0;
 
   return (
@@ -158,7 +161,7 @@ export function PlanSelection({ product, onEdit, onContinue }: PlanSelectionProp
         </div>
 
         {/* Continue Button */}
-        {onContinue && (
+        {onContinue && !subscription && (
           <div className="mt-6 border-t border-gray-200 pt-4">
             <button
               onClick={onContinue}
@@ -169,6 +172,13 @@ export function PlanSelection({ product, onEdit, onContinue }: PlanSelectionProp
           </div>
         )}
       </div>
+
+      {/* Trial Instructions */}
+      {subscription && (
+        <div className="mt-6">
+          <TrialInstructions subscription={subscription} />
+        </div>
+      )}
     </div>
   );
 }

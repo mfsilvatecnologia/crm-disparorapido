@@ -153,6 +153,12 @@ const settingsItems = [
     description: 'Configurações do perfil'
   },
   {
+    title: 'Estágios de Campanha',
+    url: '/app/settings/campaign-stages',
+    icon: Kanban,
+    description: 'Configurar estágios e funil'
+  },
+  {
     title: 'Cobrança',
     url: '/app/billing',
     icon: CreditCard,

@@ -23,7 +23,7 @@ export const subscriptionSchema = z.object({
   produtoId: z.string().uuid('ID do produto deve ser um UUID válido'),
   dataInicio: z.string().datetime('Data de início inválida'),
   dataExpiracao: z.string().datetime('Data de expiração inválida'),
-  status: z.enum(['trial', 'ativa', 'expirada', 'cancelada', 'suspensa']),
+  status: z.enum(['trial', 'trialing', 'ativa', 'expirada', 'cancelada', 'suspensa']),
   tipo: z.enum(['trial', 'paga', 'vitalicia']),
   valorPago: z.number().nullable(),
   asaasPaymentId: z.string().nullable(),
@@ -32,6 +32,13 @@ export const subscriptionSchema = z.object({
   isActive: z.boolean(),
   isExpirando: z.boolean(),
   descricaoStatus: z.string(),
+  
+  // New trial fields from API
+  asaasInvoiceUrl: z.string().url().nullable().optional(),
+  trialDays: z.number().int().positive().optional(),
+  trialEndDate: z.string().optional(),
+  firstChargeDate: z.string().optional(),
+  nextSteps: z.array(z.string()).optional(),
   
   createdAt: z.string().datetime('Data de criação inválida'),
   updatedAt: z.string().datetime('Data de atualização inválida'),
@@ -52,6 +59,19 @@ export const subscriptionSchema = z.object({
   cancellationReason: z.string().nullable().optional(),
   canceledAt: z.string().datetime().nullable().optional(),
   deletedAt: z.string().datetime().nullable().optional(),
+});
+
+/**
+ * Trial subscription response schema (from API)
+ */
+export const trialSubscriptionResponseSchema = z.object({
+  id: z.string().uuid('ID deve ser um UUID válido'),
+  status: z.enum(['trial', 'trialing', 'ativa', 'expirada', 'cancelada', 'suspensa']),
+  asaasInvoiceUrl: z.string().url().nullable().optional(),
+  trialDays: z.number().int().positive().optional(),
+  trialEndDate: z.string().optional(),
+  firstChargeDate: z.string().optional(),
+  nextSteps: z.array(z.string()).optional(),
 });
 
 /**
@@ -101,6 +121,13 @@ export const updatePaymentMethodSchema = z.object({
  */
 export function validateSubscription(data: unknown) {
   return subscriptionSchema.safeParse(data);
+}
+
+/**
+ * Helper to validate trial subscription response
+ */
+export function validateTrialSubscription(data: unknown) {
+  return trialSubscriptionResponseSchema.safeParse(data);
 }
 
 /**

@@ -10,7 +10,20 @@ import type {
   CreateSubscriptionSchema,
   CancelSubscriptionSchema 
 } from '../schemas';
-import { validateSubscription } from '../schemas';
+
+/**
+ * Trial subscription response type (from API)
+ */
+export interface TrialSubscriptionResponse {
+  id: string;
+  status: 'trial' | 'trialing' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
+  asaasInvoiceUrl?: string | null;
+  trialDays?: number;
+  trialEndDate?: string;
+  firstChargeDate?: string;
+  nextSteps?: string[];
+}
+import { validateSubscription, validateTrialSubscription } from '../schemas';
 
 /**
  * Standard API response envelope
@@ -26,41 +39,80 @@ interface ApiResponse<T> {
  */
 const BASE_PATH = '/api/v1/licencas';
 
+const SUBSCRIPTIONS_PATH = '/api/v1/subscriptions';
+
 /**
  * Create a trial subscription
  */
 export async function createTrialSubscription(
   data: CreateSubscriptionSchema
-): Promise<Subscription> {
-  const response = await apiClient.post<ApiResponse<Subscription>>(`${BASE_PATH}/trial`, data);
+): Promise<TrialSubscriptionResponse> {
+  const response = await apiClient.post<ApiResponse<TrialSubscriptionResponse>>(`${SUBSCRIPTIONS_PATH}/trial`, data);
+  
+  if (!response.success) {
+    throw new Error(response.message || 'Failed to create trial subscription');
+  }
+  
   const result = response.data;
   
-  // Validate response
-  const validation = validateSubscription(result);
+  // Validate response using trial-specific schema
+  const validation = validateTrialSubscription(result);
   if (!validation.success) {
-    throw new Error('Invalid subscription data from API');
+    console.error('Trial subscription validation failed:', validation.error);
+    throw new Error('Invalid trial subscription data from API');
   }
   
   return result;
 }
 
 /**
- * Fetch current company subscription
+ * API response for subscription list
+ */
+interface SubscriptionListResponse {
+  success: boolean;
+  data: Subscription[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Fetch all company subscriptions
+ */
+export async function fetchAllSubscriptions(): Promise<Subscription[]> {
+  try {
+    const response = await apiClient.get<SubscriptionListResponse>(`${SUBSCRIPTIONS_PATH}`);
+    
+    if (!response.success) {
+      throw new Error('Failed to fetch subscriptions');
+    }
+    
+    // Extract data from response envelope
+    return response.data || [];
+  } catch (error: any) {
+    // Return empty array if no subscriptions found (404)
+    if (error.status === 404) {
+      return [];
+    }
+    throw error;
+  }
+}
+
+/**
+ * Fetch current active subscription (first active subscription found)
  */
 export async function fetchCurrentSubscription(): Promise<Subscription | null> {
   try {
-    const response = await apiClient.get<ApiResponse<Subscription>>(`${BASE_PATH}/user/active`);
+    const subscriptions = await fetchAllSubscriptions();
     
-    // Extract data from response envelope
-    const data = response.data;
+    // Return the first active subscription (trialing, ativa)
+    const activeSubscription = subscriptions.find(sub => 
+      sub.status === 'trialing' || 
+      sub.status === 'ativa' || 
+      sub.status === 'trial'
+    );
     
-    // Validate response
-    const validation = validateSubscription(data);
-    if (!validation.success) {
-      throw new Error('Invalid subscription data from API');
-    }
-    
-    return data;
+    return activeSubscription || null;
   } catch (error: any) {
     // Return null if no subscription found (404)
     if (error.status === 404) {
@@ -100,11 +152,33 @@ export async function fetchSubscriptionStatus(): Promise<{
   isInTrial: boolean;
   status: string | null;
 }> {
-  return await apiClient.get<{
-    hasActiveSubscription: boolean;
-    isInTrial: boolean;
-    status: string | null;
-  }>(`${BASE_PATH}/status`);
+  try {
+    const subscriptions = await fetchAllSubscriptions();
+    
+    const activeSubscriptions = subscriptions.filter(sub => 
+      sub.status === 'trialing' || 
+      sub.status === 'ativa' || 
+      sub.status === 'trial'
+    );
+    
+    const trialSubscriptions = subscriptions.filter(sub => 
+      sub.isInTrial || 
+      sub.status === 'trialing' || 
+      sub.status === 'trial'
+    );
+    
+    return {
+      hasActiveSubscription: activeSubscriptions.length > 0,
+      isInTrial: trialSubscriptions.length > 0,
+      status: activeSubscriptions.length > 0 ? activeSubscriptions[0].status : null
+    };
+  } catch (error) {
+    return {
+      hasActiveSubscription: false,
+      isInTrial: false,
+      status: null
+    };
+  }
 }
 
 /**

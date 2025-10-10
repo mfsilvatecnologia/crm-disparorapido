@@ -29,7 +29,7 @@ class HealthCheckService {
     backoffMultiplier: 2,
   };
 
-  private readonly API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  private readonly API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
   constructor() {
     this.startHealthCheck();

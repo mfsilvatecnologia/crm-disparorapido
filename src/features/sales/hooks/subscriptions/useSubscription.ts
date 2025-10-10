@@ -7,7 +7,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchCurrentSubscription } from '../../api/subscriptionsApi';
 import { 
-  isTrialActive,
+  isTrialSubscription,
   getDaysRemainingInTrial 
 } from '../../types';
 import { isSubscriptionActive } from '../../services/subscriptionService';
@@ -34,7 +34,7 @@ export function useSubscription() {
     // Refetch more frequently if in trial
     refetchInterval: (query) => {
       const data = query.state.data;
-      if (data && isTrialActive(data)) {
+      if (data && isTrialSubscription(data)) {
         return 1000 * 30; // 30 seconds during trial
       }
       return false; // No auto-refetch otherwise
@@ -43,7 +43,7 @@ export function useSubscription() {
 
   // Compute derived values
   const subscription = query.data;
-  const isInTrial = subscription ? isTrialActive(subscription) : false;
+  const isInTrial = subscription ? isTrialSubscription(subscription) : false;
   const daysRemaining = subscription ? getDaysRemainingInTrial(subscription) : null;
   const hasActiveSubscription = subscription ? isSubscriptionActive(subscription) : false;
 

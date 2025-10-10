@@ -4,7 +4,8 @@ import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
 import { Input } from '@/shared/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
-import { Trash2, Search, Users, AlertCircle, Clock } from 'lucide-react'
+import { Trash2, Search, Users, AlertCircle, Clock, History } from 'lucide-react'
+import LeadStageHistory from '@/features/campaign-stages/components/history/LeadStageHistory'
 import { useCampaignContacts, useRemoveContactFromCampaign } from '../hooks/useCampaigns'
 import type { CampaignContact, CampaignContactsParams } from '../types/campaigns'
 
@@ -19,6 +20,7 @@ export function CampaignContactsList({ campaignId }: CampaignContactsListProps) 
   const [searchTerm, setSearchTerm] = useState('')
 
   const { data: contacts, isLoading, error } = useCampaignContacts(campaignId, params)
+  const [historyContactId, setHistoryContactId] = useState<string | null>(null)
   const removeContactMutation = useRemoveContactFromCampaign()
 
   const handleRemoveContact = (contactId: string) => {
@@ -73,6 +75,7 @@ export function CampaignContactsList({ campaignId }: CampaignContactsListProps) 
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -167,21 +170,43 @@ export function CampaignContactsList({ campaignId }: CampaignContactsListProps) 
                     <span>Respostas: {contact.metricas.respostas}</span>
                   </div>
                 </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleRemoveContact(contact.contactId)}
-                  disabled={removeContactMutation.isPending}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setHistoryContactId(contact.contactId)}
+                  >
+                    <History className="w-4 h-4 mr-1" /> Histórico
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRemoveContact(contact.contactId)}
+                    disabled={removeContactMutation.isPending}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             ))
           )}
         </div>
       </CardContent>
     </Card>
+    {historyContactId && (
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+        <div className="bg-white dark:bg-neutral-900 rounded shadow w-[640px] max-h-[80vh] overflow-auto">
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="font-medium">Histórico de estágios</div>
+            <button className="text-sm" onClick={() => setHistoryContactId(null)}>Fechar</button>
+          </div>
+          <div className="p-4">
+            <LeadStageHistory campaignId={campaignId} contactId={historyContactId} />
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
