@@ -471,20 +471,20 @@ export const OrganizationSchema = z.object({
 
 // Lead schemas baseados na API real
 export const LeadAddressSchema = z.object({
-  rua: z.string().optional(),
-  numero: z.string().optional(),
-  cidade: z.string().optional(),
-  estado: z.string().optional(),
-  cep: z.string().optional(),
-  pais: z.string().optional(),
+  rua: z.string().nullable().optional(),
+  numero: z.string().nullable().optional(),
+  cidade: z.string().nullable().optional(),
+  estado: z.string().nullable().optional(),
+  cep: z.string().nullable().optional(),
+  pais: z.string().nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
 });
 
 export const LeadSchema = z.object({
   id: z.string(),
-  empresaId: z.string().optional(), // Pode ser string vazia ""
-  nomeEmpresa: z.string(),
+  empresaId: z.string().nullable().optional(), // Pode ser string vazia "" ou null
+  nomeEmpresa: z.string().nullable().optional(), // Pode ser null
   nomeContato: z.string().nullable().optional(),
   cargoContato: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
@@ -492,18 +492,18 @@ export const LeadSchema = z.object({
   linkedinUrl: z.string().nullable().optional(),
   siteEmpresa: z.string().nullable().optional(),
   cnpj: z.string().nullable().optional(),
-  segmento: z.string().optional(),
+  segmento: z.string().nullable().optional(),
   porteEmpresa: z.string().nullable().optional(),
   numFuncionarios: z.number().nullable().optional(),
   receitaAnualEstimada: z.number().nullable().optional(),
   endereco: LeadAddressSchema.nullable().optional(),
-  status: z.enum(['novo', 'qualificado', 'contatado', 'convertido', 'descartado', 'privado']).optional(),
+  status: z.enum(['novo', 'qualificado', 'contatado', 'convertido', 'descartado', 'privado']).nullable().optional(),
   scoreQualificacao: z.number().min(0).max(100).default(0),
-  tags: z.array(z.string()).optional(),
+  tags: z.array(z.string()).nullable().optional(),
   observacoes: z.string().nullable().optional(),
-  fonte: z.string().optional(),
-  dadosOriginais: z.record(z.unknown()).optional(),
-  custoAquisicao: z.number().optional(),
+  fonte: z.string().nullable().optional(),
+  dadosOriginais: z.record(z.unknown()).nullable().optional(),
+  custoAquisicao: z.number().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

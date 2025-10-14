@@ -45,7 +45,7 @@ import type { Empresa, CreateEmpresaDTO } from '@/shared/services/schemas';
 
 const createEmpresaSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  cnpj: z.string().min(14, 'CNPJ deve ter 14 dígitos').max(18, 'CNPJ inválido'),
+  cnpj: z.string().min(11, 'CNPJ deve ter 14 dígitos e CPF deve ter 11 dígitos').max(14, 'CNPJ inválido e CPF deve ter 11 dígitos'),
   email: z.string().email('Email inválido'),
   segmento: z.string().optional(),
   volume_auditorias_mensal: z.string().optional(),

@@ -33,17 +33,39 @@ export default function LoginPage() {
   const [showSessionManager, setShowSessionManager] = useState(false);
   const [pendingLoginData, setPendingLoginData] = useState<LoginForm | null>(null);
 
-  // Captura o parâmetro de redirect da URL
+  // Captura os parâmetros da URL
   const searchParams = new URLSearchParams(location.search);
   const redirectUrl = searchParams.get('redirect') || '/app';
+  const emailFromUrl = searchParams.get('email') || '';
+  const isRegistered = searchParams.get('registered') === 'true';
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: emailFromUrl,
+      password: '',
+    },
   });
+
+  // Exibe toast quando usuário foi registrado com sucesso
+  useEffect(() => {
+    if (isRegistered && emailFromUrl) {
+      toast({
+        title: "🎉 Registro realizado com sucesso!",
+        description: "📧 Verifique seu email para validar sua conta e faça login. A validação é obrigatória para acessar o sistema.",
+        duration: 20000, // 20 segundos para dar tempo de ler
+        variant: "success" as any, // Cast para any pois o tipo ainda não foi atualizado
+      });
+      
+      // Define o email no formulário
+      setValue('email', emailFromUrl);
+    }
+  }, [isRegistered, emailFromUrl, toast, setValue]);
 
   // Verifica redirecionamento do Supabase para reset de senha
   useEffect(() => {
@@ -66,14 +88,14 @@ export default function LoginPage() {
 
     if (token && type === 'recovery') {
       // Redireciona para a página de nova senha com o token
-      navigate(`/nova-senha?token=${token}&type=${type}`);
+      navigate(`/nova-senha?token=${token}&type=${token}`);
     }
   }, [location.search, location.hash, navigate]);
 
   // Movendo a verificação de autenticação para dentro de um useEffect
   const [shouldRedirect, setShouldRedirect] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       setShouldRedirect(true);
     }

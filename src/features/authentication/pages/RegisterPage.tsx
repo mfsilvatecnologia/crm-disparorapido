@@ -1,6 +1,6 @@
 // RegisterPage Component - User registration form
 import React, { useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Zap, Loader2 } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -20,6 +20,7 @@ interface RegisterFormData {
 
 export function RegisterPage() {
   const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
     password: '',
@@ -72,11 +73,11 @@ export function RegisterPage() {
 
     // CNPJ validation
     if (!formData.cnpj) {
-      newErrors.cnpj = 'CNPJ é obrigatório'
+      newErrors.cnpj = 'CNPJ/CPF é obrigatório'
     } else {
       const cnpjNumbers = formData.cnpj.replace(/\D/g, '')
-      if (cnpjNumbers.length !== 14) {
-        newErrors.cnpj = 'CNPJ deve ter 14 dígitos'
+      if (cnpjNumbers.length !== 14 && cnpjNumbers.length !== 11) {
+        newErrors.cnpj = 'CNPJ deve ter 14 dígitos e CPF deve ter 11 dígitos'
       }
     }
 
@@ -111,14 +112,8 @@ export function RegisterPage() {
       const result = await registerUser(registerData)
 
       if (result.success) {
-        setSuccessMessage('Usuário registrado com sucesso! Você pode fazer login agora.')
-        setFormData({
-          email: '',
-          password: '',
-          confirmPassword: '',
-          cnpj: '',
-          empresa: ''
-        })
+        // Redireciona para login com email preenchido e toast de validação
+        navigate(`/login?email=${encodeURIComponent(formData.email)}&registered=true`)
       }
     } catch (error) {
       setApiError(error instanceof Error ? error.message : 'Erro no registro')
@@ -221,7 +216,7 @@ export function RegisterPage() {
 
                 {/* CNPJ */}
                 <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ</Label>
+                  <Label htmlFor="cnpj">CNPJ ou CPF (válidos)</Label>
                   <Input
                     id="cnpj"
                     name="cnpj"

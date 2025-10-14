@@ -224,6 +224,12 @@ class ApiClient {
             error: validationError,
             receivedData: data
           });
+          
+          // Log detalhado dos erros de validação
+          if (validationError instanceof Error && 'issues' in validationError) {
+            console.error('Validation issues:', (validationError as any).issues);
+          }
+          
           throw validationError;
         }
       }
