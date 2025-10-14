@@ -10,6 +10,7 @@ import { AppLayout } from "./shared/components/layout/AppLayout";
 // Feature imports
 import { Index } from "./features/landing";
 import { LoginPage, RegisterPage, ResetPasswordPage, NewPasswordPage, UserProfilePage } from "./features/authentication";
+import SessionManagementPage from "./features/authentication/pages/SessionManagementPage";
 import { Dashboard } from "./features/dashboard";
 import { LeadsPage } from "./features/leads";
 import { AdminPage } from "./features/admin";
@@ -115,6 +116,7 @@ function AppRoutes() {
           <Route path="financial" element={<FinancialDashboardPage />} />
           
           <Route path="profile" element={<UserProfilePage />} />
+          <Route path="sessions" element={<SessionManagementPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
           <Route path="settings/campaign-stages" element={<StageConfigPage />} />

@@ -787,11 +787,20 @@ export type WorkerStats = z.infer<typeof WorkerStatsSchema>;
 export const ActiveSessionSchema = z.object({
   id: z.string(),
   device_id: z.string(),
+  device_fingerprint: z.string().optional(),
   client_type: z.enum(['web', 'extension']),
+  status: z.enum(['active', 'expired', 'revoked', 'suspicious']).optional(),
   last_activity: z.string(),
   created_at: z.string(),
-  ip_address: z.string().optional(),
-  user_agent: z.string().optional(),
+  expires_at: z.string().optional(),
+  ip_address: z.string().nullable().optional(),
+  user_agent: z.string().nullable().optional(),
+  is_current: z.boolean().optional(),
+});
+
+export const ActiveSessionsResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.array(ActiveSessionSchema),
 });
 
 export const SessionLimitErrorSchema = z.object({
@@ -824,6 +833,7 @@ export const DeleteSessionSchema = z.object({
 });
 
 export type ActiveSession = z.infer<typeof ActiveSessionSchema>;
+export type ActiveSessionsResponse = z.infer<typeof ActiveSessionsResponseSchema>;
 export type SessionLimitError = z.infer<typeof SessionLimitErrorSchema>;
 export type RevokeOtherSessions = z.infer<typeof RevokeOtherSessionsSchema>;
 export type DeleteSession = z.infer<typeof DeleteSessionSchema>;

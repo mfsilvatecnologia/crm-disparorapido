@@ -3,6 +3,9 @@
 
 import { getOrCreateDeviceId } from '@/shared/utils/device'
 import { apiClient } from '@/shared/services/client'
+import {
+  ActiveSessionsResponseSchema
+} from '@/shared/services/schemas'
 import type {
   ActiveSession,
   RevokeOtherSessions,
@@ -160,11 +163,13 @@ export async function getActiveSessions(managementToken?: string): Promise<Activ
     }
   }
 
-  const response = await apiClient.request<{ success: boolean; data: { sessions: ActiveSession[] } }>(
+  const response = await apiClient.request(
     '/api/v1/sessions/active',
-    config
+    config,
+    ActiveSessionsResponseSchema
   )
-  return response.data?.sessions || []
+
+  return response.data || []
 }
 
 /**

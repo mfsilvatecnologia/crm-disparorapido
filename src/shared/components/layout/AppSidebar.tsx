@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   BarChart3,
@@ -11,13 +10,11 @@ import {
   Building2,
   Home,
   Zap,
-  Plus,
   Activity,
   Search,
   Map,
   User,
   Target,
-  Mail,
   ShoppingCart,
   Coins,
   Receipt,
@@ -39,7 +36,6 @@ import { Badge } from '@/shared/components/ui/badge';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { leadKeys } from '@/features/leads/hooks/useLeads';
-import { useFeatures } from '@/shared/hooks/useFeatures';
 import { FeatureGuard } from '@/shared/components/features/FeatureGuard';
 
 const navigationItems = [
@@ -167,6 +163,12 @@ const settingsItems = [
     description: 'Configurações do perfil'
   },
   {
+    title: 'Sessões Ativas',
+    url: '/app/sessions',
+    icon: Shield,
+    description: 'Gerenciar dispositivos e sessões'
+  },
+  {
     title: 'Estágios de Campanha',
     url: '/app/settings/campaign-stages',
     icon: Kanban,
@@ -206,7 +208,6 @@ export function AppSidebar() {
   const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { hasFeature } = useFeatures();
 
   const isActive = (path: string) => {
     if (path === '/') {
