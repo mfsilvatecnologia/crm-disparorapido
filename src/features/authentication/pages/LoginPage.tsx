@@ -90,7 +90,7 @@ export default function LoginPage() {
 
     if (token && type === 'recovery') {
       // Redireciona para a página de nova senha com o token
-      navigate(`/nova-senha?token=${token}&type=${token}`);
+      navigate(`/nova-senha?token=${token}&type=${type}`);
     }
   }, [location.search, location.hash, navigate]);
 
