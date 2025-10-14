@@ -10,6 +10,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { useAuth, SessionLimitExceededError } from '@/shared/contexts/AuthContext';
+import { useTenant } from '@/shared/contexts/TenantContext';
 import { useToast } from '@/shared/hooks/use-toast';
 import { ConnectionStatus } from '@/shared/components/common/ConnectionStatus';
 import { useConnectivity } from '@/shared/hooks/useConnectivity';
@@ -24,6 +25,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading, sessionLimitError, clearSessionLimitError } = useAuth();
+  const { tenant } = useTenant();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -112,7 +114,7 @@ export default function LoginPage() {
       await login({ email: data.email, password: data.password });
       toast({
         title: "Login realizado com sucesso",
-        description: "Bem-vindo ao LeadCRM!",
+        description: `Bem-vindo ao ${tenant.branding.companyName}!`,
       });
     } catch (error: unknown) {
       // Se for erro de limite de sessões, mostra o gerenciador
@@ -167,14 +169,31 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex" style={{position: 'relative'}}>
       {/* Left side - Hero */}
-      <div className="hidden lg:flex flex-1 bg-gradient-hero items-center justify-center p-12 text-white">
+      <div className="hidden lg:flex flex-1 items-center justify-center p-12 text-white"
+           style={{
+             background: `linear-gradient(135deg, ${tenant.theme.gradientFrom} 0%, ${tenant.theme.gradientVia || tenant.theme.gradientFrom} 50%, ${tenant.theme.gradientTo} 100%)`
+           }}>
         <div className="max-w-md text-center">
           <div className="mb-8">
-            <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4">
-              <Zap className="h-8 w-8 text-white" />
+            <div className="h-24 w-24 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-6 p-4">
+              <img
+                src={tenant.branding.logoLight || tenant.branding.logo}
+                alt={tenant.branding.companyName}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  // Fallback to icon if logo doesn't exist
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const icon = document.createElement('div');
+                    icon.innerHTML = '<svg class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>';
+                    parent.appendChild(icon);
+                  }
+                }}
+              />
             </div>
-            <h1 className="text-4xl font-bold mb-4">LeadCRM</h1>
-            <p className="text-xl text-white/90">Sistema Multi-Empresa de Lead Generation</p>
+            <h1 className="text-4xl font-bold mb-4">{tenant.branding.companyName}</h1>
+            <p className="text-xl text-white/90">{tenant.branding.companyTagline}</p>
           </div>
           
           <div className="glass rounded-2xl p-6 text-left">
@@ -194,10 +213,24 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <div className="text-center mb-8 lg:hidden">
-            <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center mx-auto mb-4">
-              <Zap className="h-6 w-6 text-white" />
+            <div className="h-16 w-16 rounded-xl flex items-center justify-center mx-auto mb-4 p-3"
+                 style={{ backgroundColor: tenant.theme.primary }}>
+              <img
+                src={tenant.branding.logoLight || tenant.branding.logo}
+                alt={tenant.branding.companyName}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const icon = document.createElement('div');
+                    icon.innerHTML = '<svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>';
+                    parent.appendChild(icon);
+                  }
+                }}
+              />
             </div>
-            <h1 className="text-2xl font-bold">LeadCRM</h1>
+            <h1 className="text-2xl font-bold">{tenant.branding.companyName}</h1>
           </div>
 
           <Card className="bg-gradient-card border-0 shadow-xl">
@@ -277,7 +310,11 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+                  className="w-full hover:opacity-90 transition-opacity"
+                  style={{
+                    background: `linear-gradient(135deg, ${tenant.theme.primary} 0%, ${tenant.theme.accent} 100%)`,
+                    color: tenant.theme.primaryForeground
+                  }}
                   disabled={isSubmitting || !connectivity.isOnline}
                 >
                   {isSubmitting ? (

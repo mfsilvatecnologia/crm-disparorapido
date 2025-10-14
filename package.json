@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:vendas": "TENANT_PORT=8080 vite --port 8080",
+    "dev:publix": "TENANT_PORT=8081 vite --port 8081",
+    "dev:both": "concurrently \"npm run dev:vendas\" \"npm run dev:publix\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint . --fix",
@@ -23,8 +26,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset",
-    "db:deploy": "prisma migrate deploy",
-    "msw:init": "msw init public --save"
+    "db:deploy": "prisma migrate deploy"
+
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -125,7 +128,6 @@
     "globals": "^15.15.0",
     "jsdom": "^27.0.0",
     "lovable-tagger": "^1.1.9",
-    "msw": "^2.11.3",
     "postcss": "^8.5.6",
     "prisma": "^6.1.0",
     "tailwindcss": "^3.4.17",
@@ -134,10 +136,5 @@
     "typescript-eslint": "^8.38.0",
     "vite": "^5.4.19",
     "vitest": "^3.2.4"
-  },
-  "msw": {
-    "workerDirectory": [
-      "public"
-    ]
   }
 }

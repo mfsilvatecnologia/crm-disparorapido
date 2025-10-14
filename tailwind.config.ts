@@ -96,6 +96,18 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Tenant-specific colors (dynamically set via CSS variables)
+				tenant: {
+					primary: 'var(--tenant-primary)',
+					'primary-foreground': 'var(--tenant-primary-foreground)',
+					secondary: 'var(--tenant-secondary)',
+					'secondary-foreground': 'var(--tenant-secondary-foreground)',
+					accent: 'var(--tenant-accent)',
+					'accent-foreground': 'var(--tenant-accent-foreground)',
+					'gradient-from': 'var(--tenant-gradient-from)',
+					'gradient-via': 'var(--tenant-gradient-via)',
+					'gradient-to': 'var(--tenant-gradient-to)',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -133,7 +145,11 @@ export default {
 				'gradient-secondary': 'var(--gradient-secondary)',
 				'gradient-accent': 'var(--gradient-accent)',
 				'gradient-hero': 'var(--gradient-hero)',
-				'gradient-card': 'var(--gradient-card)'
+				'gradient-card': 'var(--gradient-card)',
+				// Tenant-specific gradients
+				'tenant-hero': 'linear-gradient(135deg, var(--tenant-gradient-from), var(--tenant-gradient-via), var(--tenant-gradient-to))',
+				'tenant-card': 'linear-gradient(45deg, var(--tenant-gradient-from), var(--tenant-gradient-to))',
+				'tenant-button': 'linear-gradient(90deg, var(--tenant-primary), var(--tenant-accent))',
 			},
 			boxShadow: {
 				'glow': 'var(--shadow-glow)',

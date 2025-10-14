@@ -72,7 +72,7 @@ class HealthCheckService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-      const response = await fetch(`${this.API_BASE_URL}/api/v1/`, {
+      const response = await fetch(`${this.API_BASE_URL}/health`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./shared/contexts/AuthContext";
 import { OrganizationProvider } from "./shared/contexts/OrganizationContext";
+import { TenantProvider } from "./shared/contexts/TenantContext";
 import { AppLayout } from "./shared/components/layout/AppLayout";
 // Feature imports
 import { Index } from "./features/landing";
@@ -34,6 +35,7 @@ import {
 } from "./features/sales/pages";
 import { NotFound } from "./shared/pages";
 import { BillingConfigPage } from "./features/campaign-stages/pages/BillingConfigPage";
+import { FeatureDemoPage } from "./shared/components/features/FeatureDemoPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -116,6 +118,7 @@ function AppRoutes() {
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
           <Route path="settings/campaign-stages" element={<StageConfigPage />} />
+          <Route path="features-demo" element={<FeatureDemoPage />} />
           <Route path="admin" element={<AdminPage />} />
           <Route path="admin/organizations" element={<div className="p-6">Admin - Organizações - Em desenvolvimento</div>} />
           <Route path="empresas/cadastro" element={<CadastroEmpresaPage />} />
@@ -128,15 +131,17 @@ function AppRoutes() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AppRoutes />
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <TenantProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AppRoutes />
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </TenantProvider>
 );
 
 export default App;

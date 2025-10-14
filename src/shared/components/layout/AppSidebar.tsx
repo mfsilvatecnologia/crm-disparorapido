@@ -39,6 +39,8 @@ import { Badge } from '@/shared/components/ui/badge';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { leadKeys } from '@/features/leads/hooks/useLeads';
+import { useFeatures } from '@/shared/hooks/useFeatures';
+import { FeatureGuard } from '@/shared/components/features/FeatureGuard';
 
 const navigationItems = [
   {
@@ -63,37 +65,43 @@ const navigationItems = [
     title: 'Campanhas',
     url: '/app/campanhas',
     icon: Target,
-    description: 'Marketing automation e campanhas'
+    description: 'Marketing automation e campanhas',
+    requiredFeature: 'enableCampaigns'
   },
   {
     title: 'Pipeline',
     url: '/app/pipeline',
     icon: Kanban,
-    description: 'Funil de vendas'
+    description: 'Funil de vendas',
+    requiredFeature: 'enablePipeline'
   },
   {
     title: 'Segmentos',
     url: '/app/segments',
     icon: BarChart3,
-    description: 'Análise e segmentação'
+    description: 'Análise e segmentação',
+    requiredFeature: 'enableAnalytics'
   },
   {
     title: 'Scraping',
     url: '/app/scraping',
     icon: Map,
-    description: 'Jobs de coleta Google Maps'
+    description: 'Jobs de coleta Google Maps',
+    requiredFeature: 'enableScraping'
   },
   {
     title: 'Termos de Busca',
     url: '/app/search-terms',
     icon: Search,
-    description: 'Gerenciar termos para scraping'
+    description: 'Gerenciar termos para scraping',
+    requiredFeature: 'enableScraping'
   },
   {
     title: 'Workers',
     url: '/app/workers',
     icon: Activity,
-    description: 'Monitorar workers e jobs'
+    description: 'Monitorar workers e jobs',
+    requiredFeature: 'enableScraping'
   },
   {
     title: 'Ferramentas',
@@ -108,19 +116,22 @@ const salesItems = [
     title: 'Marketplace',
     url: '/app/marketplace',
     icon: ShoppingCart,
-    description: 'Comprar leads verificados'
+    description: 'Comprar leads verificados',
+    requiredFeature: 'enableMarketplace'
   },
   {
     title: 'Créditos',
     url: '/app/credits',
     icon: Coins,
-    description: 'Gerenciar créditos'
+    description: 'Gerenciar créditos',
+    requiredFeature: 'enableBilling'
   },
   {
     title: 'Assinatura',
     url: '/app/subscription',
     icon: CreditCard,
-    description: 'Gerenciar assinatura'
+    description: 'Gerenciar assinatura',
+    requiredFeature: 'enableBilling'
   },
 ];
 
@@ -129,19 +140,22 @@ const financialItems = [
     title: 'Dashboard',
     url: '/app/financial',
     icon: TrendingUp,
-    description: 'Visão geral financeira'
+    description: 'Visão geral financeira',
+    requiredFeature: 'enableBilling'
   },
   {
     title: 'Pagamentos',
     url: '/app/payments',
     icon: Receipt,
-    description: 'Histórico de pagamentos'
+    description: 'Histórico de pagamentos',
+    requiredFeature: 'enableBilling'
   },
   {
     title: 'Transações',
     url: '/app/credits/transactions',
     icon: ArrowRightLeft,
-    description: 'Transações de crédito'
+    description: 'Transações de crédito',
+    requiredFeature: 'enableBilling'
   },
 ];
 
@@ -192,6 +206,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { hasFeature } = useFeatures();
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -212,6 +227,36 @@ export function AppSidebar() {
   };
 
   const isAdmin = user?.role === 'admin';
+
+  // Render menu item with feature control
+  const renderMenuItem = (item: any) => {
+    const menuItem = (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton asChild>
+          <NavLink
+            to={item.url}
+            className={getNavClassName(item.url)}
+            title={!open ? item.description : undefined}
+            onClick={handleNavClick}
+          >
+            <item.icon className="h-4 w-4" />
+            {open && <span>{item.title}</span>}
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+
+    // If item has required feature, wrap with FeatureGuard
+    if (item.requiredFeature) {
+      return (
+        <FeatureGuard key={item.title} feature={item.requiredFeature}>
+          {menuItem}
+        </FeatureGuard>
+      );
+    }
+
+    return menuItem;
+  };
 
   return (
     <Sidebar className={!open ? "w-16" : "w-64"} collapsible="icon">
@@ -236,72 +281,34 @@ export function AppSidebar() {
           <SidebarGroupLabel>Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={getNavClassName(item.url)}
-                      title={!open ? item.description : undefined}
-                      onClick={handleNavClick}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {open && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navigationItems.map(renderMenuItem)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Sales & Credits */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Vendas</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {salesItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={getNavClassName(item.url)}
-                      title={!open ? item.description : undefined}
-                      onClick={handleNavClick}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {open && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <FeatureGuard anyFeatures={['enableMarketplace', 'enableBilling']}>
+          <SidebarGroup>
+            <SidebarGroupLabel>Vendas</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {salesItems.map(renderMenuItem)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </FeatureGuard>
 
         {/* Financial */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Financeiro</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {financialItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={getNavClassName(item.url)}
-                      title={!open ? item.description : undefined}
-                      onClick={handleNavClick}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {open && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <FeatureGuard feature="enableBilling">
+          <SidebarGroup>
+            <SidebarGroupLabel>Financeiro</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {financialItems.map(renderMenuItem)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </FeatureGuard>
 
         {/* Settings */}
         <SidebarGroup>

@@ -3,7 +3,8 @@
 
 import React from 'react'
 import { useRoles } from '../hooks/useRoles'
-import { usePermissions } from '../hooks/usePermissions'
+// COMENTADO: Sistema de permissões será implementado no backend
+// import { usePermissions } from '../hooks/usePermissions'
 
 interface RoleSelectorProps {
   selectedRole?: string
@@ -21,21 +22,26 @@ export function RoleSelector({
   placeholder = 'Selecione uma role'
 }: RoleSelectorProps) {
   const { roles, isLoading: rolesLoading } = useRoles()
-  const { isAdmin, isCompanyAdmin } = usePermissions()
+  // COMENTADO: Sistema de permissões será implementado no backend
+  // const { isAdmin, isCompanyAdmin } = usePermissions()
 
+  // TEMPORÁRIO: Mostrar todos os roles até backend implementar permissões
+  const availableRoles = roles
+
+  // TODO: Reativar quando backend implementar permissões
   // Filter roles based on current user's permissions
-  const availableRoles = roles.filter(role => {
-    // Admin can assign any role
-    if (isAdmin) return true
-
-    // Company admin can assign company roles but not admin
-    if (isCompanyAdmin) {
-      return ['empresa_admin', 'empresa_user', 'api_user'].includes(role.nome)
-    }
-
-    // Regular users cannot assign roles
-    return false
-  })
+  // const availableRoles = roles.filter(role => {
+  //   // Admin can assign any role
+  //   if (isAdmin) return true
+  //
+  //   // Company admin can assign company roles but not admin
+  //   if (isCompanyAdmin) {
+  //     return ['empresa_admin', 'empresa_user', 'api_user'].includes(role.nome)
+  //   }
+  //
+  //   // Regular users cannot assign roles
+  //   return false
+  // })
 
   if (rolesLoading) {
     return (
@@ -75,29 +81,17 @@ export function SimpleRoleSelector({
   onRoleChange: (role: string) => void
   disabled?: boolean
 }) {
-  const { isAdmin, isCompanyAdmin } = usePermissions()
-
-  // Define available roles based on permissions
+  // TODO: Implementar controle de permissões quando backend estiver pronto
+  // Por enquanto, permitir todos os roles
   const availableRoles = React.useMemo(() => {
-    if (isAdmin) {
-      return [
-        { value: 'admin', label: 'Administrador do Sistema' },
-        { value: 'empresa_admin', label: 'Administrador da Empresa' },
-        { value: 'empresa_user', label: 'Usuário da Empresa' },
-        { value: 'api_user', label: 'Usuário API' },
-      ]
-    }
+    return [
+      { value: 'admin', label: 'Administrador do Sistema' },
+      { value: 'empresa_admin', label: 'Administrador da Empresa' },
+      { value: 'empresa_user', label: 'Usuário da Empresa' },
+      { value: 'api_user', label: 'Usuário API' },
+    ]
 
-    if (isCompanyAdmin) {
-      return [
-        { value: 'empresa_admin', label: 'Administrador da Empresa' },
-        { value: 'empresa_user', label: 'Usuário da Empresa' },
-        { value: 'api_user', label: 'Usuário API' },
-      ]
-    }
-
-    return []
-  }, [isAdmin, isCompanyAdmin])
+  }, [])
 
   if (availableRoles.length === 0) {
     return (

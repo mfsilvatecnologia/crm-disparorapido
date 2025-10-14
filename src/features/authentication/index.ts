@@ -16,7 +16,6 @@ export { useActivityMonitor } from './hooks/useActivityMonitor';
 export { useAuthenticatedFetch } from './hooks/useAuthenticatedFetch';
 export type { AuthenticatedFetch } from './hooks/useAuthenticatedFetch';
 export * from './hooks/useRegister';
-export * from './hooks/usePermissions';
 export * from './hooks/useRoles';
 export * from './hooks/useSessions';
 

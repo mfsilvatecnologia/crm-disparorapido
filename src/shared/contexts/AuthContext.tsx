@@ -6,7 +6,6 @@ import type { User, ComputedPermissions, LoginCredentials } from '../types';
 import { ClientType } from '@/features/authentication/types/auth';
 import apiClient from '../services/client';
 import { apiClient as libApiClient } from '@/lib/api-client';
-import { fetchUserPermissions } from '../../features/authentication/services/permissions';
 import type { AuthResponse, SessionLimitError } from '../services/schemas';
 
 /**
@@ -99,9 +98,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setEmpresa(parsedEmpresa);
           }
 
-          // Fetch and set permissions
-          const permissionsResponse = await fetchUserPermissions(savedToken);
-          setPermissions(permissionsResponse.data.permissions);
+          // TODO: Implementar sistema de permissões quando backend estiver pronto
+          setPermissions({} as ComputedPermissions);
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
@@ -177,9 +175,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setToken(accessToken);
       setRefreshToken(null); // API não retorna refresh token no login
 
-      // Fetch and set permissions
-      const permissionsResponse = await fetchUserPermissions(accessToken);
-      setPermissions(permissionsResponse.data.permissions);
+      // TODO: Implementar sistema de permissões quando backend estiver pronto
+      setPermissions({} as ComputedPermissions);
     } catch (error: any) {
       console.error('Login failed:', error);
       console.error('Error details:', {

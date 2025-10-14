@@ -4,7 +4,8 @@
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { usePermissions } from '../hooks/usePermissions'
+// COMENTADO: Sistema de permissões será implementado no backend
+// import { usePermissions } from '../hooks/usePermissions'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -23,9 +24,16 @@ export function ProtectedRoute({
   fallbackPath = '/login',
   requireValidSession = true
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading: authLoading, user, token } = useAuth()
-  const { hasPermission, hasRole, isLoading: permLoading, permissions } = usePermissions()
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth()
+  // COMENTADO: Sistema de permissões será implementado no backend
+  // const { hasPermission, hasRole, isLoading: permLoading, permissions } = usePermissions()
   const location = useLocation()
+  
+  // TEMPORÁRIO: Permitir acesso até backend implementar permissões
+  const hasPermission = (_permission: string) => true
+  const hasRole = (_role: string | string[]) => true
+  const permLoading = false
+  const permissions = React.useMemo(() => ({}), [])
 
   // Debug logging for admin route access
   React.useEffect(() => {
@@ -34,7 +42,7 @@ export function ProtectedRoute({
         pathname: location.pathname,
         isAuthenticated,
         user: user ? { id: user.id, role: user.role, email: user.email } : null,
-        token: token ? 'present' : 'missing',
+        // token: token ? 'present' : 'missing', // COMENTADO: token removido do AuthContext
         permissions: permissions ? Object.keys(permissions).filter(key => permissions[key as keyof typeof permissions]) : null,
         authLoading,
         permLoading,
@@ -42,7 +50,7 @@ export function ProtectedRoute({
         requiredRole
       });
     }
-  }, [location.pathname, isAuthenticated, user, token, permissions, authLoading, permLoading]);
+  }, [location.pathname, isAuthenticated, user, permissions, authLoading, permLoading, requiredPermission, requiredRole]);
 
   // Show loading state while checking authentication and permissions
   if (authLoading || permLoading) {

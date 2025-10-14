@@ -1,0 +1,30 @@
+<svg width="160" height="48" viewBox="0 0 160 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="160" height="48" rx="8" fill="url(#gradient)" opacity="0.05"/>
+  
+  <!-- Logo Icon -->
+  <circle cx="24" cy="24" r="16" fill="url(#logoGradient)"/>
+  <path d="M16 20 L20 16 L24 20 L32 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 24 L28 28 L32 24" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Text -->
+  <text x="48" y="20" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="white">
+    Publix
+  </text>
+  <text x="48" y="34" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="#e2e8f0">
+    .IA
+  </text>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6d28d9"/>
+      <stop offset="50%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+  </defs>
+</svg>
