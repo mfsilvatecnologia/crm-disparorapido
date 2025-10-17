@@ -56,11 +56,11 @@ export function FunnelBoard({ stages, leadsByStage, onRequestTransition, onReque
         />
       ))}
 
-      <div className="self-start">
+      {/* <div className="self-start">
         <button className="px-3 py-2 border rounded" onClick={() => setBulkOpen(true)} disabled={selected.size === 0}>
           Atualização em massa ({selected.size})
         </button>
-      </div>
+      </div> */}
 
       <TransitionReasonModal
         open={reasonModal.open}

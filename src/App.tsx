@@ -101,7 +101,7 @@ function AppRoutes() {
           <Route path="pipeline" element={<PipelinePage />} />
           <Route path="campaigns/:id/funnel" element={<CampaignFunnelPage />} />
           <Route path="campaigns/:id/metrics" element={<CampaignDashboard />} />
-          <Route path="sales-tools" element={<div className="p-6">Ferramentas de Vendas - Em desenvolvimento</div>} />
+          <Route path="campaigns/:id/stages" element={<StageConfigPage />} />
           <Route path="billing" element={<BillingConfigPage />} />
           
           {/* Sales & Subscriptions Routes */}
@@ -118,11 +118,9 @@ function AppRoutes() {
           <Route path="profile" element={<UserProfilePage />} />
           <Route path="sessions" element={<SessionManagementPage />} />
           <Route path="users" element={<UsersPage />} />
-          <Route path="settings" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
           <Route path="settings/campaign-stages" element={<StageConfigPage />} />
           <Route path="features-demo" element={<FeatureDemoPage />} />
           <Route path="admin" element={<AdminPage />} />
-          <Route path="admin/organizations" element={<div className="p-6">Admin - Organizações - Em desenvolvimento</div>} />
           <Route path="empresas/cadastro" element={<CadastroEmpresaPage />} />
         </Route>
 

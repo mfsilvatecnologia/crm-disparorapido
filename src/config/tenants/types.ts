@@ -26,12 +26,14 @@ export interface TenantTheme {
 
 export interface TenantFeatures {
   // Enable/disable features per tenant
+  enableBasicFeatures: boolean;  // Leads, Empresas, Ferramentas, Configurações
   enableCampaigns: boolean;
   enablePipeline: boolean;
   enableScraping: boolean;
   enableAnalytics: boolean;
   enableMarketplace: boolean;
   enableBilling: boolean;
+  enableWorkers: boolean;
 }
 
 export interface TenantBranding {

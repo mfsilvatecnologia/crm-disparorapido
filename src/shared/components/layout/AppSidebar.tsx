@@ -37,25 +37,29 @@ import { useAuth } from '@/shared/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { leadKeys } from '@/features/leads/hooks/useLeads';
 import { FeatureGuard } from '@/shared/components/features/FeatureGuard';
+import { useTenant } from '@/shared/contexts/TenantContext';
 
 const navigationItems = [
   {
     title: 'Dashboard',
     url: '/app',
     icon: Home,
-    description: 'Visão geral e métricas'
+    description: 'Visão geral e métricas',
+    // Dashboard sempre disponível (sem feature required)
   },
   {
     title: 'Leads',
     url: '/app/leads',
     icon: Users,
-    description: 'Gerenciar base de leads'
+    description: 'Gerenciar base de leads',
+    requiredFeature: 'enableBasicFeatures'
   },
   {
     title: 'Empresas',
     url: '/app/empresas',
     icon: Building2,
-    description: 'Gestão de empresas'
+    description: 'Gestão de empresas',
+    requiredFeature: 'enableBasicFeatures'
   },
   {
     title: 'Campanhas',
@@ -71,13 +75,13 @@ const navigationItems = [
     description: 'Funil de vendas',
     requiredFeature: 'enablePipeline'
   },
-  {
-    title: 'Segmentos',
-    url: '/app/segments',
-    icon: BarChart3,
-    description: 'Análise e segmentação',
-    requiredFeature: 'enableAnalytics'
-  },
+  // {
+  //   title: 'Segmentos',
+  //   url: '/app/segments',
+  //   icon: BarChart3,
+  //   description: 'Análise e segmentação',
+  //   requiredFeature: 'enableAnalytics'
+  // },
   {
     title: 'Scraping',
     url: '/app/scraping',
@@ -86,25 +90,12 @@ const navigationItems = [
     requiredFeature: 'enableScraping'
   },
   {
-    title: 'Termos de Busca',
-    url: '/app/search-terms',
-    icon: Search,
-    description: 'Gerenciar termos para scraping',
-    requiredFeature: 'enableScraping'
-  },
-  {
     title: 'Workers',
     url: '/app/workers',
     icon: Activity,
     description: 'Monitorar workers e jobs',
-    requiredFeature: 'enableScraping'
-  },
-  {
-    title: 'Ferramentas',
-    url: '/app/sales-tools',
-    icon: Phone,
-    description: 'Call center e e-mails'
-  },
+    requiredFeature: 'enableWorkers'
+  }
 ];
 
 const salesItems = [
@@ -160,32 +151,37 @@ const settingsItems = [
     title: 'Perfil',
     url: '/app/profile',
     icon: User,
-    description: 'Configurações do perfil'
+    description: 'Configurações do perfil',
+    requiredFeature: 'enableBasicFeatures'
   },
   {
     title: 'Sessões Ativas',
     url: '/app/sessions',
     icon: Shield,
-    description: 'Gerenciar dispositivos e sessões'
+    description: 'Gerenciar dispositivos e sessões',
+    requiredFeature: 'enableBasicFeatures'
   },
   {
     title: 'Estágios de Campanha',
     url: '/app/settings/campaign-stages',
     icon: Kanban,
-    description: 'Configurar estágios e funil'
+    description: 'Configurar estágios e funil',
+    requiredFeature: 'enableCampaigns'
   },
   {
     title: 'Cobrança',
     url: '/app/billing',
     icon: CreditCard,
-    description: 'Uso e faturas'
+    description: 'Uso e faturas',
+    requiredFeature: 'enableBilling'
   },
-  {
-    title: 'Configurações',
-    url: '/app/settings',
-    icon: Settings,
-    description: 'Integrações e sistema'
-  },
+  // {
+  //   title: 'Configurações',
+  //   url: '/app/settings',
+  //   icon: Settings,
+  //   description: 'Integrações e sistema',
+  //   requiredFeature: 'enableBasicFeatures'
+  // },
 ];
 
 const adminItems = [
@@ -205,6 +201,7 @@ const adminItems = [
 
 export function AppSidebar() {
   const { open } = useSidebar();
+  const { tenant } = useTenant();
   const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -270,8 +267,8 @@ export function AppSidebar() {
             </div>
             {open && (
               <div>
-                <h2 className="text-lg font-bold text-sidebar-foreground">LeadCRM</h2>
-                <p className="text-xs text-sidebar-foreground/60">Multi-tenant CRM</p>
+                <h2 className="text-lg font-bold text-sidebar-foreground">{tenant.branding.companyName}</h2>
+                <p className="text-xs text-sidebar-foreground/60">{tenant.branding.companyTagline}</p>
               </div>
             )}
           </div>
@@ -316,21 +313,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Configurações</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {settingsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={getNavClassName(item.url)}
-                      title={!open ? item.description : undefined}
-                      onClick={handleNavClick}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {open && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {settingsItems.map(renderMenuItem)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

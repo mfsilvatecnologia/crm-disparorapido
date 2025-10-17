@@ -488,14 +488,14 @@ export default function LeadsPage() {
               <FileDown className="mr-2 h-4 w-4" />
               Exportar {selectedLeads.length > 0 ? `(${selectedLeads.length})` : `(${sortedLeads.length})`}
             </Button>
-            <Button variant="outline" className="border-gray-300">
+            {/* <Button variant="outline" className="border-gray-300">
               <RefreshCw className="mr-2 h-4 w-4" />
               Sincronizar CRM
-            </Button>
-            <Button className="bg-primary-600 hover:bg-primary-700">
+            </Button> */}
+            {/* <Button className="bg-primary-600 hover:bg-primary-700">
               <Plus className="mr-2 h-4 w-4" />
               Importar Leads
-            </Button>
+            </Button> */}
           </div>
         </div>
 

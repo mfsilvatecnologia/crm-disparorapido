@@ -28,7 +28,8 @@ import {
   Target,
   Loader2,
   RefreshCw,
-  Kanban
+  Kanban,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -38,12 +39,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/shared/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/components/ui/dropdown-menu';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Progress } from '@/shared/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { useToast } from '@/shared/hooks/use-toast';
-import { useCampaigns, useCampaignStats, useCreateCampaign } from '../hooks/useCampaigns';
+import { useCampaigns, useCampaignStats, useCreateCampaign, useDeleteCampaign } from '../hooks/useCampaigns';
 import type { Campaign, CampaignFilters } from '../types/campaigns';
 
 const createCampanhaSchema = z.object({
@@ -110,6 +112,9 @@ export default function CampanhasPage() {
   const [editingCampanha, setEditingCampanha] = useState<Campaign | null>(null);
   const [viewingCampanha, setViewingCampanha] = useState<Campaign | null>(null);
   const [gerenciandoContatos, setGerenciandoContatos] = useState<Campaign | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingCampanha, setDeletingCampanha] = useState<Campaign | null>(null);
+  const [forceDelete, setForceDelete] = useState(false);
 
   const CampaignContactsManagerLazy = React.lazy(() => import('../components/CampaignContactsManager').then(m => ({ default: m.CampaignContactsManager })));
 
@@ -151,6 +156,7 @@ export default function CampanhasPage() {
 
   // Mutations
   const createCampanhaMutation = useCreateCampaign();
+  const deleteCampanhaMutation = useDeleteCampaign();
 
   const onCreateCampanha = (data: CreateCampanhaForm) => {
     const campaignData = {
@@ -201,6 +207,33 @@ export default function CampanhasPage() {
 
     resetContatoForm();
     setAddContatoDialogOpen(false);
+  };
+
+  const handleDeleteCampanha = (campanha: Campaign) => {
+    setDeletingCampanha(campanha);
+    setForceDelete(false);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteCampanha = () => {
+    if (!deletingCampanha) return;
+    
+    deleteCampanhaMutation.mutate(
+      { id: deletingCampanha.id, force: forceDelete },
+      {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setDeletingCampanha(null);
+          setForceDelete(false);
+        },
+        onError: (error: any) => {
+          // Se o erro for sobre contatos existentes, permitir exclusão forçada
+          if (error.message.includes('contato(s) associado(s)')) {
+            setForceDelete(true);
+          }
+        }
+      }
+    );
   };
 
   const formatPercentage = (value: number | undefined) => value ? `${value.toFixed(1)}%` : '0%';
@@ -565,6 +598,17 @@ export default function CampanhasPage() {
                               <TrendingUp className="mr-2 h-4 w-4" />
                               Métricas
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/app/campaigns/${campanha.id}/stages`)}>
+                              <Settings className="mr-2 h-4 w-4" />
+                              Editar Estágios
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteCampanha(campanha)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -798,6 +842,68 @@ export default function CampanhasPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Excluir Campanha
+            </DialogTitle>
+            <DialogDescription>
+              <div className="space-y-4">
+                {forceDelete && (
+                  <Alert variant="destructive">
+                    <AlertDescription>
+                      <strong>Atenção:</strong> Esta campanha possui contatos associados. 
+                      A exclusão removerá todos os contatos da campanha permanentemente.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <p>
+                  Tem certeza que deseja excluir a campanha <strong>"{deletingCampanha?.nome}"</strong>
+                  {forceDelete ? ' e todos os seus contatos associados' : ''}?
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Esta ação não poderá ser desfeita.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setDeletingCampanha(null);
+                setForceDelete(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="button" 
+              variant={forceDelete ? "destructive" : "default"}
+              onClick={confirmDeleteCampanha}
+              disabled={deleteCampanhaMutation.isPending}
+            >
+              {deleteCampanhaMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {forceDelete ? 'Excluir Mesmo Assim' : 'Excluir'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

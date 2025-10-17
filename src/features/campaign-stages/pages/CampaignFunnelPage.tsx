@@ -13,12 +13,29 @@ export function CampaignFunnelPage() {
   const bulk = useBulkUpdateLeads(campaignId || '')
 
   const stages = stagesQuery.data || []
-  // NOTE: Backend should provide currentStageId; if not, leads will not appear in columns
   const leadsByStage: Record<string, any[]> = {}
+  
+  // Find the initial stage to assign contacts without currentStageId
+  const initialStage = stages.find(s => s.isInicial)
+  const defaultStageId = initialStage?.id || stages[0]?.id || ''
+  
   ;(contactsQuery.data || []).forEach((c: any) => {
-    const sid = c.currentStageId || ''
+    // If contact has no currentStageId, assign to initial stage
+    const sid = c.currentStageId || defaultStageId
     if (!leadsByStage[sid]) leadsByStage[sid] = []
-    leadsByStage[sid].push({ id: c.id, nome: c.id } as any)
+    
+    // Create a more complete contact object with the data we have
+    leadsByStage[sid].push({
+      id: c.id,
+      nome: c.nome || 'Contato sem nome',
+      telefone: c.telefone || c.phone || null,
+      email: c.email || null,
+      empresa: c.empresa || c.company || null,
+      addedAt: c.addedAt,
+      stageChangedAt: c.stageChangedAt,
+      contatoId: c.contatoId,
+      leadId: c.leadId
+    })
   })
 
   return (
@@ -34,8 +51,12 @@ export function CampaignFunnelPage() {
         <FunnelBoard
           stages={stages}
           leadsByStage={leadsByStage}
-          onRequestTransition={(leadId, toStageId, motivo) => transition.mutateAsync({ contactId: leadId, stageId: toStageId, motivo })}
-          onRequestBulkUpdate={(leadIds, toStageId, motivo) => bulk.mutateAsync({ contactIds: leadIds, stageId: toStageId, motivo })}
+          onRequestTransition={async (leadId, toStageId, motivo) => {
+            await transition.mutateAsync({ contactId: leadId, stageId: toStageId, motivo })
+          }}
+          onRequestBulkUpdate={async (leadIds, toStageId, motivo) => {
+            await bulk.mutateAsync({ contactIds: leadIds, stageId: toStageId, motivo })
+          }}
         />
       )}
     </div>

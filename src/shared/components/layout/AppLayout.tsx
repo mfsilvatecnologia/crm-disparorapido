@@ -1,8 +1,8 @@
-import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider } from '@/shared/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
+import { TenantDebug } from '@/shared/components/debug/TenantDebug';
 
 export function AppLayout() {
   return (

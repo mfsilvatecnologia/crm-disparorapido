@@ -23,12 +23,16 @@ export async function fetchCampaigns(filters: CampaignFilters = {}): Promise<Cam
 
     const response = await apiClient.request<{ 
       success: boolean; 
-      data: {
-        campanhas: Campaign[]
-        total: number
+      data: Campaign[]
+      pagination: {
         page: number
         limit: number
+        total: number
         totalPages: number
+        hasNext: boolean
+        hasPrev: boolean
+        firstPage: number
+        lastPage: number
       }
     }>(CAMPAIGNS_ENDPOINT, {
       method: 'GET',
@@ -36,12 +40,13 @@ export async function fetchCampaigns(filters: CampaignFilters = {}): Promise<Cam
 
     console.log('Raw API response:', response)
 
-    // A API retorna { success: true, data: { campanhas: [...], total, page, limit, totalPages } }
-    const campaigns = response.data?.campanhas || []
-    const total = response.data?.total || 0
-    const page = response.data?.page || 1
-    const limit = response.data?.limit || 20
-    const totalPages = response.data?.totalPages || 1
+    // A API retorna { success: true, data: [...], pagination: {...} }
+    const campaigns = response.data || []
+    const pagination = response.pagination
+    const total = pagination?.total || 0
+    const page = pagination?.page || 1
+    const limit = pagination?.limit || 20
+    const totalPages = pagination?.totalPages || 1
     
     console.log('Extracted campaigns:', campaigns)
     console.log('Pagination info:', { total, page, limit, totalPages })
@@ -101,13 +106,24 @@ export async function updateCampaign(data: UpdateCampaignData): Promise<Campaign
   }
 }
 
-export async function deleteCampaign(id: string): Promise<void> {
+export async function deleteCampaign(id: string, force: boolean = false): Promise<void> {
   try {
+    // Verificar se existem contatos associados à campanha, a menos que seja forçado
+    if (!force) {
+      const contacts = await fetchCampaignContacts(id)
+      if (contacts.length > 0) {
+        throw new Error(`Não é possível excluir a campanha pois ela possui ${contacts.length} contato(s) associado(s). Remova os contatos primeiro ou force a exclusão.`)
+      }
+    }
+
     await apiClient.request(`${CAMPAIGNS_ENDPOINT}/${id}`, {
       method: 'DELETE'
     })
   } catch (error) {
     console.error('Error deleting campaign:', error)
+    if (error instanceof Error) {
+      throw error
+    }
     throw new Error('Falha ao deletar campanha')
   }
 }

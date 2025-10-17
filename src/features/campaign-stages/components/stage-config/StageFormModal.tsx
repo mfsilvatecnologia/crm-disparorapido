@@ -4,7 +4,20 @@ import ColorPicker from './ColorPicker'
 import IconPicker from './IconPicker'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CreateStageSchema, UpdateStageSchema } from '../../schemas/stage.schemas'
+import { z } from 'zod'
+
+// Schema simplificado para o formulário
+const FormSchema = z.object({
+  nome: z.string().min(1, 'Nome é obrigatório'),
+  categoria: z.enum(['novo', 'contato', 'qualificacao', 'negociacao', 'ganho', 'perdido']),
+  cor: z.string(),
+  icone: z.string().optional(),
+  isInicial: z.boolean().optional(),
+  isFinal: z.boolean().optional(),
+  cobraCreditos: z.boolean().optional(),
+  custoCentavos: z.number().optional(),
+  descricaoCobranca: z.string().optional(),
+})
 
 type Props = {
   open: boolean
@@ -23,7 +36,7 @@ export function StageFormModal({ open, initial, onClose, onSubmit }: Props) {
     watch,
     formState: { errors },
   } = useForm<StageFormState>({
-    resolver: zodResolver(isEdit ? UpdateStageSchema.partial().extend({ categoria: CreateStageSchema.shape.categoria }).transform((v) => v as any) : CreateStageSchema as any),
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       nome: initial?.nome || '',
       categoria: (initial?.categoria as any) || 'novo',
@@ -32,7 +45,7 @@ export function StageFormModal({ open, initial, onClose, onSubmit }: Props) {
       isInicial: initial?.isInicial || false,
       isFinal: initial?.isFinal || false,
       cobraCreditos: initial?.cobraCreditos || false,
-      custocentavos: initial?.custocentavos,
+      custoCentavos: initial?.custoCentavos,
       descricaoCobranca: initial?.descricaoCobranca,
     },
   })
@@ -47,7 +60,7 @@ export function StageFormModal({ open, initial, onClose, onSubmit }: Props) {
         isInicial: initial?.isInicial || false,
         isFinal: initial?.isFinal || false,
         cobraCreditos: initial?.cobraCreditos || false,
-        custocentavos: initial?.custocentavos,
+        custoCentavos: initial?.custoCentavos,
         descricaoCobranca: initial?.descricaoCobranca,
       })
     }
@@ -104,8 +117,8 @@ export function StageFormModal({ open, initial, onClose, onSubmit }: Props) {
           {watch('cobraCreditos') && (
             <label className="grid gap-1 text-sm">
               <span>Custo (centavos)</span>
-              <input type="number" className="border rounded px-2 py-1" {...register('custocentavos', { valueAsNumber: true })} />
-              {errors.custocentavos && <span className="text-xs text-red-600">{String(errors.custocentavos.message)}</span>}
+              <input type="number" className="border rounded px-2 py-1" {...register('custoCentavos', { valueAsNumber: true })} />
+              {errors.custoCentavos && <span className="text-xs text-red-600">{String(errors.custoCentavos.message)}</span>}
             </label>
           )}
 

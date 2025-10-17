@@ -19,7 +19,7 @@ export interface CampaignLeadStage {
   isInicial: boolean
   isFinal: boolean
   cobraCreditos: boolean
-  custocentavos?: number
+  custoCentavos?: number
   descricaoCobranca?: string
   isAtivo: boolean
   criadoPor?: string
@@ -36,7 +36,7 @@ export interface CreateStageRequest {
   isInicial?: boolean
   isFinal?: boolean
   cobraCreditos?: boolean
-  custocentavos?: number
+  custoCentavos?: number
   descricaoCobranca?: string
 }
 
@@ -45,7 +45,7 @@ export interface UpdateStageRequest {
   cor?: string
   icone?: string
   cobraCreditos?: boolean
-  custocentavos?: number
+  custoCentavos?: number
   descricaoCobranca?: string
 }
 

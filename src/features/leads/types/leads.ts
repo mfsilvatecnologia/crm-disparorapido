@@ -24,6 +24,30 @@ export interface Lead {
   segmento?: string
   localizacao?: string
   tamanhoEmpresa?: string
+
+  // Novos campos conforme especificação da API
+  cargoContato?: string
+  siteEmpresa?: string
+  cnpj?: string
+  porteEmpresa?: string
+  numFuncionarios?: number
+  receitaAnualEstimada?: number
+  endereco?: {
+    rua?: string
+    numero?: string
+    cidade?: string
+    estado?: string
+    cep?: string
+    pais?: string
+    latitude?: number
+    longitude?: number
+  }
+  dadosOriginais?: Record<string, any>
+  custoAquisicao?: number
+  fonte?: string
+  descricaoEmpresa?: string
+  ultimoContato?: string
+  scoreQualificacao?: number
 }
 
 export interface LeadFilters {
@@ -56,6 +80,36 @@ export interface UpdateLeadData extends Partial<CreateLeadData> {
   id: string
   status?: Lead['status']
   score?: number
+}
+
+// Interface conforme especificação da API
+export interface UpdateLeadDTO {
+  nomeContato?: string
+  cargoContato?: string
+  email?: string
+  telefone?: string
+  linkedinUrl?: string
+  siteEmpresa?: string
+  cnpj?: string
+  segmento?: string
+  porteEmpresa?: string
+  numFuncionarios?: number
+  receitaAnualEstimada?: number
+  descricaoEmpresa?: string
+  endereco?: {
+    rua?: string
+    numero?: string
+    cidade?: string
+    estado?: string
+    cep?: string
+    pais?: string
+    latitude?: number
+    longitude?: number
+  }
+  tags?: string[]
+  observacoes?: string
+  dadosOriginais?: Record<string, any>
+  custoAquisicao?: number
 }
 
 export interface LeadsResponse {

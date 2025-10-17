@@ -54,7 +54,7 @@ export function ChargeAuditTable({ campaignId, stages }: Props) {
                 <tr key={c.id} className="border-t">
                   <td className="p-2">{c.campaignContactId}</td>
                   <td className="p-2">{c.stageName || c.stageId}</td>
-                  <td className="p-2">{formatCentavosToReais(c.custocentavos)}</td>
+                  <td className="p-2">{formatCentavosToReais(c.custoCentavos)}</td>
                   <td className="p-2">{c.foiCobrado ? 'Sucesso' : 'Falha'}</td>
                   <td className="p-2">{c.erroCobranca || '—'}</td>
                   <td className="p-2">{new Date(c.createdAt).toLocaleString()}</td>

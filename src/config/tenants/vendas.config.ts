@@ -47,6 +47,7 @@ export const vendasConfig: TenantConfig = {
   },
 
   features: {
+    enableBasicFeatures: true,
     enableCampaigns: true,
     enablePipeline: true,
     enableScraping: true,

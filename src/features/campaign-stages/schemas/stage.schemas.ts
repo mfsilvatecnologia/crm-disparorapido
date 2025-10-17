@@ -24,7 +24,7 @@ export const CampaignLeadStageSchema = z.object({
   isInicial: z.boolean(),
   isFinal: z.boolean(),
   cobraCreditos: z.boolean(),
-  custocentavos: z.number().int().min(0).optional(),
+  custoCentavos: z.number().int().min(0).optional(),
   descricaoCobranca: z.string().max(255).optional(),
   isAtivo: z.boolean(),
   criadoPor: z.string().uuid().optional(),
@@ -45,17 +45,17 @@ export const CreateStageSchema = z
     isInicial: z.boolean().default(false),
     isFinal: z.boolean().default(false),
     cobraCreditos: z.boolean().default(false),
-    custocentavos: z.number().int().min(0).optional(),
+    custoCentavos: z.number().int().min(0).optional(),
     descricaoCobranca: z.string().max(255).optional(),
   })
   .refine(
     (data) => {
-      if (data.cobraCreditos && !data.custocentavos) return false
+      if (data.cobraCreditos && !data.custoCentavos) return false
       return true
     },
     {
       message: 'Custo em centavos é obrigatório quando cobrança está ativada',
-      path: ['custocentavos'],
+      path: ['custoCentavos'],
     }
   )
 
@@ -65,17 +65,17 @@ export const UpdateStageSchema = z
     cor: HexColorSchema.optional(),
     icone: z.string().optional(),
     cobraCreditos: z.boolean().optional(),
-    custocentavos: z.number().int().min(0).optional(),
+    custoCentavos: z.number().int().min(0).optional(),
     descricaoCobranca: z.string().max(255).optional(),
   })
   .refine(
     (data) => {
-      if (data.cobraCreditos && !data.custocentavos) return false
+      if (data.cobraCreditos && !data.custoCentavos) return false
       return true
     },
     {
       message: 'Custo em centavos é obrigatório quando cobrança está ativada',
-      path: ['custocentavos'],
+      path: ['custoCentavos'],
     }
   )
 

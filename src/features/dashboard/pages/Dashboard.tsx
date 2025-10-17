@@ -1,27 +1,17 @@
 import React from 'react';
 import {
   TrendingUp,
-  Users,
-  Target,
-  DollarSign,
-  Rocket,
   BarChart3,
-  FileDown,
   Settings,
   Bell,
   Calendar,
-  Clock,
-  Star
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
-import { useOrganization } from '@/shared/contexts/OrganizationContext';
 import { useAuth } from '@/shared/contexts/AuthContext';
-import { useLeads } from '@/features/leads/hooks/useLeads';
-import { KpiCard, ActiveCampaignsWidget, RecentLeadsWidget, UsageMonitorWidget } from '@/features/dashboard';
+import { RecentLeadsWidget, UsageMonitorWidget } from '@/features/dashboard';
 import {
-  MetricCard,
   LeadsMetricCard,
   QualityMetricCard,
   ROIMetricCard,
@@ -30,18 +20,34 @@ import {
   useQuickActions,
   CampaignsWidget
 } from '@/features/dashboard';
+import { useDashboardData } from '../hooks/useDashboardData';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
+import { DashboardError } from '../components/DashboardError';
 
 const Dashboard: React.FC = () => {
-  const { currentOrganization } = useOrganization();
   const { user } = useAuth();
   const { actions } = useQuickActions();
 
-  // Fetch real leads data
-  const { data: leadsData, isLoading: leadsLoading } = useLeads({
-    limit: 10,
-  });
+  // Fetch real dashboard data
+  const {
+    stats,
+    recentLeads: apiRecentLeads,
+    usage,
+    isLoading,
+    error,
+  } = useDashboardData();
 
-  // Enhanced mock data with more realistic metrics
+  // Show loading state
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  // Show error state
+  if (error) {
+    return <DashboardError error={error} onRetry={() => window.location.reload()} />;
+  }
+
+  // Enhanced mock data for campaigns (until API is ready)
   const mockCampaigns = [
     {
       id: '1',
@@ -99,12 +105,11 @@ const Dashboard: React.FC = () => {
     }
   ];
 
-  const mockUsage = {
+  // Extended usage data with additional metrics
+  const extendedUsage = {
+    ...usage,
     plan: 'Professional',
-    leadsUsed: 2847,
-    leadsLimit: 4000,
-    daysRemaining: 12,
-    activeCampaigns: 4,
+    activeCampaigns: mockCampaigns.filter((c) => c.status === 'active').length,
     maxCampaigns: 10,
     integrations: 2,
     maxIntegrations: 5,
@@ -112,44 +117,25 @@ const Dashboard: React.FC = () => {
     maxExports: 50,
     apiCalls: 1247,
     maxApiCalls: 5000,
-    estimatedDaysUntilLimit: 8
+    estimatedDaysUntilLimit: 8,
   };
 
-  const mockRecentLeads = [
-    {
-      id: '1',
-      companyName: 'TechStart Solutions',
-      contactName: 'Maria Silva',
-      contactRole: 'CEO',
-      email: 'maria@techstart.com.br',
-      phone: '(11) 99999-9999',
-      sector: 'Software',
-      location: 'São Paulo',
-      employees: 25,
-      qualityScore: 94,
-      createdAt: new Date(Date.now() - 5 * 60 * 1000),
-      campaign: 'B2B Software - SP',
-      linkedinUrl: 'https://linkedin.com/in/maria-silva'
-    }
-  ];
-
-  const totalLeads = leadsData?.items?.length || 2847;
-  const qualityAverage = 89;
-  const monthGrowth = 247;
-  const estimatedROI = 8340;
-
-  // Enhanced metrics calculations
-  const leadsBreakdown = {
-    novos: Math.round(totalLeads * 0.54), // 54% novos
-    qualificados: Math.round(totalLeads * 0.36), // 36% qualificados  
-    convertidos: Math.round(totalLeads * 0.10) // 10% convertidos
-  };
-
-  const qualityDistribution = {
-    alta: Math.round(totalLeads * 0.67), // 67% alta qualidade (85-100)
-    media: Math.round(totalLeads * 0.28), // 28% média (70-84)
-    baixa: Math.round(totalLeads * 0.05) // 5% baixa (<70)
-  };
+  // Transform API recent leads to match component format
+  const mockRecentLeads = apiRecentLeads.map((lead) => ({
+    id: lead.id,
+    companyName: lead.empresa || 'N/A',
+    contactName: lead.nome || 'Sem nome',
+    contactRole: 'Contato',
+    email: lead.email || 'N/A',
+    phone: lead.telefone || 'N/A',
+    sector: 'N/A',
+    location: 'N/A',
+    employees: 0,
+    qualityScore: lead.score,
+    createdAt: new Date(lead.createdAt),
+    campaign: 'N/A',
+    linkedinUrl: '',
+  }));
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -212,9 +198,6 @@ const Dashboard: React.FC = () => {
   };
 
   const getUserFirstName = () => {
-    if (user?.name) {
-      return user.name.split(' ')[0];
-    }
     return user?.email?.split('@')[0] || 'Usuário';
   };
 
@@ -230,12 +213,12 @@ const Dashboard: React.FC = () => {
                   {getGreeting()}, {getUserFirstName()}! 👋
                 </h1>
                 <Badge variant="outline" className="px-3 py-1">
-                  {mockUsage.plan}
+                  {extendedUsage.plan}
                 </Badge>
               </div>
               <p className="text-gray-600">
-                Sua operação está {getTimeOfDay() === 'manhã' ? 'iniciando bem' : 'performando excelente'} esta {getTimeOfDay()}. 
-                {mockUsage.daysRemaining} dias restantes no seu plano.
+                Sua operação está {getTimeOfDay() === 'manhã' ? 'iniciando bem' : 'performando excelente'} esta {getTimeOfDay()}.
+                {extendedUsage.daysRemaining} dias restantes no seu plano.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -253,31 +236,31 @@ const Dashboard: React.FC = () => {
           {/* Main Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <LeadsMetricCard
-              total={totalLeads}
+              total={stats.totalLeads}
               change={15.3}
-              breakdown={leadsBreakdown}
+              breakdown={stats.leadsBreakdown}
               onViewAll={handleViewAllLeads}
               onFilter={handleFilterLeads}
               onExport={handleExportLeads}
             />
-            
+
             <QualityMetricCard
-              average={qualityAverage}
-              distribution={qualityDistribution}
+              average={stats.qualityAverage}
+              distribution={stats.qualityDistribution}
               trend="up"
               onOptimize={handleOptimizeQuality}
             />
-            
+
             <GrowthMetricCard
-              percentage={monthGrowth}
+              percentage={stats.monthGrowth}
               trend="up"
               onAnalyze={handleAnalyzeGrowth}
             />
-            
+
             <ROIMetricCard
-              value={estimatedROI}
+              value={stats.estimatedROI}
               period="Este mês"
-              projection={estimatedROI * 1.2}
+              projection={stats.estimatedROI * 1.2}
               onViewReport={handleViewReport}
             />
           </div>
@@ -338,7 +321,7 @@ const Dashboard: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <UsageMonitorWidget usage={mockUsage} />
+                <UsageMonitorWidget usage={extendedUsage} />
               </CardContent>
             </Card>
 

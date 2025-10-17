@@ -23,7 +23,7 @@ describe('StageFormModal', () => {
     expect(arg.nome).toBe('Qualificação')
     expect(arg.categoria).toBe('qualificacao')
     expect(arg.cobraCreditos).toBe(true)
-    expect(arg.custocentavos).toBe(500)
+    expect(arg.custoCentavos).toBe(500)
   })
 
   it('disables restricted fields in edit mode and shows warnings', async () => {

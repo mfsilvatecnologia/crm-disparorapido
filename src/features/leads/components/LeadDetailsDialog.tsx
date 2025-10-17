@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,9 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
+import { Input } from '@/shared/components/ui/input';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { Label } from '@/shared/components/ui/label';
 import {
   MapPin,
   Mail,
@@ -22,26 +25,143 @@ import {
   Globe,
   Edit,
   ExternalLink,
-  Briefcase
+  Briefcase,
+  Save,
+  X,
+  Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Lead } from '../types/leads';
+import { Lead, UpdateLeadDTO } from '../types/leads';
+import { updateLead, fetchLead } from '../services/leads';
+import { useToast } from '@/shared/hooks/use-toast';
 
 interface LeadDetailsDialogProps {
   lead: Lead | null;
   open: boolean;
   onClose: () => void;
   onEdit?: (lead: Lead) => void;
+  onUpdate?: (lead: Lead) => void;
 }
 
 export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
   lead,
   open,
   onClose,
-  onEdit
+  onEdit,
+  onUpdate
 }) => {
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editData, setEditData] = useState<UpdateLeadDTO>({});
+
   if (!lead) return null;
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setError(null);
+    // Inicializar dados de edição com os valores atuais
+    setEditData({
+      nomeContato: lead.nomeContato || '',
+      cargoContato: lead.cargoContato || '',
+      email: lead.email || '',
+      telefone: lead.telefone || '',
+      linkedinUrl: lead.linkedinUrl || '',
+      siteEmpresa: lead.siteEmpresa || '',
+      cnpj: lead.cnpj || '',
+      segmento: lead.segmento || '',
+      porteEmpresa: lead.porteEmpresa || '',
+      numFuncionarios: lead.numFuncionarios || 0,
+      receitaAnualEstimada: lead.receitaAnualEstimada || 0,
+      endereco: lead.endereco || {},
+      tags: lead.tags || [],
+      observacoes: lead.observacoes || '',
+      dadosOriginais: lead.dadosOriginais || {},
+      custoAquisicao: lead.custoAquisicao || 0,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setError(null);
+    setEditData({});
+  };
+
+  const handleSave = async () => {
+    if (!lead) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Remover campos vazios ou undefined
+      const cleanedData = Object.fromEntries(
+        Object.entries(editData).filter(([_, value]) => {
+          if (typeof value === 'string') return value.trim() !== '';
+          if (typeof value === 'number') return value > 0;
+          if (Array.isArray(value)) return value.length > 0;
+          if (typeof value === 'object' && value !== null) {
+            return Object.keys(value).length > 0;
+          }
+          return value !== null && value !== undefined;
+        })
+      );
+
+      // Primeiro, atualizar o lead
+      await updateLead({
+        id: lead.id,
+        ...cleanedData
+      });
+
+      // Após sucesso, recarregar os dados atualizados da API
+      const refreshedLead = await fetchLead(lead.id);
+
+      // Atualizar o componente pai com os dados mais recentes
+      if (onUpdate) {
+        onUpdate(refreshedLead);
+      }
+
+      // Sair do modo de edição
+      setIsEditing(false);
+      setEditData({});
+
+      toast({
+        title: "Sucesso",
+        description: "Lead atualizado com sucesso!",
+      });
+
+    } catch (error: any) {
+      console.error('Erro ao atualizar lead:', error);
+
+      let errorMessage = 'Erro desconhecido ao atualizar lead';
+
+      if (error.response?.status === 400) {
+        errorMessage = 'Dados inválidos. Verifique as informações e tente novamente.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Não autorizado. Faça login novamente.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Acesso negado. Você não tem permissão para editar este lead.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Lead não encontrado.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Erro interno do servidor. Tente novamente mais tarde.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
+
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getQualityColor = (score: number) => {
     if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
@@ -62,6 +182,72 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
     return colors[status as keyof typeof colors] || colors.novo;
   };
 
+  const renderEditableField = (
+    label: string,
+    value: string | number,
+    fieldName: keyof UpdateLeadDTO,
+    type: 'text' | 'email' | 'tel' | 'number' = 'text',
+    placeholder?: string
+  ) => {
+    if (!isEditing) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">{label}:</span>
+          <span className="text-sm">{value || 'Não informado'}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">{label}</Label>
+        <Input
+          type={type}
+          value={editData[fieldName] as string || ''}
+          onChange={(e) => setEditData(prev => ({
+            ...prev,
+            [fieldName]: type === 'number' ? Number(e.target.value) : e.target.value
+          }))}
+          placeholder={placeholder}
+          className="h-8"
+        />
+      </div>
+    );
+  };
+
+  const renderEditableTextarea = (
+    label: string,
+    value: string,
+    fieldName: keyof UpdateLeadDTO,
+    placeholder?: string
+  ) => {
+    if (!isEditing) {
+      return (
+        <div>
+          <h4 className="text-sm font-medium mb-2">{label}:</h4>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {value || 'Não informado'}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">{label}</Label>
+        <Textarea
+          value={editData[fieldName] as string || ''}
+          onChange={(e) => setEditData(prev => ({
+            ...prev,
+            [fieldName]: e.target.value
+          }))}
+          placeholder={placeholder}
+          className="min-h-[80px]"
+        />
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -80,11 +266,38 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                 <p className="text-sm text-muted-foreground">{lead.nomeContato || 'Contato não informado'}</p>
               </div>
             </DialogTitle>
-            {onEdit && (
-              <Button onClick={() => onEdit(lead)} variant="outline" size="sm">
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
+            {isEditing ? (
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Salvar
+                </Button>
+                <Button
+                  onClick={handleCancelEdit}
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoading}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              onEdit && (
+                <Button onClick={handleEdit} variant="outline" size="sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </Button>
+              )
             )}
           </div>
         </DialogHeader>
@@ -101,26 +314,27 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Nome:</span>
-                    <span className="text-sm">{lead.nomeContato || 'Não informado'}</span>
+                    {renderEditableField('Nome', lead.nomeContato || '', 'nomeContato')}
                   </div>
                   <div className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Cargo:</span>
-                    <span className="text-sm">{lead.cargoContato || 'Não informado'}</span>
+                    {renderEditableField('Cargo', lead.cargoContato || '', 'cargoContato')}
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Email:</span>
-                    <span className="text-sm">{lead.email || 'Não informado'}</span>
+                    {renderEditableField('Email', lead.email || '', 'email', 'email')}
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Telefone:</span>
-                    <span className="text-sm">{lead.telefone || 'Não informado'}</span>
+                    {renderEditableField('Telefone', lead.telefone || '', 'telefone', 'tel')}
                   </div>
                 </div>
               </CardContent>
@@ -144,14 +358,21 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                   <div className="flex items-center gap-2">
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Website:</span>
-                    {lead.website ? (
+                    {isEditing ? (
+                      <Input
+                        value={editData.siteEmpresa || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, siteEmpresa: e.target.value }))}
+                        placeholder="https://exemplo.com"
+                        className="h-8"
+                      />
+                    ) : lead.siteEmpresa ? (
                       <a
-                        href={lead.website}
+                        href={lead.siteEmpresa}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                       >
-                        {lead.website}
+                        {lead.siteEmpresa}
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     ) : (
@@ -161,26 +382,55 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Localização:</span>
-                    <span className="text-sm">
-                      {lead.endereco?.cidade && lead.endereco?.estado
-                        ? `${lead.endereco.cidade}, ${lead.endereco.estado}`
-                        : 'Não informado'}
-                    </span>
+                    {isEditing ? (
+                      <div className="flex gap-1">
+                        <Input
+                          value={editData.endereco?.cidade || ''}
+                          onChange={(e) => setEditData(prev => ({
+                            ...prev,
+                            endereco: { ...prev.endereco, cidade: e.target.value }
+                          }))}
+                          placeholder="Cidade"
+                          className="h-6 w-20"
+                        />
+                        <Input
+                          value={editData.endereco?.estado || ''}
+                          onChange={(e) => setEditData(prev => ({
+                            ...prev,
+                            endereco: { ...prev.endereco, estado: e.target.value }
+                          }))}
+                          placeholder="Estado"
+                          className="h-6 w-16"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-sm">
+                        {lead.endereco?.cidade && lead.endereco?.estado
+                          ? `${lead.endereco.cidade}, ${lead.endereco.estado}`
+                          : 'Não informado'}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Tag className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Segmento:</span>
-                    <Badge variant="outline">{lead.segmento || 'Não definido'}</Badge>
+                    {isEditing ? (
+                      <Input
+                        value={editData.segmento || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, segmento: e.target.value }))}
+                        placeholder="Segmento"
+                        className="h-8"
+                      />
+                    ) : (
+                      <Badge variant="outline">{lead.segmento || 'Não definido'}</Badge>
+                    )}
                   </div>
                 </div>
 
-                {lead.descricaoEmpresa && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Descrição:</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {lead.descricaoEmpresa}
-                    </p>
-                  </div>
+                {renderEditableTextarea(
+                  'Descrição da Empresa',
+                  lead.descricaoEmpresa || '',
+                  'descricaoEmpresa'
                 )}
               </CardContent>
             </Card>
@@ -305,15 +555,17 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
             </Card>
 
             {/* Observações */}
-            {lead.observacoes && (
+            {(lead.observacoes || isEditing) && (
               <Card>
                 <CardHeader>
                   <CardTitle>Observações</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {lead.observacoes}
-                  </p>
+                  {renderEditableTextarea(
+                    'Observações',
+                    lead.observacoes || '',
+                    'observacoes'
+                  )}
                 </CardContent>
               </Card>
             )}

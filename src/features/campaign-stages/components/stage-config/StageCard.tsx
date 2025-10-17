@@ -19,7 +19,7 @@ export function StageCard({ stage, onEdit, onDelete }: Props) {
           {stage.isInicial ? 'Estágio inicial' : stage.isFinal ? 'Estágio final' : 'Estágio intermediário'}
         </div>
         {stage.cobraCreditos && (
-          <div className="text-xs">Cobra créditos: {formatCentavosToReais(stage.custocentavos)}</div>
+          <div className="text-xs">Cobra créditos: {formatCentavosToReais(stage.custoCentavos)}</div>
         )}
       </div>
       <div className="flex gap-2">

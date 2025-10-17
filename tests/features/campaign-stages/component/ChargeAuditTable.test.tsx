@@ -4,7 +4,7 @@ import { ChargeAuditTable } from '@/features/campaign-stages/components/billing/
 
 vi.mock('@/features/campaign-stages/hooks/useCharges', () => ({
   useCampaignCharges: vi.fn(() => ({ data: [
-    { id: 'ch1', campaignContactId: 'l1', stageId: 's1', stageName: 'Qualificação', custocentavos: 500, foiCobrado: true, createdAt: new Date().toISOString() }
+    { id: 'ch1', campaignContactId: 'l1', stageId: 's1', stageName: 'Qualificação', custoCentavos: 500, foiCobrado: true, createdAt: new Date().toISOString() }
   ], isLoading: false })),
 }))
 

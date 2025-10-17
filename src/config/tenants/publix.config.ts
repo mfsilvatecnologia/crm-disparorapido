@@ -48,12 +48,15 @@ export const publixConfig: TenantConfig = {
   },
 
   features: {
+    // Publix inicia apenas com Dashboard - todas features bloqueadas
+    enableBasicFeatures: true,
     enableCampaigns: true,
-    enablePipeline: false,        // Publix não tem pipeline
+    enablePipeline: false,
     enableScraping: true,
-    enableAnalytics: false,       // Publix não tem analytics completo
-    enableMarketplace: false,     // Publix não tem marketplace
-    enableBilling: true,
+    enableAnalytics: false,
+    enableMarketplace: false,
+    enableBilling: false,
+    enableWorkers: false,
   },
 
   settings: {

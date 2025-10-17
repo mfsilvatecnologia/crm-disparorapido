@@ -51,14 +51,14 @@ describe('campaign-stages service', () => {
     const now = new Date().toISOString()
     const created: CampaignLeadStage = {
       id: '2', empresaId: 'emp', nome: 'Qualificação', categoria: 'qualificacao', cor: '#10B981', ordem: 1,
-      isInicial: false, isFinal: false, cobraCreditos: true, custocentavos: 500, isAtivo: true, createdAt: now, updatedAt: now
+      isInicial: false, isFinal: false, cobraCreditos: true, custoCentavos: 500, isAtivo: true, createdAt: now, updatedAt: now
     }
     apiClient.request.mockResolvedValue({ success: true, data: created })
-    const res = await createCampaignStage({ nome: 'Qualificação', categoria: 'qualificacao', cor: '#10B981', cobraCreditos: true, custocentavos: 500 })
+    const res = await createCampaignStage({ nome: 'Qualificação', categoria: 'qualificacao', cor: '#10B981', cobraCreditos: true, custoCentavos: 500 })
     expect(res).toEqual(created)
     expect(apiClient.request).toHaveBeenCalledWith('/api/v1/campaign-lead-stages', {
       method: 'POST',
-      body: JSON.stringify({ nome: 'Qualificação', categoria: 'qualificacao', cor: '#10B981', cobraCreditos: true, custocentavos: 500 }),
+      body: JSON.stringify({ nome: 'Qualificação', categoria: 'qualificacao', cor: '#10B981', cobraCreditos: true, custoCentavos: 500 }),
     })
   })
 
@@ -80,14 +80,14 @@ describe('campaign-stages service', () => {
     const now = new Date().toISOString()
     const updated: CampaignLeadStage = {
       id: '2', empresaId: 'emp', nome: 'Qualificação+', categoria: 'qualificacao', cor: '#10B981', ordem: 1,
-      isInicial: false, isFinal: false, cobraCreditos: true, custocentavos: 700, isAtivo: true, createdAt: now, updatedAt: now
+      isInicial: false, isFinal: false, cobraCreditos: true, custoCentavos: 700, isAtivo: true, createdAt: now, updatedAt: now
     }
     apiClient.request.mockResolvedValue({ success: true, data: updated })
-    const res = await updateCampaignStage('2', { nome: 'Qualificação+', custocentavos: 700 })
+    const res = await updateCampaignStage('2', { nome: 'Qualificação+', custoCentavos: 700 })
     expect(res).toEqual(updated)
     expect(apiClient.request).toHaveBeenCalledWith('/api/v1/campaign-lead-stages/2', {
       method: 'PUT',
-      body: JSON.stringify({ nome: 'Qualificação+', custocentavos: 700 }),
+      body: JSON.stringify({ nome: 'Qualificação+', custoCentavos: 700 }),
     })
   })
 

@@ -12,7 +12,7 @@ import type {
   ImportResult
 } from '../types/leads'
 
-const LEADS_ENDPOINT = '/api/leads'
+const LEADS_ENDPOINT = '/api/v1/leads'
 
 // Lead CRUD Operations
 export async function fetchLeads(filters: LeadFilters = {}): Promise<LeadsResponse> {

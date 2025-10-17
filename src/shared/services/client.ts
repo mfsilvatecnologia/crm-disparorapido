@@ -944,10 +944,15 @@ class ApiClient {
   }
 
   async createScrapingJob(data: CreateScrapingJob): Promise<ScrapingJob> {
-    return this.request('/api/v1/scraping/jobs', {
+    const response = await this.request('/api/v1/scraping/jobs', {
       method: 'POST',
       body: JSON.stringify(data),
-    }, ScrapingJobSchema);
+    }, z.object({
+      success: z.boolean(),
+      data: ScrapingJobSchema,
+      message: z.string().optional()
+    }));
+    return response.data;
   }
 
   async createBulkScrapingJobs(jobs: CreateScrapingJob[]): Promise<ScrapingJob[]> {
@@ -1010,6 +1015,77 @@ class ApiClient {
 
   async getWorkerStats(workerName: string): Promise<WorkerStats> {
     return this.request(`/api/v1/workers/${workerName}/stats`, {}, WorkerStatsSchema);
+  }
+
+  // Lead Processing
+  async startLeadProcessing(data?: {
+    batchSize?: number;
+    maxConcurrency?: number;
+    filters?: Record<string, unknown>;
+  }): Promise<{ success: boolean; data: { jobId: string }; message: string }> {
+    return this.request('/api/v1/leads/processing/start', {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  async getLeadProcessingStatus(empresaId: string): Promise<{
+    success: boolean;
+    data: {
+      isRunning: boolean;
+      totalLeads: number;
+      processedLeads: number;
+      pendingLeads: number;
+      errorLeads: number;
+    };
+    message: string;
+  }> {
+    return this.request(`/api/v1/leads/processing/status/${empresaId}`);
+  }
+
+  async getLeadProcessingReport(empresaId: string, periodoEmDias: number = 30): Promise<{
+    success: boolean;
+    data: {
+      periodo: {
+        inicio: string;
+        fim: string;
+      };
+      estatisticas: {
+        totalProcessados: number;
+        sucessos: number;
+        erros: number;
+        tempoMedioProcessamento: number;
+      };
+    };
+    message: string;
+  }> {
+    return this.request(`/api/v1/leads/processing/report/${empresaId}?periodoEmDias=${periodoEmDias}`);
+  }
+
+  async getStuckLeads(empresaId: string, minutosMinimos: number = 30): Promise<{
+    success: boolean;
+    data: Array<{
+      id: string;
+      nome: string;
+      status: string;
+      tempoTravado: number;
+      ultimaAtualizacao: string;
+    }>;
+  }> {
+    return this.request(`/api/v1/leads/processing/stuck/${empresaId}?minutosMinimos=${minutosMinimos}`);
+  }
+
+  async resetStuckLeads(minutosMinimos: number): Promise<{
+    success: boolean;
+    data: {
+      leadsResetados: number;
+    };
+    message: string;
+  }> {
+    return this.request('/api/v1/leads/processing/reset-stuck', {
+      method: 'POST',
+      body: JSON.stringify({ minutosMinimos }),
+    });
   }
 
   // ========== Métodos auxiliares para compatibilidade ==========

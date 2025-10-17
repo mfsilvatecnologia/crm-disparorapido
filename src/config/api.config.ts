@@ -18,17 +18,19 @@ interface ApiConfig {
  */
 const API_CONFIGS: Record<TenantId, ApiConfig> = {
   vendas: {
-    baseURL: process.env.NODE_ENV === 'production' 
-      ? 'https://api.vendas.ia.br' 
-      : 'http://localhost:3000',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 
+             (process.env.NODE_ENV === 'production' 
+               ? 'https://api.vendas.ia.br' 
+               : 'http://localhost:3000'),
     timeout: 30000,
     retries: 3,
     retryDelay: 1000,
   },
   publix: {
-    baseURL: process.env.NODE_ENV === 'production' 
-      ? 'https://api.publix.ia.br' 
-      : 'http://localhost:3001', // Different port for publix in dev
+    baseURL: import.meta.env.VITE_API_BASE_URL || 
+             (process.env.NODE_ENV === 'production' 
+               ? 'https://api.publix.ia.br' 
+               : 'http://localhost:3001'), // Different port for publix in dev
     timeout: 30000,
     retries: 3,
     retryDelay: 1000,
@@ -98,15 +100,24 @@ export async function checkApiHealth(baseUrl: string): Promise<boolean> {
  * Auto-detect the best API endpoint
  */
 export async function detectApiEndpoint(tenantId: TenantId): Promise<string> {
+  // First priority: respect environment variable if set
+  const envApiUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envApiUrl) {
+    console.log(`[API] Using environment API URL: ${envApiUrl}`);
+    return envApiUrl;
+  }
+  
+  // Second priority: tenant-specific configuration
   const config = getApiConfig(tenantId);
   
-  // Try tenant-specific endpoint first
+  // Try tenant-specific endpoint
   const isHealthy = await checkApiHealth(config.baseURL);
   if (isHealthy) {
+    console.log(`[API] Using tenant API endpoint: ${config.baseURL}`);
     return config.baseURL;
   }
   
-  // Try fallback endpoints
+  // Try fallback endpoints only if environment URL is not set
   const fallbackUrls = [
     'http://localhost:3000',
     'http://localhost:3001',
@@ -115,13 +126,13 @@ export async function detectApiEndpoint(tenantId: TenantId): Promise<string> {
   
   for (const url of fallbackUrls) {
     if (await checkApiHealth(url)) {
-      console.log(`Using fallback API endpoint: ${url}`);
+      console.log(`[API] Using fallback API endpoint: ${url}`);
       return url;
     }
   }
   
   // If all fail, return the original config (mocks will handle this)
-  console.warn('No healthy API endpoint found, falling back to mocks');
+  console.warn('[API] No healthy API endpoint found, falling back to mocks');
   return config.baseURL;
 }
 

@@ -8,7 +8,7 @@ describe('StageCard', () => {
     const onDelete = vi.fn()
     const stage = {
       id: '1', nome: 'Novo', categoria: 'novo', cor: '#3B82F6', ordem: 0,
-      isInicial: true, isFinal: false, cobraCreditos: true, custocentavos: 500
+      isInicial: true, isFinal: false, cobraCreditos: true, custoCentavos: 500
     } as any
     render(<StageCard stage={stage} onEdit={onEdit} onDelete={onDelete} />)
     expect(screen.getByText('Novo')).toBeInTheDocument()

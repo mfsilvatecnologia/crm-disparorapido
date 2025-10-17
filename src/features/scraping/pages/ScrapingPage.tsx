@@ -55,13 +55,15 @@ import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useToast } from '@/shared/hooks/use-toast';
 import { apiClient } from '@/shared/services/client';
-import type { 
-  ScrapingJob, 
-  CreateScrapingJob, 
-  ScrapingTemplate, 
+import { useAuth } from '@/shared/contexts/AuthContext';
+import type {
+  ScrapingJob,
+  CreateScrapingJob,
+  ScrapingTemplate,
   ScrapingStats,
-  WorkerStatus 
+  WorkerStatus
 } from '@/shared/services/schemas';
+import LeadProcessingManager from '../components/LeadProcessingManager';
 
 // Componente para estatísticas do scraping
 function ScrapingStatsCards({ stats, workerStatus }: { 
@@ -384,9 +386,10 @@ export default function ScrapingPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isJobDialogOpen, setIsJobDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Queries
   const { data: workerStatus, refetch: refetchStatus } = useQuery({
@@ -571,6 +574,11 @@ export default function ScrapingPage() {
 
       {/* Estatísticas */}
       <ScrapingStatsCards stats={stats} workerStatus={workerStatus} />
+
+      {/* Gerenciamento de Processamento de Leads */}
+      {user?.empresa_id && (
+        <LeadProcessingManager empresaId={user.empresa_id} />
+      )}
 
       {/* Filtros */}
       <Card>

@@ -10,7 +10,7 @@ export interface StageCardData {
   icone?: string
   ordem: number
   cobraCreditos?: boolean
-  custocentavos?: number
+  custoCentavos?: number
   isInicial?: boolean
   isFinal?: boolean
 }
@@ -20,8 +20,13 @@ export interface LeadCardData {
   nome: string
   email?: string
   telefone?: string
+  empresa?: string
   currentStageId?: string
   createdAt?: string
+  addedAt?: string
+  stageChangedAt?: string
+  contatoId?: string
+  leadId?: string
 }
 
 export interface KanbanColumn {
@@ -38,7 +43,7 @@ export interface StageFormState {
   isInicial?: boolean
   isFinal?: boolean
   cobraCreditos?: boolean
-  custocentavos?: number
+  custoCentavos?: number
   descricaoCobranca?: string
 }
 

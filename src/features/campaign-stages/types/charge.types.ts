@@ -11,7 +11,7 @@ export interface CampaignStageCharge {
   campanhaId: string
   campaignContactId: string
   stageId: string
-  custocentavos: number
+  custoCentavos: number
   tipoCobranca: ChargeType
   creditoTransacaoId?: string
   motivo?: string

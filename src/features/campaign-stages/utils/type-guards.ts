@@ -10,7 +10,7 @@ export function isFinalStage(stage: CampaignLeadStage): boolean {
 }
 
 export function stageChargesCredits(stage: CampaignLeadStage): boolean {
-  return stage.cobraCreditos === true && (stage.custocentavos ?? 0) > 0
+  return stage.cobraCreditos === true && (stage.custoCentavos ?? 0) > 0
 }
 
 export function isApiError(response: any): response is { success: false; error: any } {
