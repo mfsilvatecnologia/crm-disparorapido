@@ -215,6 +215,72 @@ Para testar a feature:
 - [CopilotKit Documentation](https://docs.copilotkit.ai/)
 - [Mastra Documentation](https://mastra.ai/docs)
 - [Shared State Pattern Example](../../ag-ui/dojo/src/app/[integrationId]/feature/shared_state/)
+- **[Guia de Troubleshooting Completo](../../../COPILOTKIT_TROUBLESHOOTING.md)** ⚠️ IMPORTANTE
+
+## 🔧 Status da Implementação Atual
+
+### ✅ Implementado (Sessão Anterior)
+
+1. **Interface Compacta com Cards**
+   - Layout 60/40 (painel/chat)
+   - Cards sem abas, seções verticais
+   - Todos os campos da API integrados
+   - Google Maps data display
+
+2. **Integração CopilotKit**
+   - `<CopilotKit>` wrapper configurado
+   - `<CopilotChat>` no painel direito
+   - useCoAgent para estado compartilhado
+   - Autenticação com token
+
+3. **Correções de Bugs**
+   - Loop infinito no useEffect corrigido
+   - Schema validation ajustado
+   - CORS headers adicionados
+   - Token retrieval corrigido
+
+4. **Serviço API Refatorado**
+   - Usa `apiClient.request()` pattern
+   - Zod schemas para validação
+   - Logging detalhado
+   - Error handling robusto
+
+### ⚠️ Requer Configuração
+
+**Você está aqui**: O CopilotKit está integrado mas precisa de runtime configurado.
+
+**Problema**: Incompatibilidade GraphQL vs REST
+- Frontend envia GraphQL queries
+- Backend espera REST JSON
+- Erro: `"lead_id e message são obrigatórios"`
+
+**Solução**: Configure runtime CopilotKit (15 min - 3 horas dependendo da opção)
+
+**Leia**: [COPILOTKIT_TROUBLESHOOTING.md](../../../COPILOTKIT_TROUBLESHOOTING.md) para instruções completas.
+
+### 🎯 Próximos Passos
+
+1. **Execute o diagnóstico**:
+   ```bash
+   ./scripts/check-copilot-config.sh
+   ```
+
+2. **Escolha uma opção**:
+   - **Opção A (15 min)**: CopilotKit Cloud - Configure chaves API
+   - **Opção B (2-3h)**: Runtime Auto-Hospedado - Implemente GraphQL
+   - **Opção C (1h)**: Adaptador GraphQL-REST - Crie middleware
+
+3. **Configure `.env`**:
+   ```bash
+   VITE_COPILOT_RUNTIME_URL=https://api.copilotkit.ai/v1/runtime
+   VITE_COPILOT_PUBLIC_API_KEY=ck_pub_sua_chave
+   ```
+
+4. **Reinicie e teste**:
+   ```bash
+   npm run dev
+   # Abra: http://localhost:8080/lead-agent/:leadId
+   ```
 
 ## 🤝 Contribuindo
 

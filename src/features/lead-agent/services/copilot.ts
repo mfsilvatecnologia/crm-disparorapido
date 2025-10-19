@@ -59,11 +59,32 @@ const GetConversationResponseSchema = z.object({
   trace: z.any().optional(),
 });
 
-const GraphQLResponseSchema = z.object({
+// Schema GraphQL do Backend - baseado em copilotRuntime.schema.ts
+const AgentStateSchema = z.object({
+  id: z.string(),
+  empresaId: z.string(),
+  agentId: z.string(),
+  state: z.any(), // JSON scalar
+  metadata: z.any().optional(), // JSON scalar
+  createdAt: z.string(), // DateTime scalar (ISO 8601)
+  updatedAt: z.string(), // DateTime scalar (ISO 8601)
+});
+
+const ActionResultSchema = z.object({
   success: z.boolean(),
-  data: z.any(),
-  timestamp: z.string().optional(),
-  trace: z.any().optional(),
+  data: z.any().optional(), // JSON scalar
+  error: z.string().optional(),
+  executionTime: z.number().optional(),
+});
+
+const GraphQLResponseSchema = z.object({
+  data: z.any().optional(),
+  errors: z.array(z.object({
+    message: z.string(),
+    locations: z.array(z.any()).optional(),
+    path: z.array(z.any()).optional(),
+    extensions: z.any().optional(),
+  })).optional(),
 });
 
 // ============================================
@@ -76,6 +97,8 @@ export type CopilotConversationData = z.infer<typeof CopilotConversationDataSche
 export type SendMessageResponse = z.infer<typeof SendMessageResponseSchema>;
 export type GetConversationResponse = z.infer<typeof GetConversationResponseSchema>;
 export type GraphQLResponse = z.infer<typeof GraphQLResponseSchema>;
+export type AgentState = z.infer<typeof AgentStateSchema>;
+export type ActionResult = z.infer<typeof ActionResultSchema>;
 
 export interface SendCopilotMessageParams {
   lead_id: string;
@@ -93,44 +116,61 @@ export interface GraphQLQueryParams {
 // API FUNCTIONS
 // ============================================
 
-const COPILOT_ENDPOINT = '/api/v1/copilot';
+const COPILOT_ENDPOINT = '/copilot';
+const GRAPHQL_ENDPOINT = '/copilot/graphql';
 
 /**
  * Execute a GraphQL query/mutation on the CopilotKit agent
+ *
+ * Backend GraphQL Schema (Apollo Server):
+ * - Query: loadAgentState(agentId: String!): AgentState
+ * - Mutation: saveAgentState(agentId: String!, state: JSON!, metadata: JSON): AgentState!
+ * - Mutation: executeAction(actionName: String!, params: JSON): ActionResult!
+ *
  * @param params - GraphQL query parameters (query, variables, operationName)
  * @returns Promise with the GraphQL response
  */
 export async function executeCopilotGraphQL(params: GraphQLQueryParams): Promise<GraphQLResponse> {
-  const { query, variables, operationName } = params;
-
-  console.log('🔍 [COPILOT] Executing GraphQL:', {
-    operationName,
-    hasVariables: !!variables,
+  console.log('🔍 [COPILOT GraphQL] Executing query:', {
+    operationName: params.operationName,
+    hasVariables: !!params.variables,
     timestamp: new Date().toISOString(),
   });
 
   try {
     const response = await apiClient.request<GraphQLResponse>(
-      `${COPILOT_ENDPOINT}/graphql`,
+      GRAPHQL_ENDPOINT,
       {
         method: 'POST',
-        body: JSON.stringify({ query, variables, operationName }),
+        body: JSON.stringify({
+          query: params.query,
+          variables: params.variables,
+          operationName: params.operationName,
+        }),
       },
       GraphQLResponseSchema
     );
 
-    console.log('✅ [COPILOT] GraphQL executed successfully:', {
-      success: response.success,
-      operationName,
+    if (response.errors && response.errors.length > 0) {
+      console.error('❌ [COPILOT GraphQL] Query returned errors:', {
+        errors: response.errors,
+        timestamp: new Date().toISOString(),
+      });
+      throw new Error(`GraphQL errors: ${response.errors.map(e => e.message).join(', ')}`);
+    }
+
+    console.log('✅ [COPILOT GraphQL] Query executed successfully:', {
+      operationName: params.operationName,
+      hasData: !!response.data,
       timestamp: new Date().toISOString(),
     });
 
     return response;
   } catch (error) {
-    console.error('❌ [COPILOT] Error executing GraphQL:', {
+    console.error('❌ [COPILOT GraphQL] Error executing query:', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
-      operationName,
+      operationName: params.operationName,
       timestamp: new Date().toISOString(),
     });
     throw error;
@@ -228,65 +268,191 @@ export async function getCopilotConversation(thread_id: string): Promise<GetConv
 
 /**
  * Load agent state from backend (GraphQL query)
- * @param agentName - Name of the agent
- * @returns Promise with the agent state
+ *
+ * Backend Schema:
+ * query {
+ *   loadAgentState(agentId: String!): AgentState
+ * }
+ *
+ * @param agentId - Unique identifier for the agent
+ * @returns Promise with the agent state or null if not found
  */
-export async function loadAgentState(agentName: string): Promise<any> {
+export async function loadAgentState(agentId: string): Promise<AgentState | null> {
+  console.log('🔍 [COPILOT] Loading agent state:', { agentId });
+
   const query = `
-    query LoadAgentState($agentName: String!) {
-      loadAgentState(agentName: $agentName)
+    query LoadAgentState($agentId: String!) {
+      loadAgentState(agentId: $agentId) {
+        id
+        empresaId
+        agentId
+        state
+        metadata
+        createdAt
+        updatedAt
+      }
     }
   `;
 
-  const response = await executeCopilotGraphQL({
-    query,
-    variables: { agentName },
-    operationName: 'LoadAgentState',
-  });
+  try {
+    const response = await executeCopilotGraphQL({
+      query,
+      variables: { agentId },
+      operationName: 'LoadAgentState',
+    });
 
-  return response.data;
+    const agentState = response.data?.loadAgentState;
+    
+    if (!agentState) {
+      console.log('ℹ️ [COPILOT] No agent state found for:', { agentId });
+      return null;
+    }
+
+    const validated = AgentStateSchema.parse(agentState);
+    console.log('✅ [COPILOT] Agent state loaded successfully:', {
+      agentId: validated.agentId,
+      hasState: !!validated.state,
+      hasMetadata: !!validated.metadata,
+    });
+
+    return validated;
+  } catch (error) {
+    console.error('❌ [COPILOT] Error loading agent state:', {
+      error: error instanceof Error ? error.message : error,
+      agentId,
+    });
+    throw error;
+  }
 }
 
 /**
  * Save agent state to backend (GraphQL mutation)
- * @param agentName - Name of the agent
- * @param state - State object to save
- * @returns Promise with the saved state
+ *
+ * Backend Schema:
+ * mutation {
+ *   saveAgentState(agentId: String!, state: JSON!, metadata: JSON): AgentState!
+ * }
+ *
+ * Uses UPSERT logic based on (empresa_id, agent_id)
+ *
+ * @param agentId - Unique identifier for the agent
+ * @param state - State object to save (any JSON-serializable data)
+ * @param metadata - Optional metadata (any JSON-serializable data)
+ * @returns Promise with the saved agent state
  */
-export async function saveAgentState(agentName: string, state: any): Promise<any> {
+export async function saveAgentState(
+  agentId: string,
+  state: any,
+  metadata?: any
+): Promise<AgentState> {
+  console.log('🔍 [COPILOT] Saving agent state:', {
+    agentId,
+    hasState: !!state,
+    hasMetadata: !!metadata,
+  });
+
   const mutation = `
-    mutation SaveAgentState($agentName: String!, $state: JSON!) {
-      saveAgentState(agentName: $agentName, state: $state)
+    mutation SaveAgentState($agentId: String!, $state: JSON!, $metadata: JSON) {
+      saveAgentState(agentId: $agentId, state: $state, metadata: $metadata) {
+        id
+        empresaId
+        agentId
+        state
+        metadata
+        createdAt
+        updatedAt
+      }
     }
   `;
 
-  const response = await executeCopilotGraphQL({
-    query: mutation,
-    variables: { agentName, state },
-    operationName: 'SaveAgentState',
-  });
+  try {
+    const response = await executeCopilotGraphQL({
+      query: mutation,
+      variables: { agentId, state, metadata },
+      operationName: 'SaveAgentState',
+    });
 
-  return response.data;
+    const savedState = response.data?.saveAgentState;
+    
+    if (!savedState) {
+      throw new Error('No data returned from saveAgentState mutation');
+    }
+
+    const validated = AgentStateSchema.parse(savedState);
+    console.log('✅ [COPILOT] Agent state saved successfully:', {
+      agentId: validated.agentId,
+      stateId: validated.id,
+    });
+
+    return validated;
+  } catch (error) {
+    console.error('❌ [COPILOT] Error saving agent state:', {
+      error: error instanceof Error ? error.message : error,
+      agentId,
+    });
+    throw error;
+  }
 }
 
 /**
  * Execute an action via GraphQL mutation
+ *
+ * Backend Schema:
+ * mutation {
+ *   executeAction(actionName: String!, params: JSON): ActionResult!
+ * }
+ *
  * @param actionName - Name of the action to execute
- * @param args - Arguments for the action
+ * @param params - Optional parameters for the action (any JSON-serializable data)
  * @returns Promise with the action result
  */
-export async function executeAction(actionName: string, args: any): Promise<any> {
+export async function executeAction(
+  actionName: string,
+  params?: any
+): Promise<ActionResult> {
+  console.log('🔍 [COPILOT] Executing action:', {
+    actionName,
+    hasParams: !!params,
+  });
+
   const mutation = `
-    mutation ExecuteAction($actionName: String!, $args: JSON!) {
-      executeAction(actionName: $actionName, args: $args)
+    mutation ExecuteAction($actionName: String!, $params: JSON) {
+      executeAction(actionName: $actionName, params: $params) {
+        success
+        data
+        error
+        executionTime
+      }
     }
   `;
 
-  const response = await executeCopilotGraphQL({
-    query: mutation,
-    variables: { actionName, args },
-    operationName: 'ExecuteAction',
-  });
+  try {
+    const response = await executeCopilotGraphQL({
+      query: mutation,
+      variables: { actionName, params },
+      operationName: 'ExecuteAction',
+    });
 
-  return response.data;
+    const result = response.data?.executeAction;
+    
+    if (!result) {
+      throw new Error('No data returned from executeAction mutation');
+    }
+
+    const validated = ActionResultSchema.parse(result);
+    console.log('✅ [COPILOT] Action executed:', {
+      actionName,
+      success: validated.success,
+      executionTime: validated.executionTime,
+      hasError: !!validated.error,
+    });
+
+    return validated;
+  } catch (error) {
+    console.error('❌ [COPILOT] Error executing action:', {
+      error: error instanceof Error ? error.message : error,
+      actionName,
+    });
+    throw error;
+  }
 }
