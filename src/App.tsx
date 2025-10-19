@@ -13,6 +13,7 @@ import { LoginPage, RegisterPage, ResetPasswordPage, NewPasswordPage, UserProfil
 import SessionManagementPage from "./features/authentication/pages/SessionManagementPage";
 import { Dashboard } from "./features/dashboard";
 import { LeadsPage } from "./features/leads";
+import { LeadAgentPage } from "./features/lead-agent";
 import { AdminPage } from "./features/admin";
 import { SearchTermsPage, ScrapingPage, WorkerMonitorPage } from "./features/scraping";
 import { UsersPage } from "./features/user-management";
@@ -92,6 +93,8 @@ function AppRoutes() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="leads" element={<LeadsPage />} />
+          <Route path="leads/:id/edit" element={<LeadAgentPage />} />
+          <Route path="lead-agent" element={<LeadAgentPage />} />
           <Route path="workers" element={<WorkerMonitorPage />} />
           <Route path="search-terms" element={<SearchTermsPage />} />
           <Route path="scraping" element={<ScrapingPage />} />

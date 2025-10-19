@@ -21,7 +21,7 @@ export function CreditsBadge() {
     return null;
   }
 
-  const displayBalance = balance.saldoAtual / 100;
+  const displayBalance = balance.saldoCreditosCentavos / 100;
 
   return (
     <Button

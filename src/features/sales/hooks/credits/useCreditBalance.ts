@@ -34,7 +34,7 @@ export function useCreditBalance() {
 
   // Compute derived values
   const balance = query.data;
-  const currentBalance = balance?.balance ?? 0;
+  const currentBalance = balance?.saldoCreditosCentavos ?? 0;
   const estimatedLeads = balance ? estimateLeadsPurchasable(balance) : 0;
   const hasCredits = currentBalance > 0;
 

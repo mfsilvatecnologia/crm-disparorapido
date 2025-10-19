@@ -54,6 +54,7 @@ export const vendasConfig: TenantConfig = {
     enableAnalytics: true,
     enableMarketplace: true,
     enableBilling: true,
+    enableWorkers: true
   },
 
   settings: {

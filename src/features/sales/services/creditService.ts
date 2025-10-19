@@ -82,7 +82,7 @@ export function calculateTotalBonus(transactions: CreditTransaction[]): number {
  * Check if has sufficient balance
  */
 export function hasSufficientBalance(balance: CreditBalance, cost: number): boolean {
-  return balance.balance >= cost;
+  return balance.saldoCreditosCentavos >= cost;
 }
 
 /**
@@ -92,7 +92,7 @@ export function hasSufficientBalance(balance: CreditBalance, cost: number): bool
  * @returns Estimated number of leads that can be purchased
  */
 export function estimateLeadsPurchasable(balance: CreditBalance, avgCostPerLead = 100): number {
-  return Math.floor(balance.balance / avgCostPerLead);
+  return Math.floor(balance.saldoCreditosCentavos / avgCostPerLead);
 }
 
 /**

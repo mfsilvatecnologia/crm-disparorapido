@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Filter,
@@ -28,7 +29,8 @@ import {
   ArrowUpDown,
   Users,
   TrendingUp,
-  Clock
+  Clock,
+  Edit
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -65,7 +67,6 @@ import { useAuth } from '@/shared/contexts/AuthContext';
 import { formatCurrency } from '@/shared/utils/utils';
 import { AdvancedPagination } from '@/shared/components/common/AdvancedPagination';
 import { LeadDetailsDialog } from '../components/LeadDetailsDialog';
-import { LeadEditDialog } from '../components/LeadEditDialog';
 import type { Lead } from '@/shared/services/schemas';
 
 type ViewMode = 'table' | 'cards' | 'kanban';
@@ -75,6 +76,7 @@ type FilterStatus = 'all' | 'novo' | 'qualificado' | 'contatado' | 'convertido' 
 type LeadData = Lead;
 
 export default function LeadsPage() {
+  const navigate = useNavigate();
   const { currentOrganization } = useOrganization();
   const { isAuthenticated } = useAuth();
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
@@ -89,7 +91,6 @@ export default function LeadsPage() {
 
   // Estados para dialogs
   const [showLeadDetails, setShowLeadDetails] = useState(false);
-  const [showEditLead, setShowEditLead] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
@@ -298,13 +299,11 @@ export default function LeadsPage() {
   };
 
   const handleEditLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setShowEditLead(true);
+    navigate(`${lead.id}/edit`);
   };
 
   const handleCloseDialogs = () => {
     setShowLeadDetails(false);
-    setShowEditLead(false);
     setSelectedLead(null);
   };
 
@@ -983,9 +982,13 @@ export default function LeadsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
                             <Eye className="mr-2 h-4 w-4" />
                             Ver Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Zap className="mr-2 h-4 w-4" />
@@ -1238,17 +1241,6 @@ export default function LeadsPage() {
         open={showLeadDetails}
         onClose={handleCloseDialogs}
         onEdit={handleEditLead}
-      />
-
-      <LeadEditDialog
-        lead={selectedLead}
-        open={showEditLead}
-        onClose={handleCloseDialogs}
-        onSave={(updatedLead) => {
-          // TODO: Implement lead update API call
-          console.log('Lead updated:', updatedLead);
-          handleCloseDialogs();
-        }}
       />
     </div>
   );

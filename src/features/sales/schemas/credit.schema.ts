@@ -60,8 +60,23 @@ export const creditTransactionListResponseSchema = z.object({
  * Credit Balance Schema
  */
 export const creditBalanceSchema = z.object({
-  balance: z.number().int().nonnegative(),
-  lastUpdated: z.string().datetime(),
+  empresaId: z.string(),
+  empresaNome: z.string(),
+  saldoCreditosCentavos: z.number(),
+  saldoFormatado: z.string(),
+  estatisticas: z.object({
+    totalComprado: z.number(),
+    totalGasto: z.number(),
+    totalBonusRecebido: z.number(),
+  }),
+});
+
+export const creditBalanceResponseSchema = z.object({
+  success: z.boolean(),
+  data: creditBalanceSchema,
+  message: z.string(),
+  timestamp: z.string(),
+  trace: z.any().optional(),
 });
 
 /**

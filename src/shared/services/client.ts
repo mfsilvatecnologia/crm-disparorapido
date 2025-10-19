@@ -552,13 +552,13 @@ class ApiClient {
         const validatedData = LeadsResponseSchema.parse(response);
         
         return {
-          items: validatedData.data.items || [],
-          total: validatedData.data.total || 0,
-          page: validatedData.data.page || 1,
-          limit: validatedData.data.limit || 20,
-          totalPages: validatedData.data.totalPages || 1,
-          hasNext: validatedData.data.hasNext || false,
-          hasPrev: validatedData.data.hasPrev || false,
+          items: validatedData.data || [],
+          total: validatedData.pagination.total || 0,
+          page: validatedData.pagination.page || 1,
+          limit: validatedData.pagination.limit || 20,
+          totalPages: validatedData.pagination.totalPages || 1,
+          hasNext: validatedData.pagination.hasNext || false,
+          hasPrev: validatedData.pagination.hasPrev || false,
         };
       } catch (schemaError) {
         console.error('❌ Schema validation failed:', {
@@ -568,18 +568,18 @@ class ApiClient {
         });
         
         // Tentar criar uma resposta válida mesmo com erro de schema
-        if (response && typeof response === 'object' && 'data' in response) {
+        if (response && typeof response === 'object' && 'data' in response && 'pagination' in response) {
+          const res = response as any;
           const fallbackResponse: PaginatedResponse<Lead> = {
-            items: Array.isArray(response.data?.items) ? response.data.items : [],
-            total: response.data?.total || 0,
-            page: response.data?.page || 1,
-            limit: response.data?.limit || 20,
-            totalPages: response.data?.totalPages || 1,
-            hasNext: response.data?.hasNext || false,
-            hasPrev: response.data?.hasPrev || false,
+            items: Array.isArray(res.data) ? res.data : [],
+            total: res.pagination?.total || 0,
+            page: res.pagination?.page || 1,
+            limit: res.pagination?.limit || 20,
+            totalPages: res.pagination?.totalPages || 1,
+            hasNext: res.pagination?.hasNext || false,
+            hasPrev: res.pagination?.hasPrev || false,
           };
           
-
           return fallbackResponse;
         }
         
@@ -607,7 +607,17 @@ class ApiClient {
   }
 
   async getLead(id: string): Promise<Lead> {
-    return this.request(`/api/v1/leads/${id}`, {}, LeadSchema);
+    const response = await this.request<{ success: boolean; data: Lead }>(
+      `/api/v1/leads/${id}`,
+      {},
+      z.object({
+        success: z.boolean(),
+        data: LeadSchema,
+        timestamp: z.string().optional(),
+        trace: z.any().optional(),
+      })
+    );
+    return response.data;
   }
 
   async createLead(data: CreateLeadDTO): Promise<Lead> {

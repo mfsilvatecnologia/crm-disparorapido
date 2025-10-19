@@ -14,6 +14,7 @@ import {
   creditBalanceSchema,
   creditTransactionListResponseSchema,
   creditPackageSchema,
+  creditBalanceResponseSchema,
 } from '../schemas';
 
 /**
@@ -21,7 +22,8 @@ import {
  */
 export async function fetchCreditBalance(): Promise<CreditBalance> {
   const response = await apiClient.get<unknown>('/api/v1/credits/balance');
-  return creditBalanceSchema.parse(response) as CreditBalance;
+  const parsed = creditBalanceResponseSchema.parse(response);
+  return parsed.data;
 }
 
 // Alias for backward compatibility

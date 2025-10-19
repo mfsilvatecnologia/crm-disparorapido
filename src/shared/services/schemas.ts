@@ -538,15 +538,23 @@ export const LeadAccessSchema = z.object({
 // Schema específico para a resposta de leads
 export const LeadsResponseSchema = z.object({
   success: z.boolean(),
-  data: z.object({
-    items: z.array(LeadSchema),
-    total: z.number(),
+  data: z.array(LeadSchema),
+  pagination: z.object({
     page: z.number(),
     limit: z.number(),
+    total: z.number(),
     totalPages: z.number(),
     hasNext: z.boolean(),
     hasPrev: z.boolean(),
-  })
+    firstPage: z.number().optional(),
+    lastPage: z.number().optional(),
+  }),
+  timestamp: z.string().optional(),
+  trace: z.object({
+    trace_id: z.string(),
+    span_id: z.string(),
+    requestId: z.string(),
+  }).optional(),
 });
 
 export type LeadsResponse = z.infer<typeof LeadsResponseSchema>;

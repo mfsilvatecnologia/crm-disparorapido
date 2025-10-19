@@ -68,8 +68,15 @@ export interface CreditTransactionListResponse {
  * Current credit balance for the user/company
  */
 export interface CreditBalance {
-  balance: number;                   // Current credit balance
-  lastUpdated: string;               // ISO 8601 datetime of last update
+  empresaId: string;
+  empresaNome: string;
+  saldoCreditosCentavos: number;
+  saldoFormatado: string;
+  estatisticas: {
+    totalComprado: number;
+    totalGasto: number;
+    totalBonusRecebido: number;
+  };
 }
 
 /**
