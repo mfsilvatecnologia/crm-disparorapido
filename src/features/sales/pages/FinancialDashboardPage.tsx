@@ -27,19 +27,14 @@ export function FinancialDashboardPage() {
   const [endDate, setEndDate] = useState<Date>(new Date());
 
   // Fetch data
-  const financialParams = {
-    startDate: toISODate(startDate),
-    endDate: toISODate(endDate),
-  };
-
-  const { data: recentPayments } = usePayments({ 
-    page: 1, 
-    limit: 5 
+  const { data: recentPayments } = usePayments({
+    limit: 5,
+    offset: 0
   });
 
-  const { data: recentTransactions } = useCreditTransactions({ 
-    page: 1, 
-    limit: 5 
+  const { data: recentTransactions } = useCreditTransactions({
+    limit: 5,
+    offset: 0
   });
 
   const handlePeriodChange = (newStartDate: Date, newEndDate: Date) => {
@@ -72,7 +67,7 @@ export function FinancialDashboardPage() {
       </Card>
 
       {/* Financial Summary */}
-      <FinancialSummaryCard params={financialParams} />
+      <FinancialSummaryCard params={{ period: 'last30days' }} />
 
       {/* Recent Activity */}
       <div className="grid gap-6 md:grid-cols-2">
@@ -91,14 +86,14 @@ export function FinancialDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentPayments?.payments.slice(0, 5).map((payment) => (
+              {recentPayments?.data?.slice(0, 5).map((payment) => (
                 <PaymentCard
                   key={payment.id}
                   payment={payment}
                   onClick={() => navigate(`/payments/${payment.id}`)}
                 />
               ))}
-              {(!recentPayments?.payments || recentPayments.payments.length === 0) && (
+              {(!recentPayments?.data || recentPayments.data.length === 0) && (
                 <p className="text-center text-muted-foreground py-8">
                   Nenhum pagamento recente
                 </p>
@@ -122,9 +117,9 @@ export function FinancialDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {recentTransactions?.transactions.slice(0, 5).map((transaction) => (
-                <div 
-                  key={transaction.id} 
+              {recentTransactions?.slice(0, 5).map((transaction) => (
+                <div
+                  key={transaction.id}
                   className="flex items-center justify-between py-2 border-b last:border-0"
                 >
                   <div className="space-y-1">
@@ -134,13 +129,13 @@ export function FinancialDashboardPage() {
                     </p>
                   </div>
                   <span className={`text-sm font-semibold ${
-                    transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                    transaction.quantity > 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                    {transaction.quantity > 0 ? '+' : ''}{transaction.quantity}
                   </span>
                 </div>
               ))}
-              {(!recentTransactions?.transactions || recentTransactions.transactions.length === 0) && (
+              {(!recentTransactions || recentTransactions.length === 0) && (
                 <p className="text-center text-muted-foreground py-8">
                   Nenhuma transação recente
                 </p>
