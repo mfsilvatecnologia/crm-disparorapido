@@ -1,63 +1,57 @@
 /**
  * Credit Validation Schemas
- * Zod schemas for credit transaction validation
+ * Zod schemas for runtime validation of credit transactions
  */
 
 import { z } from 'zod';
-import { paginationMetaSchema } from './payment.schema';
 
 /**
- * Credit Transaction Type Enum Schema
+ * Credit Transaction Type Enum Schema (Backend API)
  */
 export const creditTransactionTypeSchema = z.enum([
-  'earned',
-  'spent',
+  'compra',
+  'uso',
+  'reembolso',
   'bonus',
-  'refund',
 ]);
 
 /**
- * Related Entity Type Enum Schema
- */
-export const relatedEntityTypeSchema = z.enum([
-  'payment',
-  'subscription',
-  'campaign',
-]);
-
-/**
- * Credit Transaction Entity Schema
+ * Credit Transaction Entity Schema (Backend API)
  */
 export const creditTransactionSchema = z.object({
   id: z.string().min(1),
-  amount: z.number().int(), // Can be negative for spent credits
+  empresaId: z.string(),
   type: creditTransactionTypeSchema,
-  description: z.string().min(1),
+  quantity: z.number(),
+  previousBalance: z.number(),
+  newBalance: z.number(),
+  amountPaid: z.number().nullable(),
+  paymentId: z.string().nullable(),
+  lead: z.object({
+    id: z.string(),
+    name: z.string(),
+  }).nullable(),
+  description: z.string(),
   createdAt: z.string().datetime(),
-  relatedEntityType: relatedEntityTypeSchema.optional(),
-  relatedEntityId: z.string().optional(),
-  balanceAfter: z.number().int().nonnegative(),
 });
 
 /**
- * Credit Transaction List Parameters Schema
+ * Credit Transaction List Parameters Schema (Backend API)
  */
 export const creditTransactionListParamsSchema = z.object({
-  page: z.number().int().positive().optional(),
   limit: z.number().int().positive().max(100).optional(),
+  offset: z.number().int().nonnegative().optional(),
   type: creditTransactionTypeSchema.optional(),
 });
 
 /**
- * Credit Transaction List Response Schema
+ * Credit Transaction List Response Schema (Backend API)
  */
-export const creditTransactionListResponseSchema = z.object({
-  transactions: z.array(creditTransactionSchema),
-  pagination: paginationMetaSchema,
-});
+export const creditTransactionListResponseSchema = z.array(creditTransactionSchema);
 
 /**
  * Credit Balance Schema
+ * For /api/v1/credits/balance endpoint
  */
 export const creditBalanceSchema = z.object({
   empresaId: z.string(),
@@ -71,38 +65,34 @@ export const creditBalanceSchema = z.object({
   }),
 });
 
+/**
+ * Credit Balance Response Schema
+ * Wrapper for credit balance response
+ */
 export const creditBalanceResponseSchema = z.object({
-  success: z.boolean(),
   data: creditBalanceSchema,
-  message: z.string(),
-  timestamp: z.string(),
-  trace: z.any().optional(),
 });
 
 /**
  * Credit Package Schema
+ * For /api/v1/credits/packages endpoint
  */
 export const creditPackageSchema = z.object({
-  id: z.string().min(1),
-  nome: z.string().min(1),
-  descricao: z.string().optional().nullable(),
-  preco_centavos: z.number().int().positive(),
-  precoFormatado: z.string().min(1),
-  quantidade_creditos: z.number().int().positive(),
-  bonus_creditos: z.number().int().min(0),
-  leadsInclusos: z.number().int().optional(),
-  bonusLeads: z.number().int().optional().nullable(),
+  id: z.string(),
+  nome: z.string(),
+  descricao: z.string().nullable().optional(),
+  preco_centavos: z.number(),
+  precoFormatado: z.string(),
+  quantidade_creditos: z.number(),
+  bonus_creditos: z.number(),
+  leadsInclusos: z.number().optional(),
+  bonusLeads: z.number().nullable().optional(),
   custoPorLead: z.string().optional(),
   ativo: z.boolean(),
   destaque: z.boolean(),
-  economia: z.string().optional().nullable(),
-  // Preserve optional metadata returned by API
-  metadata: z
-    .object({
-      creditos_total: z.number().int().optional(),
-      custo_por_credito: z.number().optional(),
-      // Accept and ignore extra metadata fields while preserving known ones
-    })
-    .partial()
-    .optional(),
+  economia: z.string().nullable().optional(),
+  metadata: z.object({
+    creditos_total: z.number().optional(),
+    custo_por_credito: z.number().optional(),
+  }).optional(),
 });

@@ -6,67 +6,63 @@
 import { z } from 'zod';
 
 /**
- * Payment Status Enum Schema
+ * Payment Status Enum Schema (Backend API)
  */
 export const paymentStatusSchema = z.enum([
-  'pending',
-  'completed',
-  'failed',
-  'cancelled',
-  'refunded',
+  'PENDING',
+  'RECEIVED',
+  'CONFIRMED',
+  'OVERDUE',
+  'REFUNDED',
+  'CANCELLED',
 ]);
 
 /**
- * Payment Method Enum Schema
+ * Billing Type Enum Schema (Backend API)
  */
-export const paymentMethodSchema = z.enum([
-  'credit_card',
-  'pix',
-  'boleto',
+export const billingTypeSchema = z.enum([
+  'BOLETO',
+  'CREDIT_CARD',
+  'PIX',
+  'UNDEFINED',
 ]);
 
 /**
- * Payment Entity Schema
+ * Payment Entity Schema (Backend API)
  */
 export const paymentSchema = z.object({
   id: z.string().min(1),
-  amount: z.number().int().positive(),
+  empresaId: z.string().nullable(),
+  value: z.number(),
+  netValue: z.number(),
+  description: z.string(),
+  billingType: billingTypeSchema,
   status: paymentStatusSchema,
-  method: paymentMethodSchema,
+  dueDate: z.string(),
+  paymentDate: z.string().nullable(),
+  invoiceUrl: z.string().url(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  description: z.string().min(1),
-  subscriptionId: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
 });
 
 /**
- * Payment List Parameters Schema
+ * Payment List Parameters Schema (Backend API)
  */
 export const paymentListParamsSchema = z.object({
-  page: z.number().int().positive().optional(),
   limit: z.number().int().positive().max(100).optional(),
+  offset: z.number().int().nonnegative().optional(),
   status: paymentStatusSchema.optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 /**
- * Pagination Metadata Schema
- */
-export const paginationMetaSchema = z.object({
-  currentPage: z.number().int().positive(),
-  totalPages: z.number().int().nonnegative(),
-  totalItems: z.number().int().nonnegative(),
-  itemsPerPage: z.number().int().positive(),
-});
-
-/**
- * Payment List Response Schema
+ * Payment List Response Schema (Backend API)
  */
 export const paymentListResponseSchema = z.object({
-  payments: z.array(paymentSchema),
-  pagination: paginationMetaSchema,
+  totalCount: z.number().int().nonnegative(),
+  limit: z.number().int().positive(),
+  offset: z.number().int().nonnegative(),
+  data: z.array(paymentSchema),
 });
 
 /**
@@ -86,9 +82,44 @@ export const paymentActionResponseSchema = z.object({
 });
 
 /**
- * Payment Details Response Schema
+ * Payment Details Response Schema (Backend API)
  */
-export const paymentDetailsResponseSchema = paymentSchema.extend({
-  transactionId: z.string().optional(),
-  receiptUrl: z.string().url().optional(),
+export const paymentDetailsResponseSchema = paymentSchema;
+
+/**
+ * Summary Item Schema
+ */
+export const summaryItemSchema = z.object({
+  count: z.number().int().nonnegative(),
+  amount: z.number(),
+});
+
+/**
+ * Financial Summary Schema (Backend API)
+ */
+export const financialSummarySchema = z.object({
+  totalAmountSpent: z.number(),
+  payments: z.object({
+    totalCount: z.number().int().nonnegative(),
+    pending: summaryItemSchema,
+    received: summaryItemSchema,
+    overdue: summaryItemSchema,
+  }),
+  credits: z.object({
+    currentBalance: z.number(),
+    totalPurchased: z.number(),
+    totalUsed: z.number(),
+    amountSpentOnCredits: z.number(),
+  }),
+  period: z.object({
+    startDate: z.string(),
+    endDate: z.string(),
+  }),
+});
+
+/**
+ * Financial Summary Parameters Schema
+ */
+export const financialSummaryParamsSchema = z.object({
+  period: z.enum(['last30days', 'last90days', 'currentMonth', 'allTime']).optional(),
 });

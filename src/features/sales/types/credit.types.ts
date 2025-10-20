@@ -6,17 +6,14 @@
 import { PaginationMeta } from './payment.types';
 
 /**
- * Credit Transaction Type
- * - earned: Credits earned (e.g., from campaign completion)
- * - spent: Credits spent (e.g., for lead enrichment)
- * - bonus: Bonus credits (e.g., promotional credits)
- * - refund: Credits refunded (e.g., from cancelled payment)
+ * Credit Transaction Type (Backend API)
+ * Matches backend enum: compra, uso, reembolso, bonus
  */
 export type CreditTransactionType =
-  | 'earned'
-  | 'spent'
-  | 'bonus'
-  | 'refund';
+  | 'compra'
+  | 'uso'
+  | 'reembolso'
+  | 'bonus';
 
 /**
  * Related Entity Type
@@ -30,38 +27,41 @@ export type RelatedEntityType =
   | 'campaign';
 
 /**
- * Credit Transaction Entity
- * Represents a single credit transaction
+ * Credit Transaction Entity (Backend API)
+ * Represents a single credit transaction from backend
  */
 export interface CreditTransaction {
   id: string;
-  amount: number;                    // Credit amount (positive for earned, negative for spent)
+  empresaId: string;
   type: CreditTransactionType;
-  description: string;               // Human-readable description
+  quantity: number;                  // Credit quantity
+  previousBalance: number;           // Balance before transaction
+  newBalance: number;                // Balance after transaction
+  amountPaid: number | null;         // Amount paid (for purchases)
+  paymentId: string | null;          // Related payment ID
+  lead: {                            // Related lead (for usage)
+    id: string;
+    name: string;
+  } | null;
+  description: string;
   createdAt: string;                 // ISO 8601 datetime
-  relatedEntityType?: RelatedEntityType; // Type of related entity
-  relatedEntityId?: string;          // ID of related entity
-  balanceAfter: number;              // Credit balance after this transaction
 }
 
 /**
- * Credit Transaction List Query Parameters
+ * Credit Transaction List Query Parameters (Backend API)
  * Used for filtering and pagination
  */
 export interface CreditTransactionListParams {
-  page?: number;                     // Page number (1-indexed)
   limit?: number;                    // Items per page (default: 10)
+  offset?: number;                   // Offset for pagination (default: 0)
   type?: CreditTransactionType;      // Filter by transaction type
 }
 
 /**
- * Credit Transaction List Response
- * Backend API response for GET /api/credits/transactions
+ * Credit Transaction List Response (Backend API)
+ * Backend API response for GET /payments/credits/transactions
  */
-export interface CreditTransactionListResponse {
-  transactions: CreditTransaction[];
-  pagination: PaginationMeta;
-}
+export type CreditTransactionListResponse = CreditTransaction[];
 
 /**
  * Credit Balance

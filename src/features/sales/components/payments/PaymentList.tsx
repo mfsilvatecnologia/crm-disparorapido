@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
 import { PaymentCard } from './PaymentCard';
-import { usePayments } from '../../hooks/payments/usePayments';
+import { usePaymentHistory } from '../../hooks/payments/usePaymentHistory';
 import { PaymentListParams } from '../../types';
 import { isCorruptedPayment } from '../../types/guards';
 
@@ -20,7 +20,7 @@ interface PaymentListProps {
  */
 export function PaymentList({ params }: PaymentListProps) {
   const navigate = useNavigate();
-  const { data, isLoading, isError, error } = usePayments(params);
+  const { data, isLoading, isError, error } = usePaymentHistory(params);
 
   // Loading state
   if (isLoading) {
@@ -51,7 +51,7 @@ export function PaymentList({ params }: PaymentListProps) {
   }
 
   // Empty state
-  if (!data?.payments || data.payments.length === 0) {
+  if (!data?.data || data.data.length === 0) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
@@ -66,7 +66,7 @@ export function PaymentList({ params }: PaymentListProps) {
   // Success state
   return (
     <div className="space-y-4">
-      {data.payments.map((payment) => (
+      {data.data.map((payment) => (
         <PaymentCard
           key={payment.id}
           payment={payment}
@@ -74,6 +74,11 @@ export function PaymentList({ params }: PaymentListProps) {
           onClick={() => navigate(`/payments/${payment.id}`)}
         />
       ))}
+      
+      {/* Pagination info */}
+      <div className="text-sm text-muted-foreground text-center py-4">
+        Mostrando {data.data.length} de {data.totalCount} pagamentos
+      </div>
     </div>
   );
 }

@@ -7,33 +7,38 @@ import { Badge } from '@/shared/components/ui/badge';
 import { PaymentStatusBadgeProps } from '../../types';
 
 /**
- * Status configuration mapping
+ * Status configuration mapping (Backend API)
  * Maps payment status to badge variant and label
  */
 const STATUS_CONFIG = {
-  pending: {
+  PENDING: {
     variant: 'outline' as const,
     label: 'Pendente',
     className: 'border-yellow-500 text-yellow-700 bg-yellow-50',
   },
-  completed: {
+  RECEIVED: {
     variant: 'default' as const,
-    label: 'Concluído',
+    label: 'Recebido',
     className: 'bg-green-500 text-white hover:bg-green-600',
   },
-  failed: {
+  CONFIRMED: {
+    variant: 'default' as const,
+    label: 'Confirmado',
+    className: 'bg-blue-500 text-white hover:bg-blue-600',
+  },
+  OVERDUE: {
     variant: 'destructive' as const,
-    label: 'Falhou',
+    label: 'Atrasado',
     className: 'bg-red-500 text-white hover:bg-red-600',
   },
-  cancelled: {
-    variant: 'secondary' as const,
-    label: 'Cancelado',
-    className: 'bg-gray-500 text-white hover:bg-gray-600',
-  },
-  refunded: {
+  REFUNDED: {
     variant: 'secondary' as const,
     label: 'Reembolsado',
+    className: 'bg-gray-500 text-white hover:bg-gray-600',
+  },
+  CANCELLED: {
+    variant: 'secondary' as const,
+    label: 'Cancelado',
     className: 'bg-gray-500 text-white hover:bg-gray-600',
   },
 } as const;

@@ -86,31 +86,67 @@ export function FinancialSummaryCard({ params }: FinancialSummaryCardProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Total Gasto"
-          value={formatCurrency(data.totalSpent)}
+          value={formatCurrency(data.totalAmountSpent)}
           icon={DollarSign}
           color="text-red-600"
         />
         
         <MetricCard
-          title="Créditos Ganhos"
-          value={`${data.totalEarned} créditos`}
+          title="Saldo de Créditos"
+          value={`${data.credits.currentBalance} créditos`}
           icon={CreditCard}
           color="text-green-600"
         />
         
         <MetricCard
-          title="Assinaturas Ativas"
-          value={data.activeSubscriptions}
+          title="Total de Pagamentos"
+          value={data.payments.totalCount}
           icon={Users}
           color="text-blue-600"
         />
         
         <MetricCard
           title="Pagamentos Pendentes"
-          value={data.pendingPayments}
+          value={data.payments.pending.count}
           icon={Clock}
           color="text-yellow-600"
         />
+      </div>
+
+      {/* Additional metrics */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Créditos Comprados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.credits.totalPurchased}</div>
+            <p className="text-xs text-muted-foreground">
+              Gasto: {formatCurrency(data.credits.amountSpentOnCredits)}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Créditos Usados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.credits.totalUsed}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Pagamentos Atrasados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{data.payments.overdue.count}</div>
+            <p className="text-xs text-muted-foreground">
+              Valor: {formatCurrency(data.payments.overdue.amount)}
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

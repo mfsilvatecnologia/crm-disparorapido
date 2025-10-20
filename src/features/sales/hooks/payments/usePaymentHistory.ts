@@ -1,11 +1,11 @@
 /**
  * usePaymentHistory Hook
- * 
- * TanStack Query hook for fetching payment history
+ *
+ * TanStack Query hook for fetching payment history (Backend API)
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getPayments } from '../../api/paymentsApi';
+import { getPaymentHistory } from '../../api/paymentsApi';
 import type { PaymentListParams } from '../../types';
 
 /**
@@ -20,11 +20,12 @@ export const paymentsKeys = {
 
 /**
  * Hook to fetch payment history
+ * GET /payments/history
  */
 export function usePaymentHistory(filters?: PaymentListParams) {
   return useQuery({
     queryKey: paymentsKeys.list(filters || {}),
-    queryFn: () => getPayments(filters || {}),
+    queryFn: () => getPaymentHistory(filters),
     staleTime: 1000 * 30, // 30 seconds
     gcTime: 1000 * 60 * 5, // 5 minutes cache
     retry: 2,

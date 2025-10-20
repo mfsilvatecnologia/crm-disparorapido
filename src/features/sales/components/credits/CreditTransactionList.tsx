@@ -6,42 +6,42 @@
 import { Loader2, AlertCircle, TrendingUp, TrendingDown, Gift, RotateCcw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
-import { useCreditTransactions } from '../../hooks/credits/useCreditTransactions';
+import { useCreditTransactionHistory } from '../../hooks/credits/useCreditTransactionHistory';
 import { CreditTransactionListParams, CreditTransaction } from '../../types';
-import { formatDate } from '../../utils/formatters';
+import { formatDate, formatCurrency } from '../../utils/formatters';
 
 interface CreditTransactionListProps {
   params: CreditTransactionListParams;
 }
 
 /**
- * Transaction type icon mapping
+ * Transaction type icon mapping (Backend API)
  */
 const TRANSACTION_ICONS = {
-  earned: TrendingUp,
-  spent: TrendingDown,
+  compra: TrendingUp,
+  uso: TrendingDown,
   bonus: Gift,
-  refund: RotateCcw,
+  reembolso: RotateCcw,
 } as const;
 
 /**
- * Transaction type color mapping
+ * Transaction type color mapping (Backend API)
  */
 const TRANSACTION_COLORS = {
-  earned: 'text-green-600',
-  spent: 'text-red-600',
+  compra: 'text-green-600',
+  uso: 'text-red-600',
   bonus: 'text-blue-600',
-  refund: 'text-purple-600',
+  reembolso: 'text-purple-600',
 } as const;
 
 /**
- * Transaction type label mapping
+ * Transaction type label mapping (Backend API)
  */
 const TRANSACTION_LABELS = {
-  earned: 'Ganhos',
-  spent: 'Gastos',
+  compra: 'Compra',
+  uso: 'Uso',
   bonus: 'Bônus',
-  refund: 'Reembolso',
+  reembolso: 'Reembolso',
 } as const;
 
 /**
@@ -50,7 +50,7 @@ const TRANSACTION_LABELS = {
 function TransactionCard({ transaction }: { transaction: CreditTransaction }) {
   const Icon = TRANSACTION_ICONS[transaction.type];
   const color = TRANSACTION_COLORS[transaction.type];
-  const isPositive = transaction.amount > 0;
+  const isPositive = transaction.type === 'compra' || transaction.type === 'bonus' || transaction.type === 'reembolso';
 
   return (
     <Card>
@@ -62,7 +62,7 @@ function TransactionCard({ transaction }: { transaction: CreditTransaction }) {
           </span>
         </div>
         <span className={`text-lg font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-          {isPositive ? '+' : ''}{transaction.amount} créditos
+          {isPositive ? '+' : ''}{transaction.quantity} créditos
         </span>
       </CardHeader>
       
@@ -72,12 +72,24 @@ function TransactionCard({ transaction }: { transaction: CreditTransaction }) {
           
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{formatDate(transaction.createdAt, { includeTime: true })}</span>
-            <span>Saldo após: {transaction.balanceAfter} créditos</span>
+            <span>Saldo após: {transaction.newBalance} créditos</span>
           </div>
           
-          {transaction.relatedEntityType && transaction.relatedEntityId && (
+          {transaction.amountPaid && (
             <p className="text-xs text-muted-foreground">
-              Relacionado a: {transaction.relatedEntityType} #{transaction.relatedEntityId}
+              Valor pago: {formatCurrency(transaction.amountPaid)}
+            </p>
+          )}
+          
+          {transaction.lead && (
+            <p className="text-xs text-muted-foreground">
+              Lead: {transaction.lead.name}
+            </p>
+          )}
+          
+          {transaction.paymentId && (
+            <p className="text-xs text-muted-foreground">
+              Pagamento: #{transaction.paymentId}
             </p>
           )}
         </div>
@@ -90,7 +102,7 @@ function TransactionCard({ transaction }: { transaction: CreditTransaction }) {
  * CreditTransactionList Component
  */
 export function CreditTransactionList({ params }: CreditTransactionListProps) {
-  const { data, isLoading, isError, error } = useCreditTransactions(params);
+  const { data, isLoading, isError, error } = useCreditTransactionHistory(params);
 
   // Loading state
   if (isLoading) {
@@ -121,7 +133,7 @@ export function CreditTransactionList({ params }: CreditTransactionListProps) {
   }
 
   // Empty state
-  if (!data?.transactions || data.transactions.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
@@ -136,7 +148,7 @@ export function CreditTransactionList({ params }: CreditTransactionListProps) {
   // Success state
   return (
     <div className="space-y-4">
-      {data.transactions.map((transaction) => (
+      {data.map((transaction) => (
         <TransactionCard key={transaction.id} transaction={transaction} />
       ))}
     </div>

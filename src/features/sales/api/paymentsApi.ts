@@ -1,6 +1,6 @@
 /**
  * Payments API Client
- * API functions for payment endpoints
+ * API functions for payment endpoints (Backend API)
  */
 
 import { apiClient } from '@/lib/api-client';
@@ -8,49 +8,44 @@ import {
   Payment,
   PaymentListParams,
   PaymentListResponse,
-  PaymentActionResponse,
+  FinancialSummary,
+  FinancialSummaryParams,
 } from '../types';
 import {
   paymentSchema,
   paymentListResponseSchema,
-  paymentActionResponseSchema,
+  financialSummarySchema,
 } from '../schemas';
 
 /**
- * Fetch paginated payment list with filters
+ * Fetch paginated payment history with filters
+ * GET /payments/history
  */
-export async function getPayments(params: PaymentListParams): Promise<PaymentListResponse> {
-  const response = await apiClient.get<PaymentListResponse>('/payments', { params });
-  return paymentListResponseSchema.parse(response.data);
+export async function getPaymentHistory(params?: PaymentListParams): Promise<PaymentListResponse> {
+  const response = await apiClient.get('/api/v1/payments/history', { params });
+  return paymentListResponseSchema.parse(response.data) as PaymentListResponse;
 }
 
 /**
  * Fetch single payment by ID
+ * GET /payments/{paymentId}
  */
 export async function getPaymentById(id: string): Promise<Payment> {
-  const response = await apiClient.get<Payment>(`/payments/${id}`);
-  return paymentSchema.parse(response.data);
+  const response = await apiClient.get(`/api/v1/payments/${id}`);
+  return paymentSchema.parse(response.data) as Payment;
 }
 
 /**
- * Cancel a pending payment
+ * Fetch financial summary
+ * GET /payments/summary
  */
-export async function cancelPayment(id: string, reason?: string): Promise<PaymentActionResponse> {
-  const response = await apiClient.post<PaymentActionResponse>(`/payments/${id}/cancel`, { reason });
-  return paymentActionResponseSchema.parse(response.data);
-}
-
-/**
- * Refund a completed payment
- */
-export async function refundPayment(id: string, reason?: string): Promise<PaymentActionResponse> {
-  const response = await apiClient.post<PaymentActionResponse>(`/payments/${id}/refund`, { reason });
-  return paymentActionResponseSchema.parse(response.data);
+export async function getFinancialSummary(params?: FinancialSummaryParams): Promise<FinancialSummary> {
+  const response = await apiClient.get('api/v1/payments/summary', { params });
+  return financialSummarySchema.parse(response.data) as FinancialSummary;
 }
 
 export const paymentsApi = {
-  getPayments,
+  getPaymentHistory,
   getPaymentById,
-  cancelPayment,
-  refundPayment,
+  getFinancialSummary,
 };

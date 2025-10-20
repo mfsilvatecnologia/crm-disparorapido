@@ -6,20 +6,21 @@
 // Payment schemas
 export {
   paymentStatusSchema,
-  paymentMethodSchema,
+  billingTypeSchema,
   paymentSchema,
   paymentListParamsSchema,
-  paginationMetaSchema,
   paymentListResponseSchema,
   paymentActionParamsSchema,
   paymentActionResponseSchema,
   paymentDetailsResponseSchema,
+  summaryItemSchema,
+  financialSummarySchema,
+  financialSummaryParamsSchema,
 } from './payment.schema';
 
 // Credit schemas
 export {
   creditTransactionTypeSchema,
-  relatedEntityTypeSchema,
   creditTransactionSchema,
   creditTransactionListParamsSchema,
   creditTransactionListResponseSchema,
@@ -27,12 +28,6 @@ export {
   creditBalanceResponseSchema,
   creditPackageSchema,
 } from './credit.schema';
-
-// Financial schemas
-export {
-  financialSummaryParamsSchema,
-  financialSummarySchema,
-} from './financial.schema';
 
 // Subscription schemas
 export {

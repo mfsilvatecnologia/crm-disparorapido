@@ -35,7 +35,7 @@ export const getCreditBalance = fetchCreditBalance;
 export async function fetchCreditTransactions(
   params: CreditTransactionListParams
 ): Promise<CreditTransactionListResponse> {
-  const response = await apiClient.get<unknown>('/api/v1/credits/transactions', { params });
+  const response = await apiClient.get<unknown>('/api/v1/payments/credits/transactions', { params });
   return creditTransactionListResponseSchema.parse(response) as CreditTransactionListResponse;
 }
 

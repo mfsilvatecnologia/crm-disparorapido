@@ -1,17 +1,31 @@
 /**
  * useFinancialSummary Hook
- * React Query hook for fetching financial summary
+ * 
+ * TanStack Query hook for fetching financial summary (Backend API)
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { financialApi } from '../../api/financialApi';
-import { financialKeys } from '../queryKeys';
-import { FinancialSummaryParams } from '../../types';
+import { getFinancialSummary } from '../../api/paymentsApi';
+import type { FinancialSummaryParams } from '../../types';
 
-export function useFinancialSummary(params: FinancialSummaryParams) {
+/**
+ * Query key factory for financial summary
+ */
+export const financialSummaryKeys = {
+  all: ['financialSummary'] as const,
+  summary: (params: FinancialSummaryParams) => [...financialSummaryKeys.all, params] as const,
+};
+
+/**
+ * Hook to fetch financial summary
+ * GET /payments/summary
+ */
+export function useFinancialSummary(params?: FinancialSummaryParams) {
   return useQuery({
-    queryKey: financialKeys.summary(params),
-    queryFn: () => financialApi.getFinancialSummary(params),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    queryKey: financialSummaryKeys.summary(params || {}),
+    queryFn: () => getFinancialSummary(params),
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    retry: 2,
   });
 }

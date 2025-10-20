@@ -56,70 +56,77 @@ export enum LegacyPaymentMethod {
  * - cancelled: Payment manually cancelled before completion
  * - refunded: Completed payment that was refunded
  */
-export type PaymentStatus =
-  | 'pending'
-  | 'completed'
-  | 'failed'
-  | 'cancelled'
-  | 'refunded';
-
 /**
- * Payment Method
- * - credit_card: Credit or debit card payment
- * - pix: Brazilian instant payment system
- * - boleto: Brazilian bank slip payment
+ * Payment Status (Backend API)
+ * Matches backend enum: PENDING, RECEIVED, CONFIRMED, OVERDUE, REFUNDED, CANCELLED
  */
-export type PaymentMethod =
-  | 'credit_card'
-  | 'pix'
-  | 'boleto';
+export type PaymentStatus =
+  | 'PENDING'
+  | 'RECEIVED'
+  | 'CONFIRMED'
+  | 'OVERDUE'
+  | 'REFUNDED'
+  | 'CANCELLED';
 
 /**
- * Payment Entity
- * Represents a single payment transaction
+ * Billing Type (Backend API)
+ * Matches backend enum: BOLETO, CREDIT_CARD, PIX, UNDEFINED
+ */
+export type BillingType =
+  | 'BOLETO'
+  | 'CREDIT_CARD'
+  | 'PIX'
+  | 'UNDEFINED';
+
+/**
+ * Payment Entity (Backend API)
+ * Represents a single payment transaction from backend
  */
 export interface Payment {
   id: string;
-  amount: number;                    // Amount in cents (e.g., 9900 = R$ 99,00)
+  empresaId: string | null;
+  value: number;                     // Payment value
+  netValue: number;                  // Net value after fees
+  description: string;
+  billingType: BillingType;
   status: PaymentStatus;
-  method: PaymentMethod;
+  dueDate: string;                   // ISO 8601 date
+  paymentDate: string | null;        // ISO 8601 date
+  invoiceUrl: string;                // URL to invoice
   createdAt: string;                 // ISO 8601 datetime
-  updatedAt: string;                 // ISO 8601 datetime
-  description: string;               // Human-readable description
-  subscriptionId?: string;           // Related subscription (if applicable)
-  metadata?: Record<string, unknown>; // Additional custom data
 }
 
 /**
- * Payment List Query Parameters
+ * Payment List Query Parameters (Backend API)
  * Used for filtering and pagination
  */
 export interface PaymentListParams {
-  page?: number;                     // Page number (1-indexed)
   limit?: number;                    // Items per page (default: 10)
+  offset?: number;                   // Offset for pagination (default: 0)
   status?: PaymentStatus;            // Filter by payment status
-  startDate?: string;                // Filter by date range start (ISO 8601)
-  endDate?: string;                  // Filter by date range end (ISO 8601)
+  startDate?: string;                // Filter by date range start (ISO 8601 date)
+  endDate?: string;                  // Filter by date range end (ISO 8601 date)
 }
 
 /**
- * Pagination Metadata
+ * Pagination Metadata (Backend API)
  * Standard pagination response structure
  */
 export interface PaginationMeta {
-  currentPage: number;               // Current page number
-  totalPages: number;                // Total number of pages
-  totalItems: number;                // Total number of items
-  itemsPerPage: number;              // Items per page
+  totalCount: number;                // Total number of items
+  limit: number;                     // Items per page
+  offset: number;                    // Current offset
 }
 
 /**
- * Payment List Response
- * Backend API response for GET /api/payments
+ * Payment List Response (Backend API)
+ * Backend API response for GET /payments/history
  */
 export interface PaymentListResponse {
-  payments: Payment[];
-  pagination: PaginationMeta;
+  totalCount: number;
+  limit: number;
+  offset: number;
+  data: Payment[];
 }
 
 /**
@@ -142,12 +149,50 @@ export interface PaymentActionResponse {
 
 /**
  * Payment Details Response
- * Backend API response for GET /api/payments/:id
+ * Backend API response for GET /payments/{paymentId}
+ * Same as Payment entity
  */
-export interface PaymentDetailsResponse extends Payment {
-  // Additional fields for detailed view (if any)
-  transactionId?: string;            // External transaction ID (e.g., from payment gateway)
-  receiptUrl?: string;               // URL to payment receipt
+export type PaymentDetailsResponse = Payment;
+
+/**
+ * Summary Item
+ * Used in financial summary for aggregated data
+ */
+export interface SummaryItem {
+  count: number;
+  amount: number;
+}
+
+/**
+ * Financial Summary (Backend API)
+ * Backend API response for GET /payments/summary
+ */
+export interface FinancialSummary {
+  totalAmountSpent: number;
+  payments: {
+    totalCount: number;
+    pending: SummaryItem;
+    received: SummaryItem;
+    overdue: SummaryItem;
+  };
+  credits: {
+    currentBalance: number;
+    totalPurchased: number;
+    totalUsed: number;
+    amountSpentOnCredits: number;
+  };
+  period: {
+    startDate: string;               // ISO 8601 date
+    endDate: string;                 // ISO 8601 date
+  };
+}
+
+/**
+ * Financial Summary Query Parameters
+ * Used for period filtering
+ */
+export interface FinancialSummaryParams {
+  period?: 'last30days' | 'last90days' | 'currentMonth' | 'allTime';
 }
 
 // ============================================================================
@@ -219,7 +264,7 @@ export interface CreatePaymentDTO {
   subscriptionId: string;
   amount: number;
   dueDate: string;
-  paymentMethod?: PaymentMethod;
+  billingType?: BillingType;
 }
 
 /**
@@ -283,8 +328,8 @@ export const LegacyPaymentMethodLabels: Record<LegacyPaymentMethod, string> = {
  * Helper function to check if payment is overdue
  */
 export function isPaymentOverdue(payment: PaymentHistory): boolean {
-  if (payment.status === PaymentStatus.RECEIVED || 
-      payment.status === PaymentStatus.REFUNDED) {
+  if (payment.status === LegacyPaymentStatus.RECEIVED ||
+      payment.status === LegacyPaymentStatus.REFUNDED) {
     return false;
   }
   

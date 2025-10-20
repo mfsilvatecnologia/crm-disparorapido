@@ -10,12 +10,13 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 import { PaymentStatusBadge } from './PaymentStatusBadge';
 
 /**
- * Payment method labels in Portuguese
+ * Billing type labels in Portuguese (Backend API)
  */
-const PAYMENT_METHOD_LABELS = {
-  credit_card: 'Cartão de Crédito',
-  pix: 'PIX',
-  boleto: 'Boleto',
+const BILLING_TYPE_LABELS = {
+  CREDIT_CARD: 'Cartão de Crédito',
+  PIX: 'PIX',
+  BOLETO: 'Boleto',
+  UNDEFINED: 'Não definido',
 } as const;
 
 /**
@@ -52,7 +53,7 @@ export function PaymentCard({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold">
-            {formatCurrency(payment.amount)}
+            {formatCurrency(payment.value)}
           </h3>
           {isCorrupted && (
             <AlertCircle className="h-4 w-4 text-red-500" aria-label="Dados corrompidos" />
@@ -68,14 +69,32 @@ export function PaymentCard({
           </p>
           
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{PAYMENT_METHOD_LABELS[payment.method]}</span>
-            <span>{formatDate(payment.createdAt, { includeTime: true })}</span>
+            <span>{BILLING_TYPE_LABELS[payment.billingType]}</span>
+            <span>Vencimento: {formatDate(payment.dueDate)}</span>
           </div>
           
-          {payment.subscriptionId && (
-            <p className="text-xs text-muted-foreground">
-              Assinatura: {payment.subscriptionId}
-            </p>
+          {payment.paymentDate && (
+            <div className="text-xs text-muted-foreground">
+              Pago em: {formatDate(payment.paymentDate)}
+            </div>
+          )}
+          
+          {payment.netValue !== payment.value && (
+            <div className="text-xs text-muted-foreground">
+              Valor líquido: {formatCurrency(payment.netValue)}
+            </div>
+          )}
+          
+          {payment.invoiceUrl && (
+            <a
+              href={payment.invoiceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Ver fatura
+            </a>
           )}
         </div>
       </CardContent>
