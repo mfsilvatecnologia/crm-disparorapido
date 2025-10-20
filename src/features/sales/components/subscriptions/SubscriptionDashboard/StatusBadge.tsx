@@ -2,7 +2,7 @@ import { SubscriptionStatus } from '../../../types/subscription.types';
 import { getStatusLabel, getStatusColor } from '../../../services/subscriptionService';
 
 // Status values from API (Portuguese)
-type ApiStatus = 'trial' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
+type ApiStatus = 'trial' | 'trialing' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
 
 interface StatusBadgeProps {
   status: SubscriptionStatus | ApiStatus;
@@ -12,8 +12,9 @@ interface StatusBadgeProps {
 
 // Helper to convert API status to SubscriptionStatus enum
 function normalizeStatus(status: SubscriptionStatus | ApiStatus): SubscriptionStatus {
-  const statusMap: Record<ApiStatus, SubscriptionStatus> = {
+  const statusMap: Record<string, SubscriptionStatus> = {
     'trial': SubscriptionStatus.TRIALING,
+    'trialing': SubscriptionStatus.TRIALING,
     'ativa': SubscriptionStatus.ACTIVE,
     'expirada': SubscriptionStatus.EXPIRED,
     'cancelada': SubscriptionStatus.CANCELED,
@@ -53,7 +54,27 @@ export function StatusBadge({ status, size = 'md', showIcon = true }: StatusBadg
         />
       </svg>
     ),
+    [SubscriptionStatus.TRIAL]: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
     [SubscriptionStatus.ACTIVE]: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
+    [SubscriptionStatus.ACTIVE_EN]: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
@@ -83,6 +104,16 @@ export function StatusBadge({ status, size = 'md', showIcon = true }: StatusBadg
         />
       </svg>
     ),
+    [SubscriptionStatus.CANCELED_EN]: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
     [SubscriptionStatus.SUSPENDED]: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -93,7 +124,27 @@ export function StatusBadge({ status, size = 'md', showIcon = true }: StatusBadg
         />
       </svg>
     ),
+    [SubscriptionStatus.SUSPENDED_EN]: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+        />
+      </svg>
+    ),
     [SubscriptionStatus.EXPIRED]: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
+    [SubscriptionStatus.EXPIRED_EN]: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"

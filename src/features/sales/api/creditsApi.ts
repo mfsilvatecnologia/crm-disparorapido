@@ -21,22 +21,22 @@ import {
  * Fetch current credit balance
  */
 export async function fetchCreditBalance(): Promise<CreditBalance> {
-  const response = await apiClient.get<unknown>('/api/v1/credits/balance');
+  const response = await apiClient.get('/api/v1/credits/balance');
   const parsed = creditBalanceResponseSchema.parse(response);
-  return parsed.data;
+  return parsed.data as CreditBalance;
 }
 
 // Alias for backward compatibility
 export const getCreditBalance = fetchCreditBalance;
 
 /**
- * Fetch paginated credit transaction list with filters
+ * Fetch paginated credit transaction list with filters (Backend API)
  */
 export async function fetchCreditTransactions(
   params: CreditTransactionListParams
 ): Promise<CreditTransactionListResponse> {
-  const response = await apiClient.get<unknown>('/api/v1/payments/credits/transactions', { params });
-  return creditTransactionListResponseSchema.parse(response) as CreditTransactionListResponse;
+  const response = await apiClient.get('/payments/credits/transactions', { params });
+  return creditTransactionListResponseSchema.parse(response.data) as CreditTransactionListResponse;
 }
 
 // Alias for backward compatibility

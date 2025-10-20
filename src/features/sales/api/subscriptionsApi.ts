@@ -70,10 +70,19 @@ export async function createTrialSubscription(
  */
 interface SubscriptionListResponse {
   success: boolean;
-  data: Subscription[];
-  total: number;
-  limit: number;
-  offset: number;
+  data: {
+    data: Subscription[];
+    total: number;
+    limit: number;
+    offset: number;
+  };
+  message?: string;
+  timestamp?: string;
+  trace?: {
+    trace_id: string;
+    span_id: string;
+    requestId: string;
+  };
 }
 
 /**
@@ -87,8 +96,8 @@ export async function fetchAllSubscriptions(): Promise<Subscription[]> {
       throw new Error('Failed to fetch subscriptions');
     }
     
-    // Extract data from response envelope
-    return response.data || [];
+    // Extract data from nested response envelope (data.data)
+    return response.data?.data || [];
   } catch (error: any) {
     // Return empty array if no subscriptions found (404)
     if (error.status === 404) {

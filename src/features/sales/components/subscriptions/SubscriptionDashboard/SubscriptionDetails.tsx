@@ -1,6 +1,6 @@
 import { Subscription } from '../../../types/subscription.types';
 import { Product } from '../../../types/product.types';
-import { PaymentHistory, LegacyPaymentStatus } from '../../../types/payment.types';
+import { Payment } from '../../../types/payment.types';
 import { BillingCycle } from '../../../types/product.types';
 import { StatusBadge } from './StatusBadge';
 import { formatPrice, getBillingCycleLabel } from '../../../services/productService';
@@ -8,7 +8,7 @@ import { formatPrice, getBillingCycleLabel } from '../../../services/productServ
 interface SubscriptionDetailsProps {
   subscription: Subscription;
   product?: Product;
-  paymentHistory?: PaymentHistory[];
+  paymentHistory?: Payment[];
   onManage?: () => void;
   onViewPayments?: () => void;
   onCancel?: () => void;
@@ -59,9 +59,9 @@ export function SubscriptionDetails({
               <div>
                 <dt className="text-sm text-gray-600">Valor</dt>
                 <dd className="mt-1 text-2xl font-bold text-gray-900">
-                  {formatPrice(subscription.amount)}
+                  {subscription.valueFormatted || formatPrice(subscription.value)}
                   <span className="ml-2 text-sm font-normal text-gray-600">
-                    /{getBillingCycleLabel(subscription.billingCycle as BillingCycle)}
+                    /{subscription.billingCycleDescription || getBillingCycleLabel(subscription.billingCycle as BillingCycle)}
                   </span>
                 </dd>
               </div>
@@ -108,20 +108,20 @@ export function SubscriptionDetails({
                 </dd>
               </div>
 
-              {subscription.trialStart && (
+              {subscription.startDate && (
                 <div>
-                  <dt className="text-sm text-gray-600">Início do Trial</dt>
+                  <dt className="text-sm text-gray-600">Início da Assinatura</dt>
                   <dd className="mt-1 text-lg font-semibold text-gray-900">
-                    {formatDate(subscription.trialStart)}
+                    {formatDate(subscription.startDate)}
                   </dd>
                 </div>
               )}
 
-              {subscription.trialEnd && (
+              {subscription.trialEndDate && (
                 <div>
                   <dt className="text-sm text-gray-600">Fim do Trial</dt>
                   <dd className="mt-1 text-lg font-semibold text-gray-900">
-                    {formatDate(subscription.trialEnd)}
+                    {formatDate(subscription.trialEndDate)}
                   </dd>
                 </div>
               )}
@@ -131,15 +131,6 @@ export function SubscriptionDetails({
                   <dt className="text-sm text-gray-600">Data de Cancelamento</dt>
                   <dd className="mt-1 text-lg font-semibold text-red-600">
                     {formatDate(subscription.canceledAt)}
-                  </dd>
-                </div>
-              )}
-
-              {subscription.cancellationReason && (
-                <div>
-                  <dt className="text-sm text-gray-600">Motivo do Cancelamento</dt>
-                  <dd className="mt-1 text-sm text-gray-700">
-                    {subscription.cancellationReason}
                   </dd>
                 </div>
               )}
@@ -199,26 +190,26 @@ export function SubscriptionDetails({
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {formatPrice(payment.amount)}
+                      R$ {payment.value.toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-600">
-                      {formatDate(payment.paidAt || payment.dueDate)}
+                      {formatDate(payment.paymentDate || payment.dueDate)}
                     </p>
                   </div>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      payment.status === LegacyPaymentStatus.RECEIVED || payment.status === LegacyPaymentStatus.CONFIRMED
+                      payment.status === 'RECEIVED' || payment.status === 'CONFIRMED'
                         ? 'bg-green-100 text-green-800'
-                        : payment.status === LegacyPaymentStatus.PENDING
+                        : payment.status === 'PENDING'
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {payment.status === LegacyPaymentStatus.RECEIVED || payment.status === LegacyPaymentStatus.CONFIRMED
+                    {payment.status === 'RECEIVED' || payment.status === 'CONFIRMED'
                       ? 'Pago'
-                      : payment.status === LegacyPaymentStatus.PENDING
+                      : payment.status === 'PENDING'
                       ? 'Pendente'
-                      : payment.status === LegacyPaymentStatus.REFUNDED
+                      : payment.status === 'REFUNDED'
                       ? 'Reembolsado'
                       : 'Atrasado'}
                   </span>

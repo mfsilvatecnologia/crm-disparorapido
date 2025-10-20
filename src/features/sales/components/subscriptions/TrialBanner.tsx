@@ -86,15 +86,15 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
               )}
             </p>
 
-            {(subscription.dataExpiracao || subscription.trialEnd) && (
+            {subscription.trialEndDate && (
               <p className="text-xs opacity-90">
-                Término do teste: {formatDate(subscription.dataExpiracao || subscription.trialEnd!)}
+                Término do teste: {formatDate(subscription.trialEndDate)}
               </p>
             )}
 
-            {product && subscription.nextDueDate && (
+            {subscription.nextDueDate && (
               <p className="mt-2 font-medium">
-                Próxima cobrança: {formatPrice(product.priceMonthly)} em{' '}
+                Próxima cobrança: {subscription.valueFormatted} em{' '}
                 {formatDate(subscription.nextDueDate)}
               </p>
             )}
@@ -129,7 +129,7 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
       </div>
 
       {/* Barra de Progresso */}
-      {product?.trialDays && product.trialDays > 0 && (
+      {subscription.trialDays && subscription.trialDays > 0 && (
         <div className="mt-4">
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/50">
             <div
@@ -137,21 +137,21 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
                 isUrgent ? 'bg-red-600' : isWarning ? 'bg-yellow-600' : 'bg-blue-600'
               }`}
               style={{
-                width: `${Math.max(0, (daysRemaining / product.trialDays) * 100)}%`,
+                width: `${Math.max(0, (daysRemaining / subscription.trialDays) * 100)}%`,
               }}
               role="progressbar"
               aria-valuenow={daysRemaining}
               aria-valuemin={0}
-              aria-valuemax={product.trialDays}
-              aria-label={`${daysRemaining} dias restantes de ${product.trialDays} dias de teste`}
+              aria-valuemax={subscription.trialDays}
+              aria-label={`${daysRemaining} dias restantes de ${subscription.trialDays} dias de teste`}
             />
           </div>
           <div className="mt-1 flex justify-between text-xs opacity-75">
             <span>Dia 1</span>
             <span>
-              Dia {product.trialDays - daysRemaining} de {product.trialDays}
+              Dia {subscription.trialDays - daysRemaining} de {subscription.trialDays}
             </span>
-            <span>Dia {product.trialDays}</span>
+            <span>Dia {subscription.trialDays}</span>
           </div>
         </div>
       )}

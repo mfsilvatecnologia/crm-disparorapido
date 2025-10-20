@@ -10,7 +10,11 @@ import { TrialBanner } from '../components/subscriptions/TrialBanner';
 export function SubscriptionManagementPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   
-  const { data: subscription, isLoading: subscriptionLoading } = useSubscription();
+  const {
+    subscription,
+    isLoading: subscriptionLoading,
+    daysRemaining
+  } = useSubscription();
   const { data: product, isLoading: productLoading } = useProduct(subscription?.produtoId);
   const { data: payments, isLoading: paymentsLoading } = usePaymentHistory();
 
@@ -55,12 +59,12 @@ export function SubscriptionManagementPage() {
         </div>
 
         {/* Trial Banner (se estiver em trial) */}
-        {subscription.status === 'trial' && (
+        {(subscription.status === 'trial' || subscription.status === 'trialing' || subscription.isInTrial) && (
           <div className="mb-6">
             <TrialBanner
               subscription={subscription}
               product={product}
-              daysRemaining={subscription.diasRestantes}
+              daysRemaining={daysRemaining || 0}
               onManage={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             />
           </div>
@@ -71,13 +75,13 @@ export function SubscriptionManagementPage() {
           <SubscriptionDetails
             subscription={subscription}
             product={product}
-            paymentHistory={payments?.payments}
+            paymentHistory={payments?.data}
             onCancel={() => setShowCancelDialog(true)}
           />
         </div>
 
         {/* Payment History */}
-        {payments && payments.payments && payments.payments.length > 0 && (
+        {payments && payments.data && payments.data.length > 0 && (
           <div className="rounded-lg bg-white p-6 shadow-sm">
             <h2 className="mb-6 text-xl font-bold text-gray-900">
               Histórico de Pagamentos
@@ -101,35 +105,35 @@ export function SubscriptionManagementPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {payments.payments.map((payment) => (
+                  {payments.data.map((payment) => (
                     <tr key={payment.id}>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                         {new Date(payment.dueDate).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                        R$ {(payment.amount / 100).toFixed(2)}
+                        R$ {payment.value.toFixed(2)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            payment.status === LegacyPaymentStatus.RECEIVED || payment.status === LegacyPaymentStatus.CONFIRMED
+                            payment.status === 'RECEIVED' || payment.status === 'CONFIRMED'
                               ? 'bg-green-100 text-green-800'
-                              : payment.status === LegacyPaymentStatus.PENDING
+                              : payment.status === 'PENDING'
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {payment.status === LegacyPaymentStatus.RECEIVED || payment.status === LegacyPaymentStatus.CONFIRMED
+                          {payment.status === 'RECEIVED' || payment.status === 'CONFIRMED'
                             ? 'Pago'
-                            : payment.status === LegacyPaymentStatus.PENDING
+                            : payment.status === 'PENDING'
                             ? 'Pendente'
-                            : payment.status === LegacyPaymentStatus.OVERDUE
+                            : payment.status === 'OVERDUE'
                             ? 'Atrasado'
                             : payment.status}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                        {payment.paymentMethod || 'N/A'}
+                        {payment.billingType || 'N/A'}
                       </td>
                     </tr>
                   ))}
