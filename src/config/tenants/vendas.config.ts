@@ -52,9 +52,10 @@ export const vendasConfig: TenantConfig = {
     enablePipeline: true,
     enableScraping: true,
     enableAnalytics: true,
-    enableMarketplace: true,
+    enableMarketplace: false,
     enableBilling: true,
-    enableWorkers: true
+    enableWorkers: true,
+    enablePlanos: true,
   },
 
   settings: {

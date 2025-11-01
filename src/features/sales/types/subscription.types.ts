@@ -62,7 +62,7 @@ export interface Subscription {
   asaasSubscriptionId: string | null;
   
   /** Current subscription status */
-  status: 'trialing' | 'trial' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
+  status: 'trialing' | 'trial' | 'ativa' | 'active' | 'expirada' | 'cancelada' | 'suspensa';
   
   /** Billing cycle */
   billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';

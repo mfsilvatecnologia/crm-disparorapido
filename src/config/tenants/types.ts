@@ -34,6 +34,7 @@ export interface TenantFeatures {
   enableMarketplace: boolean;
   enableBilling: boolean;
   enableWorkers: boolean;
+  enablePlanos: boolean;
 }
 
 export interface TenantBranding {

@@ -19,7 +19,8 @@ import {
   Coins,
   Receipt,
   TrendingUp,
-  ArrowRightLeft
+  ArrowRightLeft,
+  DollarSign
 } from 'lucide-react';
 import {
   Sidebar,
@@ -52,13 +53,6 @@ const navigationItems = [
     url: '/app/leads',
     icon: Users,
     description: 'Gerenciar base de leads',
-    requiredFeature: 'enableBasicFeatures'
-  },
-  {
-    title: 'Empresas',
-    url: '/app/empresas',
-    icon: Building2,
-    description: 'Gestão de empresas',
     requiredFeature: 'enableBasicFeatures'
   },
   {
@@ -131,6 +125,13 @@ const financialItems = [
     requiredFeature: 'enableBilling'
   },
   {
+    title: 'Planos',
+    url: '/app/pricing',
+    icon: DollarSign,
+    description: 'Planos e preços',
+    requiredFeature: 'enablePlanos'
+  },
+  {
     title: 'Pagamentos',
     url: '/app/payments',
     icon: Receipt,
@@ -167,6 +168,13 @@ const settingsItems = [
     icon: Kanban,
     description: 'Configurar estágios e funil',
     requiredFeature: 'enableCampaigns'
+  },
+    {
+    title: 'Empresas',
+    url: '/app/empresas',
+    icon: Building2,
+    description: 'Gestão de empresas',
+    requiredFeature: 'enableBasicFeatures'
   },
   {
     title: 'Cobrança',

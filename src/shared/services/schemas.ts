@@ -427,6 +427,10 @@ export const AuthResponseSchema = z.object({
       device_id: z.string(),
       expires_at: z.string(),
     }).nullable(),
+    license: z.object({
+      hasActiveLicense: z.boolean(),
+      message: z.string().optional(),
+    }).optional(),
   }),
   message: z.string(),
   timestamp: z.string(),

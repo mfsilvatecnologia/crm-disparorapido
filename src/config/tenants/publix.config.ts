@@ -57,6 +57,7 @@ export const publixConfig: TenantConfig = {
     enableMarketplace: false,
     enableBilling: false,
     enableWorkers: false,
+    enablePlanos: true,
   },
 
   settings: {

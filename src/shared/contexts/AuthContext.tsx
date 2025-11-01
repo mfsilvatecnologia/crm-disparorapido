@@ -143,6 +143,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const response: AuthResponse = await apiClient.login(loginData);
 
+      // Check license status before proceeding
+      if (response.data.license && !response.data.license.hasActiveLicense) {
+        // Store tokens temporarily for the redirect
+        const accessToken = response.data.token;
+        localStorage.setItem(TOKEN_KEY, accessToken);
+        localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+        
+        if (response.data.empresa) {
+          localStorage.setItem(EMPRESA_KEY, JSON.stringify(response.data.empresa));
+        }
+        
+        // Update API client
+        apiClient.setAccessToken(accessToken);
+        libApiClient.setAccessToken(accessToken);
+        
+        // Set user state to allow navigation
+        setUser({
+          ...response.data.user,
+          created_at: response.data.user.createdAt || new Date().toISOString(),
+          updated_at: response.data.user.updatedAt || new Date().toISOString(),
+        } as User);
+        setToken(accessToken);
+        setEmpresa(response.data.empresa ? {
+          id: response.data.empresa.id,
+          nome: response.data.empresa.nome,
+          cnpj: response.data.empresa.cnpj,
+        } : null);
+        
+        // Store license info for redirect
+        localStorage.setItem('license_redirect', 'true');
+        
+        setIsLoading(false);
+        
+        // Throw error to trigger redirect in LoginPage
+        throw new Error('NO_ACTIVE_LICENSE');
+      }
+
       // Store tokens and user data
       const accessToken = response.data.token;
 

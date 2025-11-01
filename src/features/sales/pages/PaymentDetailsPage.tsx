@@ -16,12 +16,13 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 import { Payment } from '../types';
 
 /**
- * Payment method labels
+ * Billing type labels (Backend API)
  */
-const PAYMENT_METHOD_LABELS = {
-  credit_card: 'Cartão de Crédito',
-  pix: 'PIX',
-  boleto: 'Boleto',
+const BILLING_TYPE_LABELS = {
+  CREDIT_CARD: 'Cartão de Crédito',
+  PIX: 'PIX',
+  BOLETO: 'Boleto',
+  UNDEFINED: 'Não definido',
 } as const;
 
 /**
@@ -96,16 +97,23 @@ export function PaymentDetailsPage() {
           {/* Amount */}
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">Valor</p>
-            <p className="text-3xl font-bold">{formatCurrency(payment.amount)}</p>
+            <p className="text-3xl font-bold">{formatCurrency(payment.value)}</p>
           </div>
+
+          {payment.netValue !== payment.value && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Valor Líquido (após taxas)</p>
+              <p className="text-xl font-semibold text-green-600">{formatCurrency(payment.netValue)}</p>
+            </div>
+          )}
 
           <Separator />
 
           {/* Details Grid */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Método de Pagamento</p>
-              <p className="text-base">{PAYMENT_METHOD_LABELS[payment.method]}</p>
+              <p className="text-sm font-medium text-muted-foreground">Forma de Pagamento</p>
+              <p className="text-base">{BILLING_TYPE_LABELS[payment.billingType]}</p>
             </div>
 
             <div className="space-y-1">
@@ -116,13 +124,20 @@ export function PaymentDetailsPage() {
             </div>
 
             <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Data de Criação</p>
-              <p className="text-base">{formatDate(payment.createdAt, { includeTime: true })}</p>
+              <p className="text-sm font-medium text-muted-foreground">Data de Vencimento</p>
+              <p className="text-base">{formatDate(payment.dueDate)}</p>
             </div>
 
+            {payment.paymentDate && (
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Data de Pagamento</p>
+                <p className="text-base">{formatDate(payment.paymentDate)}</p>
+              </div>
+            )}
+
             <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Última Atualização</p>
-              <p className="text-base">{formatDate(payment.updatedAt, { includeTime: true })}</p>
+              <p className="text-sm font-medium text-muted-foreground">Data de Criação</p>
+              <p className="text-base">{formatDate(payment.createdAt)}</p>
             </div>
 
             <div className="space-y-1 md:col-span-2">
@@ -130,35 +145,15 @@ export function PaymentDetailsPage() {
               <p className="text-base">{payment.description}</p>
             </div>
 
-            {payment.subscriptionId && (
+            {payment.invoiceUrl && (
               <div className="space-y-1 md:col-span-2">
-                <p className="text-sm font-medium text-muted-foreground">Assinatura Relacionada</p>
-                <Button
-                  variant="link"
-                  className="h-auto p-0"
-                  onClick={() => navigate(`/subscriptions/${payment.subscriptionId}`)}
-                >
-                  {payment.subscriptionId}
-                </Button>
-              </div>
-            )}
-
-            {(payment as any).transactionId && (
-              <div className="space-y-1 md:col-span-2">
-                <p className="text-sm font-medium text-muted-foreground">ID da Transação</p>
-                <p className="text-base font-mono text-sm">{(payment as any).transactionId}</p>
-              </div>
-            )}
-
-            {(payment as any).receiptUrl && (
-              <div className="space-y-1 md:col-span-2">
-                <p className="text-sm font-medium text-muted-foreground">Recibo</p>
+                <p className="text-sm font-medium text-muted-foreground">Fatura</p>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open((payment as any).receiptUrl, '_blank')}
+                  onClick={() => window.open(payment.invoiceUrl, '_blank')}
                 >
-                  Baixar Recibo
+                  Visualizar Fatura
                 </Button>
               </div>
             )}

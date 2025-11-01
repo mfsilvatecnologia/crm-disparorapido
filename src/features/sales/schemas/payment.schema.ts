@@ -32,16 +32,16 @@ export const billingTypeSchema = z.enum([
  */
 export const paymentSchema = z.object({
   id: z.string().min(1),
-  empresaId: z.string().nullable(),
+  empresaId: z.string().nullable().optional(),
   value: z.number(),
   netValue: z.number(),
   description: z.string(),
   billingType: billingTypeSchema,
   status: paymentStatusSchema,
-  dueDate: z.string(),
+  dueDate: z.string(), // API returns date in format YYYY-MM-DD
   paymentDate: z.string().nullable(),
   invoiceUrl: z.string().url(),
-  createdAt: z.string().datetime(),
+  createdAt: z.string(), // API returns date in format YYYY-MM-DD
 });
 
 /**

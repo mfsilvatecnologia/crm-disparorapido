@@ -36,8 +36,9 @@ export function PaymentHistoryPage() {
   });
 
   // Fetch payments with current filters
+  // Convert page-based pagination to offset-based pagination for the API
   const params = {
-    page: filters.page,
+    offset: (filters.page - 1) * filters.limit,
     limit: filters.limit,
     status: filters.status,
     startDate: filters.startDate ? toISODate(filters.startDate) : undefined,
@@ -89,12 +90,12 @@ export function PaymentHistoryPage() {
       <PaymentList params={params} />
 
       {/* Pagination */}
-      {data?.pagination && (
+      {data && (
         <Pagination
-          currentPage={data.pagination.currentPage}
-          totalPages={data.pagination.totalPages}
-          totalItems={data.pagination.totalItems}
-          itemsPerPage={data.pagination.itemsPerPage}
+          currentPage={filters.page}
+          totalPages={Math.ceil(data.totalCount / filters.limit)}
+          totalItems={data.totalCount}
+          itemsPerPage={filters.limit}
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}
         />

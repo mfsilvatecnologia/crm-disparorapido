@@ -71,7 +71,7 @@ export function PaymentList({ params }: PaymentListProps) {
           key={payment.id}
           payment={payment}
           isCorrupted={isCorruptedPayment(payment)}
-          onClick={() => navigate(`/payments/${payment.id}`)}
+          onClick={() => navigate(`/app/payments/${payment.id}`)}
         />
       ))}
       

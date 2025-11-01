@@ -117,6 +117,7 @@ function AppRoutes() {
           <Route path="payments/:id" element={<PaymentDetailsPage />} />
           <Route path="credits/transactions" element={<CreditTransactionsPage />} />
           <Route path="financial" element={<FinancialDashboardPage />} />
+          <Route path="pricing" element={<PricingPage />} />
           
           <Route path="profile" element={<UserProfilePage />} />
           <Route path="sessions" element={<SessionManagementPage />} />

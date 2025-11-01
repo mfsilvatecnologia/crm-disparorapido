@@ -16,7 +16,7 @@ import type {
  */
 export interface TrialSubscriptionResponse {
   id: string;
-  status: 'trial' | 'trialing' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
+  status: 'trial' | 'trialing' | 'ativa' | 'active' | 'expirada' | 'cancelada' | 'suspensa';
   asaasInvoiceUrl?: string | null;
   trialDays?: number;
   trialEndDate?: string;
@@ -37,8 +37,6 @@ interface ApiResponse<T> {
 /**
  * Base path for subscriptions API
  */
-const BASE_PATH = '/api/v1/licencas';
-
 const SUBSCRIPTIONS_PATH = '/api/v1/subscriptions';
 
 /**
@@ -47,22 +45,51 @@ const SUBSCRIPTIONS_PATH = '/api/v1/subscriptions';
 export async function createTrialSubscription(
   data: CreateSubscriptionSchema
 ): Promise<TrialSubscriptionResponse> {
-  const response = await apiClient.post<ApiResponse<TrialSubscriptionResponse>>(`${SUBSCRIPTIONS_PATH}/trial`, data);
-  
-  if (!response.success) {
-    throw new Error(response.message || 'Failed to create trial subscription');
+  try {
+    const response = await apiClient.post<ApiResponse<TrialSubscriptionResponse>>(`${SUBSCRIPTIONS_PATH}/trial`, data);
+    
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to create trial subscription');
+    }
+    
+    const result = response.data;
+    
+    // Validate response using trial-specific schema
+    const validation = validateTrialSubscription(result);
+    if (!validation.success) {
+      console.error('Trial subscription validation failed:', validation.error);
+      throw new Error('Invalid trial subscription data from API');
+    }
+    
+    return result;
+  } catch (error: any) {
+    // Extract detailed error message from API response
+    let errorMessage = 'Erro ao criar trial. Tente novamente.';
+    
+    if (error?.data) {
+      // Check for details.detail (Asaas API errors)
+      if (error.data.details?.detail) {
+        errorMessage = error.data.details.detail;
+      }
+      // Check for error message
+      else if (error.data.error) {
+        errorMessage = error.data.error;
+      }
+      // Check for message field
+      else if (error.data.message) {
+        errorMessage = error.data.message;
+      }
+    }
+    // Fallback to error message if available
+    else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
+    // Create a new error with the extracted message
+    const enhancedError = new Error(errorMessage);
+    (enhancedError as any).originalError = error;
+    throw enhancedError;
   }
-  
-  const result = response.data;
-  
-  // Validate response using trial-specific schema
-  const validation = validateTrialSubscription(result);
-  if (!validation.success) {
-    console.error('Trial subscription validation failed:', validation.error);
-    throw new Error('Invalid trial subscription data from API');
-  }
-  
-  return result;
 }
 
 /**
@@ -114,10 +141,11 @@ export async function fetchCurrentSubscription(): Promise<Subscription | null> {
   try {
     const subscriptions = await fetchAllSubscriptions();
     
-    // Return the first active subscription (trialing, ativa)
-    const activeSubscription = subscriptions.find(sub => 
-      sub.status === 'trialing' || 
-      sub.status === 'ativa' || 
+    // Return the first active subscription (trialing, ativa, active)
+    const activeSubscription = subscriptions.find(sub =>
+      sub.status === 'trialing' ||
+      sub.status === 'ativa' ||
+      sub.status === 'active' ||
       sub.status === 'trial'
     );
     
@@ -139,7 +167,7 @@ export async function cancelSubscription(
   data: CancelSubscriptionSchema
 ): Promise<Subscription> {
   const response = await apiClient.patch<ApiResponse<Subscription>>(
-    `${BASE_PATH}/${subscriptionId}/cancel`,
+    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/cancel`,
     data
   );
   const result = response.data;
@@ -164,15 +192,16 @@ export async function fetchSubscriptionStatus(): Promise<{
   try {
     const subscriptions = await fetchAllSubscriptions();
     
-    const activeSubscriptions = subscriptions.filter(sub => 
-      sub.status === 'trialing' || 
-      sub.status === 'ativa' || 
+    const activeSubscriptions = subscriptions.filter(sub =>
+      sub.status === 'trialing' ||
+      sub.status === 'ativa' ||
+      sub.status === 'active' ||
       sub.status === 'trial'
     );
-    
-    const trialSubscriptions = subscriptions.filter(sub => 
-      sub.isInTrial || 
-      sub.status === 'trialing' || 
+
+    const trialSubscriptions = subscriptions.filter(sub =>
+      sub.isInTrial ||
+      sub.status === 'trialing' ||
       sub.status === 'trial'
     );
     
@@ -197,7 +226,7 @@ export async function reactivateSubscription(
   subscriptionId: string
 ): Promise<Subscription> {
   const data = await apiClient.patch<Subscription>(
-    `${BASE_PATH}/${subscriptionId}/reactivate`
+    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/reactivate`
   );
   
   // Validate response
@@ -220,7 +249,7 @@ export async function updatePaymentMethod(
   }
 ): Promise<Subscription> {
   const data = await apiClient.patch<Subscription>(
-    `${BASE_PATH}/${subscriptionId}/payment-method`,
+    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/payment-method`,
     paymentData
   );
   

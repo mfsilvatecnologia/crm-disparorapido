@@ -23,7 +23,7 @@ export const subscriptionSchema = z.object({
   produtoId: z.string().uuid('ID do produto deve ser um UUID válido'),
   dataInicio: z.string().datetime('Data de início inválida'),
   dataExpiracao: z.string().datetime('Data de expiração inválida'),
-  status: z.enum(['trial', 'trialing', 'ativa', 'expirada', 'cancelada', 'suspensa']),
+  status: z.enum(['trial', 'trialing', 'ativa', 'active', 'expirada', 'cancelada', 'suspensa']),
   tipo: z.enum(['trial', 'paga', 'vitalicia']),
   valorPago: z.number().nullable(),
   asaasPaymentId: z.string().nullable(),
@@ -66,7 +66,7 @@ export const subscriptionSchema = z.object({
  */
 export const trialSubscriptionResponseSchema = z.object({
   id: z.string().uuid('ID deve ser um UUID válido'),
-  status: z.enum(['trial', 'trialing', 'ativa', 'expirada', 'cancelada', 'suspensa']),
+  status: z.enum(['trial', 'trialing', 'ativa', 'active', 'expirada', 'cancelada', 'suspensa']),
   asaasInvoiceUrl: z.string().url().nullable().optional(),
   trialDays: z.number().int().positive().optional(),
   trialEndDate: z.string().optional(),

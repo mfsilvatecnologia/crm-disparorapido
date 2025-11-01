@@ -30,3 +30,4 @@ backend_nodejs/
 # Local Netlify folder
 .netlify
 .playwright-mcp/
+ag-ui/

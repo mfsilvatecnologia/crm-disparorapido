@@ -657,7 +657,7 @@ export default function EmpresasPage() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {new Date(empresa.createdAt).toLocaleDateString('pt-BR')}
+                      {new Date(empresa.created_at).toLocaleDateString('pt-BR')}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
@@ -709,6 +709,252 @@ export default function EmpresasPage() {
         </CardContent>
       </Card>
 
+      {/* Edit Empresa Dialog */}
+      {/* <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Empresa</DialogTitle>
+            <DialogDescription>
+              Atualize os dados da empresa
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmitUpdate(onUpdateEmpresa)} className="space-y-4">
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="basic">Básico</TabsTrigger>
+                <TabsTrigger value="business">Negócio</TabsTrigger>
+                <TabsTrigger value="address">Endereço</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="basic" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="update-nome">Nome da Empresa</Label>
+                    <Input
+                      id="update-nome"
+                      {...registerUpdate('nome')}
+                      className={updateErrors.nome ? 'border-destructive' : ''}
+                    />
+                    {updateErrors.nome && (
+                      <p className="text-sm text-destructive">{updateErrors.nome.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="update-cnpj">CNPJ</Label>
+                    <Input
+                      id="update-cnpj"
+                      {...registerUpdate('cnpj')}
+                      placeholder="00.000.000/0000-00"
+                      className={updateErrors.cnpj ? 'border-destructive' : ''}
+                    />
+                    {updateErrors.cnpj && (
+                      <p className="text-sm text-destructive">{updateErrors.cnpj.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="update-email">Email</Label>
+                    <Input
+                      id="update-email"
+                      type="email"
+                      {...registerUpdate('email')}
+                      className={updateErrors.email ? 'border-destructive' : ''}
+                    />
+                    {updateErrors.email && (
+                      <p className="text-sm text-destructive">{updateErrors.email.message}</p>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="business" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="update-segmento">Segmento</Label>
+                    <Select
+                      value={watchUpdate('segmento')}
+                      onValueChange={(value) => setUpdateValue('segmento', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o segmento" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {segmentosDisponiveis.map((segmento) => (
+                          <SelectItem key={segmento} value={segmento}>
+                            {segmento}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="update-volume">Volume Mensal de Auditorias</Label>
+                    <Select
+                      value={watchUpdate('volume_auditorias_mensal')}
+                      onValueChange={(value) => setUpdateValue('volume_auditorias_mensal', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o volume" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1-5">1-5 auditorias</SelectItem>
+                        <SelectItem value="6-10">6-10 auditorias</SelectItem>
+                        <SelectItem value="11-20">11-20 auditorias</SelectItem>
+                        <SelectItem value="20+">20+ auditorias</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Recursos de Interesse</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {recursosDisponiveis.map((recurso) => {
+                      const currentRecursos = watchUpdate('recursos_interesse') || [];
+                      const isChecked = currentRecursos.includes(recurso);
+                      
+                      return (
+                        <div key={recurso} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`update-${recurso}`}
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setUpdateValue('recursos_interesse', [...currentRecursos, recurso]);
+                              } else {
+                                setUpdateValue('recursos_interesse', currentRecursos.filter(r => r !== recurso));
+                              }
+                            }}
+                          />
+                          <Label
+                            htmlFor={`update-${recurso}`}
+                            className="text-sm font-normal"
+                          >
+                            {recurso}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="address" className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="update-rua">Rua</Label>
+                    <Input
+                      id="update-rua"
+                      {...registerUpdate('rua')}
+                      placeholder="Nome da rua"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="update-numero">Número</Label>
+                    <Input
+                      id="update-numero"
+                      {...registerUpdate('numero')}
+                      placeholder="123"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="update-bairro">Bairro</Label>
+                    <Input
+                      id="update-bairro"
+                      {...registerUpdate('bairro')}
+                      placeholder="Nome do bairro"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="update-cidade">Cidade</Label>
+                    <Input
+                      id="update-cidade"
+                      {...registerUpdate('cidade')}
+                      placeholder="Nome da cidade"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="update-estado">Estado</Label>
+                    <Select
+                      value={watchUpdate('estado')}
+                      onValueChange={(value) => setUpdateValue('estado', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="UF" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="AC">AC</SelectItem>
+                        <SelectItem value="AL">AL</SelectItem>
+                        <SelectItem value="AP">AP</SelectItem>
+                        <SelectItem value="AM">AM</SelectItem>
+                        <SelectItem value="BA">BA</SelectItem>
+                        <SelectItem value="CE">CE</SelectItem>
+                        <SelectItem value="DF">DF</SelectItem>
+                        <SelectItem value="ES">ES</SelectItem>
+                        <SelectItem value="GO">GO</SelectItem>
+                        <SelectItem value="MA">MA</SelectItem>
+                        <SelectItem value="MT">MT</SelectItem>
+                        <SelectItem value="MS">MS</SelectItem>
+                        <SelectItem value="MG">MG</SelectItem>
+                        <SelectItem value="PA">PA</SelectItem>
+                        <SelectItem value="PB">PB</SelectItem>
+                        <SelectItem value="PR">PR</SelectItem>
+                        <SelectItem value="PE">PE</SelectItem>
+                        <SelectItem value="PI">PI</SelectItem>
+                        <SelectItem value="RJ">RJ</SelectItem>
+                        <SelectItem value="RN">RN</SelectItem>
+                        <SelectItem value="RS">RS</SelectItem>
+                        <SelectItem value="RO">RO</SelectItem>
+                        <SelectItem value="RR">RR</SelectItem>
+                        <SelectItem value="SC">SC</SelectItem>
+                        <SelectItem value="SP">SP</SelectItem>
+                        <SelectItem value="SE">SE</SelectItem>
+                        <SelectItem value="TO">TO</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="update-cep">CEP</Label>
+                    <Input
+                      id="update-cep"
+                      {...registerUpdate('cep')}
+                      placeholder="00000-000"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => {
+                setEditDialogOpen(false);
+                setEditingEmpresa(null);
+              }}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isUpdating}>
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Atualizando...
+                  </>
+                ) : (
+                  'Atualizar Empresa'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog> */}
+
       {/* View Empresa Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -747,7 +993,7 @@ export default function EmpresasPage() {
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-muted-foreground">Data de Criação</Label>
-                      <p className="text-sm mt-1">{new Date(viewingEmpresa.createdAt).toLocaleString('pt-BR')}</p>
+                      <p className="text-sm mt-1">{new Date(viewingEmpresa.created_at).toLocaleString('pt-BR')}</p>
                     </div>
                   </div>
                 </TabsContent>
