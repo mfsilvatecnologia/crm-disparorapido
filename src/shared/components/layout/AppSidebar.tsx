@@ -20,7 +20,9 @@ import {
   Receipt,
   TrendingUp,
   ArrowRightLeft,
-  DollarSign
+  DollarSign,
+  MessageCircle,
+  Link2
 } from 'lucide-react';
 import {
   Sidebar,
@@ -90,6 +92,23 @@ const navigationItems = [
     description: 'Monitorar workers e jobs',
     requiredFeature: 'enableWorkers'
   }
+];
+
+const contatoItems = [
+  {
+    title: 'Mensagens',
+    url: '/app/disparorapido/messages',
+    icon: MessageCircle,
+    description: 'Consultar mensagens WhatsApp',
+    requiredFeature: 'enableBasicFeatures'
+  },
+  {
+    title: 'Vinculações',
+    url: '/app/disparorapido/vinculacoes',
+    icon: Link2,
+    description: 'Vincular contatos a leads',
+    requiredFeature: 'enableBasicFeatures'
+  },
 ];
 
 const salesItems = [
@@ -288,6 +307,16 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map(renderMenuItem)}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Contato / DisparoRapido */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Contato</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {contatoItems.map(renderMenuItem)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

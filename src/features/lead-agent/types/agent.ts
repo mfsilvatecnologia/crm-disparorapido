@@ -1,48 +1,45 @@
-// Lead Agent Types
-export interface LeadContact {
-  nome: string;
-  cargo: string;
-  email: string;
-  telefone?: string;
-}
-
-export interface LeadActivity {
-  tipo: 'email' | 'chamada' | 'reuniao' | 'nota' | 'proposta';
-  descricao: string;
-  data: string;
-}
+// Lead Agent Types - Aligned with Backend Domain Model
 
 export interface LeadAddress {
+  rua?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
   cidade?: string;
   estado?: string;
+  cep?: string;
   pais?: string;
 }
 
 export interface LeadData {
+  id: string;
+  empresaId: string;
   nomeEmpresa: string;
+  fonte: string;
+  status: LeadStatus;
+  scoreQualificacao: number;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Single contact fields (not array)
+  nomeContato?: string;
+  cargoContato?: string;
+  email?: string;
+  telefone?: string;
+
+  // Company data
+  linkedinUrl?: string;
+  siteEmpresa?: string;
   cnpj?: string;
   segmento?: string;
-  porteEmpresa: 'MEI' | 'Micro' | 'Pequena' | 'Média' | 'Grande';
-  status: 'novo' | 'qualificado' | 'contatado' | 'interessado' | 'desqualificado' | 'convertido';
-  score: number;
-  tags: string[];
-  contacts: LeadContact[];
-  activities: LeadActivity[];
-  observacoes?: string;
+  porteEmpresa?: PorteEmpresa;
+  numFuncionarios?: number;
+  receitaAnualEstimada?: number;
   endereco?: LeadAddress;
-  apiData?: {
-    id?: string;
-    empresaId?: string | null;
-    linkedinUrl?: string | null;
-    siteEmpresa?: string | null;
-    numFuncionarios?: number | null;
-    receitaAnualEstimada?: number | null;
-    fonte?: string | null;
-    dadosOriginais?: Record<string, unknown> | null;
-    custoAquisicao?: number | null;
-    createdAt?: string;
-    updatedAt?: string;
-  };
+  tags: string[];
+  observacoes?: string;
+  dadosOriginais?: any;
+  custoAquisicao?: number;
 }
 
 export interface LeadAgentState {
@@ -60,42 +57,26 @@ export enum PorteEmpresa {
 export enum LeadStatus {
   NOVO = 'novo',
   QUALIFICADO = 'qualificado',
+  NAO_QUALIFICADO = 'nao_qualificado',
   CONTATADO = 'contatado',
-  INTERESSADO = 'interessado',
-  DESQUALIFICADO = 'desqualificado',
   CONVERTIDO = 'convertido',
-}
-
-export enum ActivityType {
-  EMAIL = 'email',
-  CHAMADA = 'chamada',
-  REUNIAO = 'reuniao',
-  NOTA = 'nota',
-  PROPOSTA = 'proposta',
+  DESCARTADO = 'descartado',
 }
 
 export const STATUS_LABELS: Record<LeadStatus, string> = {
   [LeadStatus.NOVO]: 'Novo',
   [LeadStatus.QUALIFICADO]: 'Qualificado',
+  [LeadStatus.NAO_QUALIFICADO]: 'Não Qualificado',
   [LeadStatus.CONTATADO]: 'Contatado',
-  [LeadStatus.INTERESSADO]: 'Interessado',
-  [LeadStatus.DESQUALIFICADO]: 'Desqualificado',
   [LeadStatus.CONVERTIDO]: 'Convertido',
+  [LeadStatus.DESCARTADO]: 'Descartado',
 };
 
 export const STATUS_COLORS: Record<LeadStatus, string> = {
   [LeadStatus.NOVO]: '#94a3b8',
   [LeadStatus.QUALIFICADO]: '#3b82f6',
+  [LeadStatus.NAO_QUALIFICADO]: '#f59e0b',
   [LeadStatus.CONTATADO]: '#f59e0b',
-  [LeadStatus.INTERESSADO]: '#8b5cf6',
-  [LeadStatus.DESQUALIFICADO]: '#ef4444',
   [LeadStatus.CONVERTIDO]: '#10b981',
-};
-
-export const ACTIVITY_ICONS: Record<ActivityType, string> = {
-  [ActivityType.EMAIL]: '📧',
-  [ActivityType.CHAMADA]: '📞',
-  [ActivityType.REUNIAO]: '🤝',
-  [ActivityType.NOTA]: '📝',
-  [ActivityType.PROPOSTA]: '📄',
+  [LeadStatus.DESCARTADO]: '#ef4444',
 };

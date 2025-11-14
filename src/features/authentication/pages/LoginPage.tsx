@@ -112,37 +112,37 @@ export default function LoginPage() {
     try {
       setLoginError(null);
       await login({ email: data.email, password: data.password });
-      
-      // Check if we need to redirect to pricing due to no active license
-      // const licenseRedirect = localStorage.getItem('license_redirect');
-      // if (licenseRedirect === 'true') {
-      //   localStorage.removeItem('license_redirect');
-      //   toast({
-      //     title: "Atenção: Licença Necessária",
-      //     description: "Você precisa adquirir uma licença para continuar usando o sistema.",
-      //     variant: "destructive",
-      //     duration: 5000,
-      //   });
-      //   navigate('/app/pricing');
-      //   return;
-      // }
-      
+
+      // Check if we need to redirect to pricing due to no active subscription
+      const subscriptionRedirect = localStorage.getItem('subscription_redirect');
+      if (subscriptionRedirect === 'true') {
+        localStorage.removeItem('subscription_redirect');
+        toast({
+          title: "Assinatura Necessária",
+          description: "Você precisa de uma assinatura ativa para continuar usando o sistema.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        navigate('/app/pricing');
+        return;
+      }
+
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo ao ${tenant.branding.companyName}!`,
       });
     } catch (error: unknown) {
-      // Se for erro de falta de licença, redireciona para pricing
-      // if (error instanceof Error && error.message === 'NO_ACTIVE_LICENSE') {
-      //   toast({
-      //     title: "Atenção: Licença Necessária",
-      //     description: "Você precisa adquirir uma licença para continuar usando o sistema.",
-      //     variant: "destructive",
-      //     duration: 5000,
-      //   });
-      //   navigate('/app/pricing');
-      //   return;
-      // }
+      // Se for erro de falta de subscription, redireciona para pricing
+      if (error instanceof Error && error.message === 'NO_ACTIVE_SUBSCRIPTION') {
+        toast({
+          title: "Assinatura Necessária",
+          description: "Você precisa de uma assinatura ativa para continuar usando o sistema.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        navigate('/app/pricing');
+        return;
+      }
       
       // Se for erro de limite de sessões, mostra o gerenciador
       if (error instanceof SessionLimitExceededError) {

@@ -11,28 +11,22 @@ import "@copilotkit/react-ui/styles.css";
 import "../styles/lead-agent.css";
 
 const INITIAL_STATE: LeadData = {
+  id: '',
+  empresaId: '',
   nomeEmpresa: 'Nova Empresa',
+  fonte: 'manual',
+  status: LeadStatus.NOVO,
+  scoreQualificacao: 50,
+  createdAt: new Date(),
+  updatedAt: new Date(),
   cnpj: '',
   segmento: '',
   porteEmpresa: PorteEmpresa.PEQUENA,
-  status: LeadStatus.NOVO,
-  score: 50,
   tags: [],
-  contacts: [
-    {
-      nome: '',
-      cargo: '',
-      email: '',
-      telefone: '',
-    },
-  ],
-  activities: [
-    {
-      tipo: 'nota',
-      descricao: 'Lead criado',
-      data: new Date().toISOString(),
-    },
-  ],
+  nomeContato: '',
+  cargoContato: '',
+  email: '',
+  telefone: '',
   observacoes: '',
   endereco: {
     cidade: '',
@@ -78,14 +72,14 @@ export function LeadAgentPage({ integrationId = 'mastra-agent-local' }: LeadAgen
   // Solução: Gerenciamos o estado localmente no React e usamos apenas o chat.
   
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-  // const runtimeUrl = `${API_BASE_URL}/copilot`;
+  // Use REST endpoint, not GraphQL! CopilotKit expects a REST runtime endpoint
+  const runtimeUrl = import.meta.env.VITE_COPILOT_RUNTIME_URL || `${API_BASE_URL}/copilot`;
 
   // Get auth token from localStorage
   const TOKEN_KEY = import.meta.env.VITE_AUTH_TOKEN_KEY || 'leadsrapido_auth_token';
   const authToken = localStorage.getItem(TOKEN_KEY);
 
   console.log('🔐 [COPILOT CONFIG - REST ONLY]', {
-    // runtimeUrl,
     apiBaseUrl: API_BASE_URL,
     hasToken: !!authToken,
     tokenLength: authToken?.length || 0,
@@ -174,45 +168,39 @@ function LeadManager() {
   const { appendMessage, isLoading } = useCopilotChat();
   const changedKeysRef = useRef<string[]>([]);
 
-  // Adapt API data to internal format (only when leadData changes)
+  // Load lead data from API (using backend structure directly)
   useEffect(() => {
     if (leadData) {
       const adaptedLead: LeadData = {
+        id: leadData.id,
+        empresaId: leadData.empresaId,
         nomeEmpresa: leadData.nomeEmpresa || '',
+        fonte: leadData.fonte || 'manual',
+        status: (leadData.status as LeadStatus) || LeadStatus.NOVO,
+        scoreQualificacao: leadData.scoreQualificacao || 0,
+        createdAt: new Date(leadData.createdAt),
+        updatedAt: new Date(leadData.updatedAt),
+        // Single contact fields (not array)
+        nomeContato: leadData.nomeContato || '',
+        cargoContato: leadData.cargoContato || '',
+        email: leadData.email || '',
+        telefone: leadData.telefone || '',
+        // Company data
         cnpj: leadData.cnpj || '',
         segmento: leadData.segmento || '',
         porteEmpresa: (leadData.porteEmpresa as PorteEmpresa) || PorteEmpresa.PEQUENA,
-        status: (leadData.status as LeadStatus) || LeadStatus.NOVO,
-        score: leadData.scoreQualificacao || 0,
+        linkedinUrl: leadData.linkedinUrl,
+        siteEmpresa: leadData.siteEmpresa,
+        numFuncionarios: leadData.numFuncionarios,
+        receitaAnualEstimada: leadData.receitaAnualEstimada,
         tags: leadData.tags || [],
-        contacts: [
-          {
-            nome: leadData.nomeContato || '',
-            cargo: leadData.cargoContato || '',
-            email: leadData.email || '',
-            telefone: leadData.telefone || '',
-          },
-        ],
-        activities: [],
         observacoes: leadData.observacoes || '',
-        endereco: {
-          cidade: leadData.endereco?.cidade || '',
-          estado: leadData.endereco?.estado || '',
-          pais: leadData.endereco?.pais || 'Brasil',
-        },
-        // Store API-specific fields for reference
-        apiData: {
-          id: leadData.id,
-          empresaId: leadData.empresaId,
-          linkedinUrl: leadData.linkedinUrl,
-          siteEmpresa: leadData.siteEmpresa,
-          numFuncionarios: leadData.numFuncionarios,
-          receitaAnualEstimada: leadData.receitaAnualEstimada,
-          fonte: leadData.fonte,
-          dadosOriginais: leadData.dadosOriginais,
-          custoAquisicao: leadData.custoAquisicao,
-          createdAt: leadData.createdAt,
-          updatedAt: leadData.updatedAt,
+        dadosOriginais: leadData.dadosOriginais,
+        custoAquisicao: leadData.custoAquisicao,
+        endereco: leadData.endereco || {
+          cidade: '',
+          estado: '',
+          pais: 'Brasil',
         },
       };
       setLead(adaptedLead);
@@ -269,7 +257,7 @@ function LeadManager() {
             if (!isLoading) {
               appendMessage(
                 new TextMessage({
-                  content: `Calcule o score ideal para este lead baseado nos dados: ${lead.contacts.length} contatos, ${lead.activities.length} atividades, porte ${lead.porteEmpresa}`,
+                  content: `Calcule o score ideal para este lead baseado nos dados: empresa ${lead.nomeEmpresa}, porte ${lead.porteEmpresa}, segmento ${lead.segmento || 'não informado'}`,
                   role: Role.User,
                 })
               );

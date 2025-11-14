@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from './SessionContext';
-import { getOrCreateDeviceId, generateDeviceFingerprint, clearDeviceData } from '@/shared/utils/device';
+import { getOrCreateDeviceId, generateDeviceFingerprint } from '@/shared/utils/device';
 import type { User, ComputedPermissions, LoginCredentials } from '../types';
 import { ClientType } from '@/features/authentication/types/auth';
 import apiClient from '../services/client';
@@ -143,21 +143,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const response: AuthResponse = await apiClient.login(loginData);
 
-      // Check license status before proceeding
-      if (response.data.license && !response.data.license.hasActiveLicense) {
+      // Check subscription status before proceeding
+      if (response.data.subscription && !response.data.subscription.isActive) {
         // Store tokens temporarily for the redirect
         const accessToken = response.data.token;
         localStorage.setItem(TOKEN_KEY, accessToken);
         localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
-        
+
         if (response.data.empresa) {
           localStorage.setItem(EMPRESA_KEY, JSON.stringify(response.data.empresa));
         }
-        
+
         // Update API client
         apiClient.setAccessToken(accessToken);
         libApiClient.setAccessToken(accessToken);
-        
+
         // Set user state to allow navigation
         setUser({
           ...response.data.user,
@@ -170,14 +170,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           nome: response.data.empresa.nome,
           cnpj: response.data.empresa.cnpj,
         } : null);
-        
-        // Store license info for redirect
-        localStorage.setItem('license_redirect', 'true');
-        
+
+        // Store subscription info for redirect
+        localStorage.setItem('subscription_redirect', 'true');
+
         setIsLoading(false);
-        
+
         // Throw error to trigger redirect in LoginPage
-        throw new Error('NO_ACTIVE_LICENSE');
+        throw new Error('NO_ACTIVE_SUBSCRIPTION');
       }
 
       // Store tokens and user data
@@ -251,6 +251,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(EMPRESA_KEY);
+      localStorage.removeItem('session_id'); // Clear session ID
 
       // Reset API client and state
       apiClient.setAccessToken(null);
@@ -261,8 +262,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setRefreshToken(null);
       setPermissions(null);
 
-      // Clear device data and query cache
-      clearDeviceData();
+      // IMPORTANT: Do NOT clear device_id during logout
+      // The device_id must persist across logins to properly track device sessions
+      // Only clear query cache
       queryClient.clear();
     }
   };

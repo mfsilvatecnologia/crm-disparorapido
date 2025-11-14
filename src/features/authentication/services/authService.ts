@@ -14,10 +14,6 @@ import {
   LoginResponse,
   LoginRequestSchema,
   LoginResponseSchema,
-  LogoutRequest,
-  LogoutResponse,
-  LogoutRequestSchema,
-  LogoutResponseSchema,
   RefreshTokenRequest,
   RefreshTokenResponse,
   RefreshTokenRequestSchema,
@@ -145,35 +141,33 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
 /**
  * Logout user and revoke session
  *
- * @param device_id - Device ID to logout from
  * @returns Promise that resolves when logout is complete
  * @throws {APIError} If logout fails
  *
  * @example
  * ```typescript
- * await logout(getOrCreateDeviceId());
+ * await logout();
  * ```
  */
-export async function logout(device_id: string): Promise<void> {
-  const request: LogoutRequest = {
-    device_id,
-    reason: 'user_initiated',
-  };
-
-  // Validate request
-  const validatedRequest = LogoutRequestSchema.parse(request);
-
+export async function logout(): Promise<void> {
   try {
-    // Get access token for authenticated request
+    // Get access token and session ID for authenticated request
     const token = authStorage.getAccessToken();
+    const sessionId = authStorage.getSessionId();
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: 'POST',
+    if (!sessionId) {
+      console.warn('No session ID found for logout');
+      authStorage.clearTokens();
+      return;
+    }
+
+    // Use DELETE /api/v1/sessions/{sessionId} endpoint instead of POST /api/auth/logout
+    const response = await fetch(`${API_BASE_URL}/api/v1/sessions/${sessionId}`, {
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
       },
-      body: JSON.stringify(validatedRequest),
     });
 
     // Handle error responses
@@ -185,11 +179,13 @@ export async function logout(device_id: string): Promise<void> {
       );
     }
 
-    // Validate response
-    const data = await response.json();
-    LogoutResponseSchema.parse(data);
+    // Parse response if it exists
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      await response.json();
+    }
 
-    // Clear tokens from localStorage regardless of API response
+    // Clear tokens from localStorage after successful logout
     authStorage.clearTokens();
   } catch (error) {
     // Always clear local tokens even if API call fails

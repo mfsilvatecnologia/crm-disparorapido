@@ -11,7 +11,8 @@ interface TrialBannerProps {
 
 export function TrialBanner({ subscription, product, daysRemaining, onManage }: TrialBannerProps) {
   // Calcular urgência baseado nos dias restantes
-  const isUrgent = daysRemaining <= 3;
+  const isExpired = daysRemaining < 0;
+  const isUrgent = daysRemaining <= 3 && daysRemaining >= 0;
   const isWarning = daysRemaining <= 7 && daysRemaining > 3;
 
   const formatDate = (date: string) => {
@@ -26,9 +27,10 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
     <div
       className={`
         rounded-lg border-l-4 p-6 shadow-sm
-        ${isUrgent ? 'border-red-500 bg-red-50' : ''}
+        ${isExpired ? 'border-red-700 bg-red-100' : ''}
+        ${isUrgent && !isExpired ? 'border-red-500 bg-red-50' : ''}
         ${isWarning ? 'border-yellow-500 bg-yellow-50' : ''}
-        ${!isUrgent && !isWarning ? 'border-blue-500 bg-blue-50' : ''}
+        ${!isUrgent && !isWarning && !isExpired ? 'border-blue-500 bg-blue-50' : ''}
       `}
       role="alert"
       aria-live="polite"
@@ -40,7 +42,7 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
             {/* Ícone */}
             <svg
               className={`h-5 w-5 flex-shrink-0 ${
-                isUrgent ? 'text-red-600' : isWarning ? 'text-yellow-600' : 'text-blue-600'
+                isExpired ? 'text-red-700' : isUrgent ? 'text-red-600' : isWarning ? 'text-yellow-600' : 'text-blue-600'
               }`}
               fill="none"
               stroke="currentColor"
@@ -57,10 +59,12 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
             {/* Título */}
             <h3
               className={`text-lg font-semibold ${
-                isUrgent ? 'text-red-900' : isWarning ? 'text-yellow-900' : 'text-blue-900'
+                isExpired ? 'text-red-900' : isUrgent ? 'text-red-900' : isWarning ? 'text-yellow-900' : 'text-blue-900'
               }`}
             >
-              {isUrgent
+              {isExpired
+                ? '🔒 Seu teste grátis expirou'
+                : isUrgent
                 ? '⚠️ Seu teste grátis está acabando'
                 : isWarning
                 ? '⏰ Seu teste grátis está próximo do fim'
@@ -71,11 +75,13 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
           {/* Detalhes */}
           <div
             className={`space-y-1 text-sm ${
-              isUrgent ? 'text-red-800' : isWarning ? 'text-yellow-800' : 'text-blue-800'
+              isExpired ? 'text-red-900' : isUrgent ? 'text-red-800' : isWarning ? 'text-yellow-800' : 'text-blue-800'
             }`}
           >
             <p className="font-medium">
-              {daysRemaining === 0 ? (
+              {isExpired ? (
+                'Seu período de teste gratuito terminou. Assine agora para continuar usando o serviço.'
+              ) : daysRemaining === 0 ? (
                 'Seu teste termina hoje!'
               ) : daysRemaining === 1 ? (
                 'Resta 1 dia de teste grátis'
@@ -99,7 +105,13 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
               </p>
             )}
 
-            {isUrgent && (
+            {isExpired && subscription.trialEndDate && (
+              <p className="mt-2 text-xs font-medium">
+                ⏱️ Expirou em: {formatDate(subscription.trialEndDate)}
+              </p>
+            )}
+
+            {isUrgent && !isExpired && (
               <p className="mt-2 text-xs font-medium">
                 💡 Cancele antes do término para não ser cobrado
               </p>
@@ -114,7 +126,9 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
             className={`
               rounded-lg px-6 py-3 font-semibold shadow-sm transition-colors
               ${
-                isUrgent
+                isExpired
+                  ? 'bg-red-700 text-white hover:bg-red-800'
+                  : isUrgent
                   ? 'bg-red-600 text-white hover:bg-red-700'
                   : isWarning
                   ? 'bg-yellow-600 text-white hover:bg-yellow-700'
@@ -123,13 +137,13 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
             `}
             type="button"
           >
-            Gerenciar Assinatura
+            {isExpired ? 'Assinar Agora' : 'Gerenciar Assinatura'}
           </button>
         </div>
       </div>
 
       {/* Barra de Progresso */}
-      {subscription.trialDays && subscription.trialDays > 0 && (
+      {subscription.trialDays && subscription.trialDays > 0 && !isExpired && (
         <div className="mt-4">
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/50">
             <div

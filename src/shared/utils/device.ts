@@ -24,7 +24,17 @@ export function getOrCreateDeviceId(): string {
 
 /**
  * Clear device ID from localStorage
- * Used during logout or device reset
+ *
+ * WARNING: This should RARELY be used!
+ * Only use this for complete device reset in security-critical situations.
+ *
+ * DO NOT call this during normal logout, as device_id must persist
+ * across logins to properly track device sessions in the backend.
+ *
+ * Valid use cases:
+ * - User explicitly requests to "forget this device"
+ * - Security incident requiring complete session reset
+ * - Testing/development purposes
  */
 export function clearDeviceId(): void {
   localStorage.removeItem(DEVICE_ID_KEY);
@@ -32,7 +42,14 @@ export function clearDeviceId(): void {
 
 /**
  * Clear all device data from localStorage
- * Alias for clearDeviceId for backward compatibility
+ *
+ * WARNING: This should RARELY be used!
+ * Only use this for complete device reset in security-critical situations.
+ *
+ * DO NOT call this during normal logout, as device_id must persist
+ * across logins to properly track device sessions in the backend.
+ *
+ * This is an alias for clearDeviceId() for backward compatibility.
  */
 export function clearDeviceData(): void {
   clearDeviceId();

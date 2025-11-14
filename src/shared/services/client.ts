@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { healthCheckService } from './health-check';
+import { getOrCreateDeviceId } from '@/shared/utils/device';
 import type {
   LoginRequest,
   ResetPasswordRequest,
@@ -132,7 +133,7 @@ class ApiClient {
     schema?: z.ZodSchema<T>
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     // Ensure proper headers for JSON requests
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -144,6 +145,11 @@ class ApiClient {
     if (this.accessToken) {
       headers['Authorization'] = `Bearer ${this.accessToken}`;
     }
+
+    // Add device tracking headers for session validation
+    const deviceId = getOrCreateDeviceId();
+    headers['X-Device-Id'] = deviceId;
+    headers['X-Client-Type'] = 'web';
 
     const requestConfig = {
       ...config,
@@ -175,31 +181,87 @@ class ApiClient {
           errorData = { message: response.statusText };
         }
 
-        // Handle 401 Unauthorized - attempt token refresh
-        if (response.status === 401 && this.refreshCallback && !endpoint.includes('/auth/')) {
-          if (this.isRefreshing) {
-            // If already refreshing, queue this request
-            return new Promise((resolve, reject) => {
-              this.failedQueue.push({ resolve, reject });
-            }).then(() => {
-              // Retry the request after refresh
-              return this.request(endpoint, config, schema);
-            });
+        // Handle NO_SUBSCRIPTION error - redirect to pricing
+        if (errorData.error === 'NO_SUBSCRIPTION' || errorData.error === 'NO_ACTIVE_SUBSCRIPTION') {
+          // Redirect to pricing page
+          window.location.href = '/app/pricing';
+          throw new ApiError(
+            response.status,
+            response.statusText,
+            errorData.message || 'No active subscription found',
+            errorData
+          );
+        }
+
+        // Handle TRIAL_EXPIRED error - redirect to subscription page
+        if (errorData.error === 'TRIAL_EXPIRED') {
+          // Redirect to subscription page
+          window.location.href = '/app/subscription';
+          throw new ApiError(
+            response.status,
+            response.statusText,
+            errorData.message || 'Your trial period has expired. Please subscribe to continue using the service.',
+            errorData
+          );
+        }
+
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          // Check if it's a session validation error (not just expired token)
+          const isSessionError = errorData.message?.toLowerCase().includes('sessão') ||
+                                  errorData.message?.toLowerCase().includes('session') ||
+                                  errorData.error === 'UNAUTHORIZED';
+
+          // If it's a session error, clear everything and redirect to login
+          if (isSessionError && !endpoint.includes('/auth/')) {
+            console.warn('Session invalid or revoked. Logging out...');
+
+            // Clear tokens but keep device_id
+            localStorage.removeItem('leadsrapido_auth_token');
+            localStorage.removeItem('leadsrapido_refresh_token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('empresa');
+            localStorage.removeItem('session_id');
+
+            // Redirect to login
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login?session_expired=true';
+            }
+
+            throw new ApiError(
+              response.status,
+              response.statusText,
+              'Sua sessão foi encerrada. Por favor, faça login novamente.',
+              errorData
+            );
           }
 
-          this.isRefreshing = true;
+          // Otherwise, try token refresh if available
+          if (this.refreshCallback && !endpoint.includes('/auth/')) {
+            if (this.isRefreshing) {
+              // If already refreshing, queue this request
+              return new Promise((resolve, reject) => {
+                this.failedQueue.push({ resolve, reject });
+              }).then(() => {
+                // Retry the request after refresh
+                return this.request(endpoint, config, schema);
+              });
+            }
 
-          try {
-            await this.refreshCallback();
-            this.processQueue(null);
-            this.isRefreshing = false;
+            this.isRefreshing = true;
 
-            // Retry the original request with new token
-            return this.request(endpoint, config, schema);
-          } catch (refreshError) {
-            this.processQueue(refreshError as Error);
-            this.isRefreshing = false;
-            throw refreshError;
+            try {
+              await this.refreshCallback();
+              this.processQueue(null);
+              this.isRefreshing = false;
+
+              // Retry the original request with new token
+              return this.request(endpoint, config, schema);
+            } catch (refreshError) {
+              this.processQueue(refreshError as Error);
+              this.isRefreshing = false;
+              throw refreshError;
+            }
           }
         }
 
@@ -272,8 +334,18 @@ class ApiClient {
   }
 
   async logout(): Promise<void> {
-    return this.request('/api/v1/auth/logout', {
-      method: 'POST',
+    // Get sessionId from storage - it's required for the DELETE endpoint
+    const sessionId = localStorage.getItem('session_id');
+
+    if (!sessionId) {
+      console.warn('No session ID found for logout');
+      // Still clear local storage even if no session ID
+      return;
+    }
+
+    // Use DELETE /api/v1/sessions/{sessionId} endpoint
+    return this.request(`/api/v1/sessions/${sessionId}`, {
+      method: 'DELETE',
     });
   }
 

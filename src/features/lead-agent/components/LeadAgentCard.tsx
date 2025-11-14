@@ -1,5 +1,5 @@
 import React from 'react';
-import { LeadData, LeadContact, LeadActivity, PorteEmpresa, LeadStatus, STATUS_LABELS, ACTIVITY_ICONS, ActivityType } from '../types/agent';
+import { LeadData, PorteEmpresa, LeadStatus, STATUS_LABELS } from '../types/agent';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 
@@ -35,7 +35,7 @@ export function LeadAgentCard({ lead, onUpdateLead, changedKeys, isLoading }: Le
 
   const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Math.min(100, Math.max(0, Number(e.target.value)));
-    onUpdateLead({ score: value });
+    onUpdateLead({ scoreQualificacao: value });
   };
 
   const handleObservacoesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -47,45 +47,21 @@ export function LeadAgentCard({ lead, onUpdateLead, changedKeys, isLoading }: Le
     onUpdateLead({ tags });
   };
 
-  // Contact management
-  const addContact = () => {
-    onUpdateLead({
-      contacts: [...lead.contacts, { nome: '', cargo: '', email: '', telefone: '' }],
-    });
+  // Contact field handlers
+  const handleNomeContatoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdateLead({ nomeContato: e.target.value });
   };
 
-  const updateContact = (index: number, field: keyof LeadContact, value: string) => {
-    const updatedContacts = [...lead.contacts];
-    updatedContacts[index] = { ...updatedContacts[index], [field]: value };
-    onUpdateLead({ contacts: updatedContacts });
+  const handleCargoContatoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdateLead({ cargoContato: e.target.value });
   };
 
-  const removeContact = (index: number) => {
-    const updatedContacts = [...lead.contacts];
-    updatedContacts.splice(index, 1);
-    onUpdateLead({ contacts: updatedContacts });
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdateLead({ email: e.target.value });
   };
 
-  // Activity management
-  const addActivity = () => {
-    onUpdateLead({
-      activities: [
-        ...lead.activities,
-        { tipo: 'nota' as ActivityType, descricao: '', data: new Date().toISOString() },
-      ],
-    });
-  };
-
-  const updateActivity = (index: number, field: keyof LeadActivity, value: string) => {
-    const updatedActivities = [...lead.activities];
-    updatedActivities[index] = { ...updatedActivities[index], [field]: value };
-    onUpdateLead({ activities: updatedActivities });
-  };
-
-  const removeActivity = (index: number) => {
-    const updatedActivities = [...lead.activities];
-    updatedActivities.splice(index, 1);
-    onUpdateLead({ activities: updatedActivities });
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdateLead({ telefone: e.target.value });
   };
 
   const getScoreColor = (score: number): string => {
@@ -95,8 +71,8 @@ export function LeadAgentCard({ lead, onUpdateLead, changedKeys, isLoading }: Le
     return '#ef4444';
   };
 
-  // Extract Google Maps data
-  const googleMapsData = (lead.apiData?.dadosOriginais || {}) as any;
+  // Extract Google Maps data from dadosOriginais
+  const googleMapsData = (lead.dadosOriginais || {}) as any;
   const avaliacao = googleMapsData.avaliacao as string | undefined;
   const totalAvaliacoes = googleMapsData.totalAvaliacoes as string | undefined;
   const verificado = googleMapsData.verificado as boolean | undefined;
@@ -157,19 +133,19 @@ export function LeadAgentCard({ lead, onUpdateLead, changedKeys, isLoading }: Le
                 type="number"
                 min="0"
                 max="100"
-                value={lead.score}
+                value={lead.scoreQualificacao}
                 onChange={handleScoreChange}
                 className="score-input"
-                style={{ color: getScoreColor(lead.score) }}
+                style={{ color: getScoreColor(lead.scoreQualificacao) }}
                 disabled={isLoading}
               />
               <span className="score-max">/100</span>
             </div>
 
-            {lead.apiData?.fonte && (
+            {lead.fonte && (
               <div className="metric-badge">
                 <span className="metric-label">Fonte</span>
-                <Badge variant="outline">{lead.apiData.fonte}</Badge>
+                <Badge variant="outline">{lead.fonte}</Badge>
               </div>
             )}
           </div>
@@ -232,46 +208,46 @@ export function LeadAgentCard({ lead, onUpdateLead, changedKeys, isLoading }: Le
               {changedKeys.includes('segmento') && <ChangedIndicator />}
             </div>
 
-            {lead.apiData?.numFuncionarios && (
+            {lead.numFuncionarios && (
               <div className="field-group">
                 <label>Funcionários</label>
-                <div className="readonly-field">{lead.apiData.numFuncionarios}</div>
+                <div className="readonly-field">{lead.numFuncionarios}</div>
               </div>
             )}
 
-            {lead.apiData?.receitaAnualEstimada && (
+            {lead.receitaAnualEstimada && (
               <div className="field-group">
                 <label>Receita Anual Est.</label>
                 <div className="readonly-field">
-                  R$ {lead.apiData.receitaAnualEstimada.toLocaleString('pt-BR')}
+                  R$ {lead.receitaAnualEstimada.toLocaleString('pt-BR')}
                 </div>
               </div>
             )}
 
-            {lead.apiData?.linkedinUrl && (
+            {lead.linkedinUrl && (
               <div className="field-group full-width">
                 <label>LinkedIn</label>
                 <a
-                  href={lead.apiData.linkedinUrl}
+                  href={lead.linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="link-field"
                 >
-                  {lead.apiData.linkedinUrl}
+                  {lead.linkedinUrl}
                 </a>
               </div>
             )}
 
-            {lead.apiData?.siteEmpresa && (
+            {lead.siteEmpresa && (
               <div className="field-group full-width">
                 <label>Site</label>
                 <a
-                  href={lead.apiData.siteEmpresa}
+                  href={lead.siteEmpresa}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="link-field"
                 >
-                  {lead.apiData.siteEmpresa}
+                  {lead.siteEmpresa}
                 </a>
               </div>
             )}
@@ -300,74 +276,65 @@ export function LeadAgentCard({ lead, onUpdateLead, changedKeys, isLoading }: Le
         </CardContent>
       </Card>
 
-      {/* Contatos */}
+      {/* Contato Principal */}
       <Card className="section-card">
-        <CardHeader className="card-header-flex">
-          <CardTitle className="section-title">Contatos</CardTitle>
-          <button
-            type="button"
-            className="add-btn"
-            onClick={addContact}
-            disabled={isLoading}
-          >
-            + Adicionar
-          </button>
+        <CardHeader>
+          <CardTitle className="section-title">Contato Principal</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="contacts-list">
-            {lead.contacts.map((contact, index) => (
-              <div key={index} className="contact-item">
-                <div className="contact-fields">
-                  <input
-                    type="text"
-                    value={contact.nome || ''}
-                    onChange={(e) => updateContact(index, 'nome', e.target.value)}
-                    placeholder="Nome completo"
-                    className="contact-name-input"
-                    disabled={isLoading}
-                  />
-                  <input
-                    type="text"
-                    value={contact.cargo || ''}
-                    onChange={(e) => updateContact(index, 'cargo', e.target.value)}
-                    placeholder="Cargo"
-                    className="contact-cargo-input"
-                    disabled={isLoading}
-                  />
-                  <div className="contact-info-row">
-                    <input
-                      type="email"
-                      value={contact.email || ''}
-                      onChange={(e) => updateContact(index, 'email', e.target.value)}
-                      placeholder="email@empresa.com"
-                      className="contact-email-input"
-                      disabled={isLoading}
-                    />
-                    <input
-                      type="tel"
-                      value={contact.telefone || ''}
-                      onChange={(e) => updateContact(index, 'telefone', e.target.value)}
-                      placeholder="(00) 00000-0000"
-                      className="contact-phone-input"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-                {lead.contacts.length > 1 && (
-                  <button
-                    type="button"
-                    className="remove-btn"
-                    onClick={() => removeContact(index)}
-                    aria-label="Remover contato"
-                    disabled={isLoading}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            ))}
+          <div className="fields-grid">
+            <div className="field-group">
+              <label>Nome do Contato</label>
+              <input
+                type="text"
+                value={lead.nomeContato || ''}
+                onChange={handleNomeContatoChange}
+                placeholder="Nome completo"
+                className="field-input"
+                disabled={isLoading}
+              />
+              {changedKeys.includes('nomeContato') && <ChangedIndicator />}
+            </div>
+
+            <div className="field-group">
+              <label>Cargo</label>
+              <input
+                type="text"
+                value={lead.cargoContato || ''}
+                onChange={handleCargoContatoChange}
+                placeholder="Ex: Diretor de TI"
+                className="field-input"
+                disabled={isLoading}
+              />
+              {changedKeys.includes('cargoContato') && <ChangedIndicator />}
+            </div>
+
+            <div className="field-group">
+              <label>Email</label>
+              <input
+                type="email"
+                value={lead.email || ''}
+                onChange={handleEmailChange}
+                placeholder="email@empresa.com"
+                className="field-input"
+                disabled={isLoading}
+              />
+              {changedKeys.includes('email') && <ChangedIndicator />}
+            </div>
+
+            <div className="field-group">
+              <label>Telefone</label>
+              <input
+                type="tel"
+                value={lead.telefone || ''}
+                onChange={handleTelefoneChange}
+                placeholder="(00) 00000-0000"
+                className="field-input"
+                disabled={isLoading}
+              />
+              {changedKeys.includes('telefone') && <ChangedIndicator />}
+            </div>
           </div>
-          {changedKeys.includes('contacts') && <ChangedIndicator />}
         </CardContent>
       </Card>
 
@@ -463,79 +430,20 @@ export function LeadAgentCard({ lead, onUpdateLead, changedKeys, isLoading }: Le
         </Card>
       )}
 
-      {/* Histórico e Atividades */}
+      {/* Observações */}
       <Card className="section-card">
-        <CardHeader className="card-header-flex">
-          <CardTitle className="section-title">Histórico de Atividades</CardTitle>
-          <button
-            type="button"
-            className="add-btn"
-            onClick={addActivity}
-            disabled={isLoading}
-          >
-            + Adicionar
-          </button>
+        <CardHeader>
+          <CardTitle className="section-title">Observações</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="activities-list">
-            {lead.activities.map((activity, index) => (
-              <div key={index} className="activity-item">
-                <div className="activity-icon">
-                  {ACTIVITY_ICONS[activity.tipo]}
-                </div>
-                <div className="activity-content">
-                  <div className="activity-header">
-                    <select
-                      value={activity.tipo}
-                      onChange={(e) => updateActivity(index, 'tipo', e.target.value)}
-                      className="activity-type-select"
-                      disabled={isLoading}
-                    >
-                      {Object.entries(ACTIVITY_ICONS).map(([type, icon]) => (
-                        <option key={type} value={type}>
-                          {icon} {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="datetime-local"
-                      value={activity.data ? new Date(activity.data).toISOString().slice(0, 16) : ''}
-                      onChange={(e) => updateActivity(index, 'data', new Date(e.target.value).toISOString())}
-                      className="activity-date-input"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      className="remove-btn"
-                      onClick={() => removeActivity(index)}
-                      aria-label="Remover atividade"
-                      disabled={isLoading}
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <textarea
-                    value={activity.descricao || ''}
-                    onChange={(e) => updateActivity(index, 'descricao', e.target.value)}
-                    placeholder="Descreva a atividade..."
-                    className="activity-textarea"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          {changedKeys.includes('activities') && <ChangedIndicator />}
-
-          {/* Observations */}
           <div className="field-group observations-section">
-            <label>Observações</label>
+            <label>Anotações e Histórico</label>
             <textarea
               value={lead.observacoes || ''}
               onChange={handleObservacoesChange}
-              placeholder="Adicione observações importantes sobre o lead..."
+              placeholder="Adicione observações importantes sobre o lead, histórico de contatos, anotações de reuniões, etc..."
               className="observations-textarea"
-              rows={3}
+              rows={6}
               disabled={isLoading}
             />
             {changedKeys.includes('observacoes') && <ChangedIndicator />}

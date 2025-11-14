@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -43,13 +44,46 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      mode === 'development' &&
-      componentTagger(),
+      mode === 'development' && componentTagger(),
+      nodePolyfills({
+        // Polyfill specific modules used by CopilotKit
+        include: ['util', 'buffer'],
+        // Enable Buffer global for is-buffer compatibility
+        globals: {
+          Buffer: true,
+          global: false,
+          process: false,
+        },
+      }),
     ].filter(Boolean),
     resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
+      alias: [
+        { find: "@", replacement: path.resolve(__dirname, "./src") },
+        { find: "chalk", replacement: path.resolve(__dirname, "./src/shared/utils/chalk-shim.ts") },
+        { find: "is-buffer", replacement: path.resolve(__dirname, "./src/shared/utils/is-buffer-shim.ts") },
+        { find: "extend", replacement: path.resolve(__dirname, "./src/shared/utils/extend-shim.ts") },
+        { find: "debug", replacement: path.resolve(__dirname, "./src/shared/utils/debug-shim.ts") },
+        { find: "style-to-object", replacement: path.resolve(__dirname, "./src/shared/utils/style-to-object-shim.ts") },
+        {
+          find: /^react-is$/,
+          replacement: path.resolve(__dirname, "./src/shared/utils/react-is-shim.ts")
+        },
+      ],
+    },
+    optimizeDeps: {
+      // REMOVED exclude for CopilotKit packages
+      // Reason: These packages have dependency conflicts (react-markdown versions)
+      // and need to be pre-bundled by Vite to resolve ESM issues
+      include: [
+        '@copilotkit/react-core',
+        '@copilotkit/react-ui',
+        '@copilotkit/runtime-client-gql',
+        'react-markdown',
+        'prop-types'
+      ]
+    },
+    build: {
+      sourcemap: false, // Disable sourcemaps to avoid warnings about missing source files
     },
   };
 });

@@ -16,6 +16,7 @@ import { LeadsPage } from "./features/leads";
 import { LeadAgentPage } from "./features/lead-agent";
 import { AdminPage } from "./features/admin";
 import { SearchTermsPage, ScrapingPage, WorkerMonitorPage } from "./features/scraping";
+import { MessagesPage, VinculacoesPendentesPage } from "./features/disparorapido/pages";
 import { UsersPage } from "./features/user-management";
 import { EmpresasPage, CadastroEmpresaPage } from "./features/companies";
 import { SegmentosPage } from "./features/segments";
@@ -117,6 +118,10 @@ function AppRoutes() {
           <Route path="payments/:id" element={<PaymentDetailsPage />} />
           <Route path="credits/transactions" element={<CreditTransactionsPage />} />
           <Route path="financial" element={<FinancialDashboardPage />} />
+          
+          {/* DisparoRapido Routes */}
+          <Route path="disparorapido/messages" element={<MessagesPage />} />
+          <Route path="disparorapido/vinculacoes" element={<VinculacoesPendentesPage />} />
           <Route path="pricing" element={<PricingPage />} />
           
           <Route path="profile" element={<UserProfilePage />} />
