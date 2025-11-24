@@ -81,6 +81,7 @@ export {
   type CreateTrialSubscriptionDTO,
   type CancelSubscriptionDTO,
   isTrialSubscription,
+  isTrialExpired,
   getDaysRemainingInTrial,
   calculateNextDueDate,
   canCancelSubscription,

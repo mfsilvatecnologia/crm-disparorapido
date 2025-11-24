@@ -27,13 +27,19 @@ export function getStatusLabel(status: SubscriptionStatus): string {
 export function getStatusColor(status: SubscriptionStatus): string {
   const colors: Record<SubscriptionStatus, string> = {
     [SubscriptionStatus.TRIALING]: 'bg-blue-100 text-blue-800',
+    [SubscriptionStatus.TRIAL]: 'bg-blue-100 text-blue-800',
+    [SubscriptionStatus.TRIAL_EXPIRED]: 'bg-red-100 text-red-800',
     [SubscriptionStatus.ACTIVE]: 'bg-green-100 text-green-800',
+    [SubscriptionStatus.ACTIVE_EN]: 'bg-green-100 text-green-800',
     [SubscriptionStatus.PAST_DUE]: 'bg-yellow-100 text-yellow-800',
     [SubscriptionStatus.CANCELED]: 'bg-red-100 text-red-800',
+    [SubscriptionStatus.CANCELED_EN]: 'bg-red-100 text-red-800',
     [SubscriptionStatus.SUSPENDED]: 'bg-orange-100 text-orange-800',
+    [SubscriptionStatus.SUSPENDED_EN]: 'bg-orange-100 text-orange-800',
     [SubscriptionStatus.EXPIRED]: 'bg-gray-100 text-gray-800',
+    [SubscriptionStatus.EXPIRED_EN]: 'bg-gray-100 text-gray-800',
   };
-  return colors[status];
+  return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
 /**
@@ -57,22 +63,28 @@ export function needsAttention(subscription: Subscription): boolean {
  */
 export function getStatusPriority(status: SubscriptionStatus): number {
   const priorities: Record<SubscriptionStatus, number> = {
+    [SubscriptionStatus.TRIAL_EXPIRED]: 0, // Most urgent - needs action
     [SubscriptionStatus.TRIALING]: 1,
+    [SubscriptionStatus.TRIAL]: 1,
     [SubscriptionStatus.ACTIVE]: 2,
+    [SubscriptionStatus.ACTIVE_EN]: 2,
     [SubscriptionStatus.PAST_DUE]: 3,
     [SubscriptionStatus.SUSPENDED]: 4,
+    [SubscriptionStatus.SUSPENDED_EN]: 4,
     [SubscriptionStatus.CANCELED]: 5,
-    [SubscriptionStatus.EXPIRED]: 6
+    [SubscriptionStatus.CANCELED_EN]: 5,
+    [SubscriptionStatus.EXPIRED]: 6,
+    [SubscriptionStatus.EXPIRED_EN]: 6
   };
-  return priorities[status] || 999;
+  return priorities[status] ?? 999;
 }
 
 /**
  * Sort subscriptions by status priority
  */
 export function sortByStatusPriority(subscriptions: Subscription[]): Subscription[] {
-  return [...subscriptions].sort((a, b) => 
-    getStatusPriority(a.status) - getStatusPriority(b.status)
+  return [...subscriptions].sort((a, b) =>
+    getStatusPriority(a.status as SubscriptionStatus) - getStatusPriority(b.status as SubscriptionStatus)
   );
 }
 
@@ -138,27 +150,27 @@ export function groupByStatus(subscriptions: Subscription[]): Record<Subscriptio
  */
 export function getHealthScore(subscription: Subscription): number {
   let score = 100;
-  
-  // Penalize based on status
-  if (subscription.status === SubscriptionStatus.PAST_DUE) score -= 30;
-  if (subscription.status === SubscriptionStatus.SUSPENDED) score -= 50;
-  if (subscription.status === SubscriptionStatus.CANCELED) score = 0;
-  if (subscription.status === SubscriptionStatus.EXPIRED) score = 0;
-  
+  const status = subscription.status;
+
+  // Penalize based on status (using string literals matching Subscription interface)
+  if (status === 'suspensa') score -= 50;
+  if (status === 'cancelada') score = 0;
+  if (status === 'expirada') score = 0;
+
   // Bonus for active trial
-  if (subscription.status === SubscriptionStatus.TRIALING) {
+  if (status === 'trialing' || status === 'trial') {
     const daysRemaining = getDaysRemainingInTrial(subscription);
     if (daysRemaining && daysRemaining > 0) {
       score += 10;
     }
   }
-  
+
   // Penalize if payment due soon
   if (isPaymentDueSoon(subscription)) score -= 10;
-  
+
   // Penalize if payment overdue
   if (isPaymentOverdue(subscription)) score -= 20;
-  
+
   return Math.max(0, Math.min(100, score));
 }
 
@@ -177,25 +189,24 @@ export function getHealthScoreColor(score: number): string {
  */
 export function getSubscriptionRecommendations(subscription: Subscription): string[] {
   const recommendations: string[] = [];
-  
-  if (subscription.status === SubscriptionStatus.TRIALING) {
+  const status = subscription.status;
+
+  if (status === 'trialing' || status === 'trial') {
     const daysRemaining = getDaysRemainingInTrial(subscription);
-    if (daysRemaining && daysRemaining <= 3) {
+    if (daysRemaining !== null && daysRemaining < 0) {
+      recommendations.push('Período de teste expirado. Ative sua assinatura para continuar.');
+    } else if (daysRemaining !== null && daysRemaining <= 3) {
       recommendations.push('Trial termina em breve. Configure método de pagamento.');
     }
   }
-  
-  if (subscription.status === SubscriptionStatus.PAST_DUE) {
-    recommendations.push('Pagamento atrasado. Atualize sua forma de pagamento.');
-  }
-  
-  if (subscription.status === SubscriptionStatus.SUSPENDED) {
+
+  if (status === 'suspensa') {
     recommendations.push('Assinatura suspensa. Regularize o pagamento para reativar.');
   }
-  
+
   if (isPaymentDueSoon(subscription)) {
     recommendations.push('Próximo pagamento em breve. Verifique se tem saldo suficiente.');
   }
-  
+
   return recommendations;
 }

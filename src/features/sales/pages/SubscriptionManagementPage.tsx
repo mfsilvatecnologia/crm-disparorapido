@@ -1,20 +1,30 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '../hooks/subscriptions/useSubscription';
 import { useProduct } from '../hooks/subscriptions/useProduct';
 import { usePaymentHistory } from '../hooks/payments/usePaymentHistory';
-import { LegacyPaymentStatus } from '../types/payment.types';
+import { isTrialExpired } from '../types/subscription.types';
 import { SubscriptionDetails } from '../components/subscriptions/SubscriptionDashboard/SubscriptionDetails';
 import { CancelDialog } from '../components/subscriptions/SubscriptionDashboard/CancelDialog';
 import { TrialBanner } from '../components/subscriptions/TrialBanner';
 
 export function SubscriptionManagementPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  
+  const navigate = useNavigate();
+
   const {
     subscription,
     isLoading: subscriptionLoading,
     daysRemaining
   } = useSubscription();
+
+  // Check if trial has expired
+  const trialExpired = subscription ? isTrialExpired(subscription) : false;
+
+  // Handler to navigate to pricing/checkout page
+  const handleActivateSubscription = () => {
+    navigate('/pricing');
+  };
   const { data: product, isLoading: productLoading } = useProduct(subscription?.produtoId);
   const { data: payments, isLoading: paymentsLoading } = usePaymentHistory();
 
@@ -58,14 +68,15 @@ export function SubscriptionManagementPage() {
           </p>
         </div>
 
-        {/* Trial Banner (se estiver em trial) */}
-        {(subscription.status === 'trial' || subscription.status === 'trialing' || subscription.isInTrial) && (
+        {/* Trial Banner (se estiver em trial ou trial expirado) */}
+        {(subscription.status === 'trial' || subscription.status === 'trialing' || subscription.isInTrial || trialExpired) && (
           <div className="mb-6">
             <TrialBanner
               subscription={subscription}
               product={product}
               daysRemaining={daysRemaining || 0}
               onManage={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onActivate={handleActivateSubscription}
             />
           </div>
         )}
@@ -77,6 +88,7 @@ export function SubscriptionManagementPage() {
             product={product}
             paymentHistory={payments?.data}
             onCancel={() => setShowCancelDialog(true)}
+            onActivate={handleActivateSubscription}
           />
         </div>
 

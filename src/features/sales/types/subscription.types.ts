@@ -10,34 +10,37 @@
 export enum SubscriptionStatus {
   /** In trial period */
   TRIALING = 'trialing',
-  
+
   /** Legacy trial status */
   TRIAL = 'trial',
-  
+
+  /** Trial expired (computed status for UI) */
+  TRIAL_EXPIRED = 'trial_expired',
+
   /** Active subscription with payments up to date */
   ACTIVE = 'ativa',
-  
+
   /** Legacy active status */
   ACTIVE_EN = 'active',
-  
+
   /** Payment overdue */
   PAST_DUE = 'past_due',
-  
+
   /** Subscription canceled */
   CANCELED = 'cancelada',
-  
+
   /** Legacy canceled status */
   CANCELED_EN = 'canceled',
-  
+
   /** Subscription suspended (e.g., fraud) */
   SUSPENDED = 'suspensa',
-  
+
   /** Legacy suspended status */
   SUSPENDED_EN = 'suspended',
-  
+
   /** Trial or subscription expired */
   EXPIRED = 'expirada',
-  
+
   /** Legacy expired status */
   EXPIRED_EN = 'expired'
 }
@@ -210,6 +213,7 @@ export interface SubscriptionWithComputed extends Subscription {
 export const SubscriptionStatusColors: Record<SubscriptionStatus, string> = {
   [SubscriptionStatus.TRIALING]: 'blue',
   [SubscriptionStatus.TRIAL]: 'blue',
+  [SubscriptionStatus.TRIAL_EXPIRED]: 'red',
   [SubscriptionStatus.ACTIVE]: 'green',
   [SubscriptionStatus.ACTIVE_EN]: 'green',
   [SubscriptionStatus.PAST_DUE]: 'yellow',
@@ -227,6 +231,7 @@ export const SubscriptionStatusColors: Record<SubscriptionStatus, string> = {
 export const SubscriptionStatusLabels: Record<SubscriptionStatus, string> = {
   [SubscriptionStatus.TRIALING]: 'Em período de teste',
   [SubscriptionStatus.TRIAL]: 'Em período de teste',
+  [SubscriptionStatus.TRIAL_EXPIRED]: 'Trial expirado',
   [SubscriptionStatus.ACTIVE]: 'Ativa',
   [SubscriptionStatus.ACTIVE_EN]: 'Ativa',
   [SubscriptionStatus.PAST_DUE]: 'Pagamento atrasado',
@@ -247,15 +252,33 @@ export function isTrialSubscription(subscription: Subscription): boolean {
 
 /**
  * Helper function to calculate days remaining in trial
+ * Returns negative values if trial has expired (e.g., -6 means expired 6 days ago)
  */
 export function getDaysRemainingInTrial(subscription: Subscription): number {
   if (!subscription.trialEndDate) return 0;
-  
+
   const now = new Date();
   const trialEnd = new Date(subscription.trialEndDate);
   const diff = trialEnd.getTime() - now.getTime();
-  
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+
+  // Return actual days (positive = remaining, negative = expired)
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Helper function to check if trial has expired
+ */
+export function isTrialExpired(subscription: Subscription): boolean {
+  if (!subscription.trialEndDate) return false;
+
+  const now = new Date();
+  const trialEnd = new Date(subscription.trialEndDate);
+
+  // Trial is expired if end date is in the past and status is still trial/trialing
+  const isExpired = trialEnd.getTime() < now.getTime();
+  const isTrialStatus = subscription.status === 'trial' || subscription.status === 'trialing';
+
+  return isExpired && isTrialStatus;
 }
 
 

@@ -2,36 +2,43 @@ import { SubscriptionStatus } from '../../../types/subscription.types';
 import { getStatusLabel, getStatusColor } from '../../../services/subscriptionService';
 
 // Status values from API (Portuguese)
-type ApiStatus = 'trial' | 'trialing' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
+type ApiStatus = 'trial' | 'trialing' | 'trial_expired' | 'ativa' | 'expirada' | 'cancelada' | 'suspensa';
 
 interface StatusBadgeProps {
   status: SubscriptionStatus | ApiStatus;
   size?: 'sm' | 'md' | 'lg';
   showIcon?: boolean;
+  isTrialExpired?: boolean;
 }
 
 // Helper to convert API status to SubscriptionStatus enum
-function normalizeStatus(status: SubscriptionStatus | ApiStatus): SubscriptionStatus {
+function normalizeStatus(status: SubscriptionStatus | ApiStatus, isTrialExpired?: boolean): SubscriptionStatus {
+  // If trial is expired, return TRIAL_EXPIRED status
+  if (isTrialExpired) {
+    return SubscriptionStatus.TRIAL_EXPIRED;
+  }
+
   const statusMap: Record<string, SubscriptionStatus> = {
     'trial': SubscriptionStatus.TRIALING,
     'trialing': SubscriptionStatus.TRIALING,
+    'trial_expired': SubscriptionStatus.TRIAL_EXPIRED,
     'ativa': SubscriptionStatus.ACTIVE,
     'expirada': SubscriptionStatus.EXPIRED,
     'cancelada': SubscriptionStatus.CANCELED,
     'suspensa': SubscriptionStatus.SUSPENDED,
   };
-  
+
   // If it's already a SubscriptionStatus enum value, return it
   if (Object.values(SubscriptionStatus).includes(status as SubscriptionStatus)) {
     return status as SubscriptionStatus;
   }
-  
+
   // Otherwise, map from API status
   return statusMap[status as ApiStatus] || SubscriptionStatus.ACTIVE;
 }
 
-export function StatusBadge({ status, size = 'md', showIcon = true }: StatusBadgeProps) {
-  const normalizedStatus = normalizeStatus(status);
+export function StatusBadge({ status, size = 'md', showIcon = true, isTrialExpired = false }: StatusBadgeProps) {
+  const normalizedStatus = normalizeStatus(status, isTrialExpired);
   const label = getStatusLabel(normalizedStatus);
   const colorClasses = getStatusColor(normalizedStatus);
 
@@ -61,6 +68,16 @@ export function StatusBadge({ status, size = 'md', showIcon = true }: StatusBadg
           strokeLinejoin="round"
           strokeWidth={2}
           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
+    [SubscriptionStatus.TRIAL_EXPIRED]: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
         />
       </svg>
     ),

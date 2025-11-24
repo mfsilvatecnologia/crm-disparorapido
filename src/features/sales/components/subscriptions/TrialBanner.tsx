@@ -1,17 +1,18 @@
 import { Subscription } from '../../types/subscription.types';
 import { Product } from '../../types/product.types';
-import { formatPrice } from '../../services/productService';
 
 interface TrialBannerProps {
   subscription: Subscription;
   product?: Product;
   daysRemaining: number;
   onManage: () => void;
+  onActivate?: () => void;
 }
 
-export function TrialBanner({ subscription, product, daysRemaining, onManage }: TrialBannerProps) {
-  // Calcular urgência baseado nos dias restantes
+export function TrialBanner({ subscription, product, daysRemaining, onManage, onActivate }: TrialBannerProps) {
+  // Calcular urgência baseado nos dias restantes (daysRemaining pode ser negativo)
   const isExpired = daysRemaining < 0;
+  const daysExpiredAgo = isExpired ? Math.abs(daysRemaining) : 0;
   const isUrgent = daysRemaining <= 3 && daysRemaining >= 0;
   const isWarning = daysRemaining <= 7 && daysRemaining > 3;
 
@@ -63,12 +64,12 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
               }`}
             >
               {isExpired
-                ? '🔒 Seu teste grátis expirou'
+                ? '🔒 Período de teste expirado'
                 : isUrgent
-                ? '⚠️ Seu teste grátis está acabando'
+                ? '⚠️ Seu período de teste está acabando'
                 : isWarning
-                ? '⏰ Seu teste grátis está próximo do fim'
-                : '🎉 Você está no período de teste grátis'}
+                ? '⏰ Seu período de teste está próximo do fim'
+                : '🎉 Você está no período de teste'}
             </h3>
           </div>
 
@@ -80,25 +81,29 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
           >
             <p className="font-medium">
               {isExpired ? (
-                'Seu período de teste gratuito terminou. Assine agora para continuar usando o serviço.'
+                daysExpiredAgo === 1 ? (
+                  'Seu período de teste expirou há 1 dia. Ative sua assinatura para continuar usando o serviço.'
+                ) : (
+                  `Seu período de teste expirou há ${daysExpiredAgo} dias. Ative sua assinatura para continuar usando o serviço.`
+                )
               ) : daysRemaining === 0 ? (
-                'Seu teste termina hoje!'
+                'Seu período de teste termina hoje!'
               ) : daysRemaining === 1 ? (
-                'Resta 1 dia de teste grátis'
+                'Resta 1 dia de período de teste'
               ) : (
                 <>
-                  Restam <span className="font-bold">{daysRemaining} dias</span> de teste grátis
+                  Restam <span className="font-bold">{daysRemaining} dias</span> de período de teste
                 </>
               )}
             </p>
 
-            {subscription.trialEndDate && (
+            {subscription.trialEndDate && !isExpired && (
               <p className="text-xs opacity-90">
                 Término do teste: {formatDate(subscription.trialEndDate)}
               </p>
             )}
 
-            {subscription.nextDueDate && (
+            {subscription.nextDueDate && !isExpired && (
               <p className="mt-2 font-medium">
                 Próxima cobrança: {subscription.valueFormatted} em{' '}
                 {formatDate(subscription.nextDueDate)}
@@ -113,7 +118,7 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
 
             {isUrgent && !isExpired && (
               <p className="mt-2 text-xs font-medium">
-                💡 Cancele antes do término para não ser cobrado
+                💡 Ative sua assinatura antes do término para não perder acesso
               </p>
             )}
           </div>
@@ -121,24 +126,32 @@ export function TrialBanner({ subscription, product, daysRemaining, onManage }: 
 
         {/* Botão de Ação */}
         <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            onClick={onManage}
-            className={`
-              rounded-lg px-6 py-3 font-semibold shadow-sm transition-colors
-              ${
-                isExpired
-                  ? 'bg-red-700 text-white hover:bg-red-800'
-                  : isUrgent
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : isWarning
-                  ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }
-            `}
-            type="button"
-          >
-            {isExpired ? 'Assinar Agora' : 'Gerenciar Assinatura'}
-          </button>
+          {isExpired ? (
+            <button
+              onClick={onActivate || onManage}
+              className="animate-pulse rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:from-red-700 hover:to-red-800 hover:shadow-xl"
+              type="button"
+            >
+              Ativar Assinatura
+            </button>
+          ) : (
+            <button
+              onClick={onManage}
+              className={`
+                rounded-lg px-6 py-3 font-semibold shadow-sm transition-colors
+                ${
+                  isUrgent
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : isWarning
+                    ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }
+              `}
+              type="button"
+            >
+              Gerenciar Assinatura
+            </button>
+          )}
         </div>
       </div>
 

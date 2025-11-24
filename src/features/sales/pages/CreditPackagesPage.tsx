@@ -10,7 +10,7 @@ export function CreditPackagesPage() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   const { data: packages, isLoading: packagesLoading } = useCreditPackages();
-  const { data: balance, isLoading: balanceLoading } = useCreditBalance();
+  const { balance, estimatedLeads, isLoading: balanceLoading } = useCreditBalance();
 
   const isLoading = packagesLoading || balanceLoading;
 
@@ -58,7 +58,7 @@ export function CreditPackagesPage() {
           <div className="mb-8">
             <CreditBalanceCard
               balance={balance}
-              estimatedLeads={balance.estatisticas.leadsEstimados}
+              estimatedLeads={estimatedLeads}
               onBuyCredits={() => window.scrollTo({ top: 400, behavior: 'smooth' })}
             />
           </div>

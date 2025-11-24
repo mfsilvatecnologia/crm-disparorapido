@@ -17,7 +17,7 @@ export function MarketplacePage() {
     limit: 12,
   });
   
-  const { data: balance, isLoading: balanceLoading } = useCreditBalance();
+  const { balance, estimatedLeads, isLoading: balanceLoading } = useCreditBalance();
   const { data: ownedLeadsData } = usePurchasedLeads();
 
   const isLoading = leadsLoading || balanceLoading;
@@ -76,7 +76,7 @@ export function MarketplacePage() {
           <div className="mb-8">
             <CreditBalanceCard
               balance={balance}
-              estimatedLeads={balance.estatisticas.leadsEstimados}
+              estimatedLeads={estimatedLeads}
               onBuyCredits={handleBuyCredits}
             />
           </div>

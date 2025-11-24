@@ -1,4 +1,4 @@
-import { Subscription } from '../../../types/subscription.types';
+import { Subscription, isTrialExpired as checkTrialExpired, getDaysRemainingInTrial } from '../../../types/subscription.types';
 import { Product } from '../../../types/product.types';
 import { Payment } from '../../../types/payment.types';
 import { BillingCycle } from '../../../types/product.types';
@@ -12,6 +12,7 @@ interface SubscriptionDetailsProps {
   onManage?: () => void;
   onViewPayments?: () => void;
   onCancel?: () => void;
+  onActivate?: () => void;
 }
 
 export function SubscriptionDetails({
@@ -20,7 +21,10 @@ export function SubscriptionDetails({
   paymentHistory = [],
   onManage,
   onViewPayments,
+  onActivate,
 }: SubscriptionDetailsProps) {
+  const isTrialExpired = checkTrialExpired(subscription);
+  const daysRemaining = getDaysRemainingInTrial(subscription);
   const formatDate = (date: string | null) => {
     if (!date) return '-';
     return new Intl.DateTimeFormat('pt-BR', {
@@ -43,7 +47,7 @@ export function SubscriptionDetails({
               <p className="mt-1 text-sm text-gray-600">{product.description}</p>
             )}
           </div>
-          <StatusBadge status={subscription.status} size="lg" />
+          <StatusBadge status={subscription.status} size="lg" isTrialExpired={isTrialExpired} />
         </div>
       </div>
 
@@ -221,13 +225,23 @@ export function SubscriptionDetails({
 
         {/* Actions */}
         <div className="mt-6 border-t border-gray-200 pt-6">
-          <button
-            onClick={onManage}
-            className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700 sm:w-auto"
-            type="button"
-          >
-            Gerenciar Assinatura
-          </button>
+          {isTrialExpired ? (
+            <button
+              onClick={onActivate || onManage}
+              className="w-full animate-pulse rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:from-red-700 hover:to-red-800 hover:shadow-xl sm:w-auto"
+              type="button"
+            >
+              Ativar Assinatura
+            </button>
+          ) : (
+            <button
+              onClick={onManage}
+              className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700 sm:w-auto"
+              type="button"
+            >
+              Gerenciar Assinatura
+            </button>
+          )}
         </div>
       </div>
     </div>

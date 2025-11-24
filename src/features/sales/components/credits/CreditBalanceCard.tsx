@@ -12,10 +12,14 @@ export function CreditBalanceCard({
   onBuyCredits,
 }: CreditBalanceCardProps) {
   const formatCredits = (amount: number) => {
+    if (isNaN(amount) || amount === null || amount === undefined) {
+      return '0';
+    }
     return new Intl.NumberFormat('pt-BR').format(amount);
   };
 
-  const currentBalance = balance.balance;
+  // Use saldoCreditosCentavos (correct field from API) with fallback
+  const currentBalance = balance.saldoCreditosCentavos ?? 0;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -56,10 +60,21 @@ export function CreditBalanceCard({
         </div>
       </div>
 
-      {/* Last Updated */}
+      {/* Statistics */}
       <div className="mb-6 border-t border-gray-200 pt-4">
-        <div className="text-xs text-gray-500">
-          Atualizado em: {new Date(balance.lastUpdated).toLocaleString('pt-BR')}
+        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+          <div>
+            <div className="font-medium text-gray-900">{formatCredits(balance.estatisticas?.totalComprado ?? 0)}</div>
+            <div className="text-gray-500">Comprados</div>
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">{formatCredits(balance.estatisticas?.totalGasto ?? 0)}</div>
+            <div className="text-gray-500">Gastos</div>
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">{formatCredits(balance.estatisticas?.totalBonusRecebido ?? 0)}</div>
+            <div className="text-gray-500">Bônus</div>
+          </div>
         </div>
       </div>
 
