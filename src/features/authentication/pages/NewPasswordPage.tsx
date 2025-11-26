@@ -9,6 +9,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Label } from '@/shared/components/ui/label';
 import { useToast } from '@/shared/hooks/use-toast';
+import { useTenant } from '@/shared/contexts/TenantContext';
 import { apiClient } from '@/shared/services/client';
 import { ConfirmResetPasswordSchema } from '@/shared/services/schemas';
 import type { ConfirmResetPasswordRequest } from '@/shared/services/schemas';
@@ -46,6 +47,7 @@ export default function NewPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tenant } = useTenant();
   const [showSuccess, setShowSuccess] = useState(false);
 
   const token = searchParams.get('token');
@@ -105,13 +107,24 @@ export default function NewPasswordPage() {
 
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center p-4"
+        style={{
+          background: `linear-gradient(to bottom right, ${tenant.theme.gradientFrom}, ${tenant.theme.gradientTo})`,
+        }}
+      >
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary mb-4">
-              <Lock className="h-6 w-6 text-primary-foreground" />
+            <div
+              className="inline-flex h-12 w-12 items-center justify-center rounded-full mb-4"
+              style={{ backgroundColor: tenant.theme.primary }}
+            >
+              <Lock
+                className="h-6 w-6"
+                style={{ color: tenant.theme.primaryForeground }}
+              />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">LeadsRápido</h1>
+            <h1 className="text-2xl font-bold text-white">{tenant.branding.companyName}</h1>
           </div>
 
           <Card className="w-full max-w-md">
@@ -126,8 +139,8 @@ export default function NewPasswordPage() {
             </CardHeader>
           </Card>
 
-          <div className="mt-8 text-center text-sm text-gray-500">
-            <p>© 2024 LeadsRápido. Todos os direitos reservados.</p>
+          <div className="mt-8 text-center text-sm text-white/80">
+            <p>© {new Date().getFullYear()} {tenant.branding.companyName}. Todos os direitos reservados.</p>
           </div>
         </div>
       </div>
@@ -135,13 +148,24 @@ export default function NewPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{
+        background: `linear-gradient(to bottom right, ${tenant.theme.gradientFrom}, ${tenant.theme.gradientTo})`,
+      }}
+    >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary mb-4">
-            <Lock className="h-6 w-6 text-primary-foreground" />
+          <div
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full mb-4"
+            style={{ backgroundColor: tenant.theme.primary }}
+          >
+            <Lock
+              className="h-6 w-6"
+              style={{ color: tenant.theme.primaryForeground }}
+            />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">LeadsRápido</h1>
+          <h1 className="text-2xl font-bold text-white">{tenant.branding.companyName}</h1>
         </div>
 
         <Card className="w-full max-w-md">
@@ -228,8 +252,8 @@ export default function NewPasswordPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>© 2024 LeadsRápido. Todos os direitos reservados.</p>
+        <div className="mt-8 text-center text-sm text-white/80">
+          <p>© {new Date().getFullYear()} {tenant.branding.companyName}. Todos os direitos reservados.</p>
         </div>
       </div>
     </div>

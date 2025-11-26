@@ -10,6 +10,7 @@ export interface CurrencyFormatOptions {
   locale?: string;                   // Default: 'pt-BR'
   currency?: string;                 // Default: 'BRL'
   showSymbol?: boolean;              // Default: true
+  isCents?: boolean;                 // Default: false - when true, divides by 100
 }
 
 /**
@@ -22,19 +23,20 @@ export interface DateFormatOptions {
 }
 
 /**
- * Format currency from cents to R$ format
- * @param cents - Amount in cents (e.g., 9900 = R$ 99,00)
+ * Format currency value to R$ format
+ * @param value - Amount (in reais by default, or in cents if isCents=true)
  * @param options - Formatting options
  * @returns Formatted currency string
  */
-export function formatCurrency(cents: number, options: CurrencyFormatOptions = {}): string {
+export function formatCurrency(value: number, options: CurrencyFormatOptions = {}): string {
   const {
     locale = 'pt-BR',
     currency = 'BRL',
     showSymbol = true,
+    isCents = false,
   } = options;
 
-  const reais = cents / 100;
+  const reais = isCents ? value / 100 : value;
 
   return new Intl.NumberFormat(locale, {
     style: showSymbol ? 'currency' : 'decimal',

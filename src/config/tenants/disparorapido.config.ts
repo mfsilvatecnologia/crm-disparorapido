@@ -10,6 +10,7 @@ export const disparorapidoConfig: TenantConfig = {
   domains: [
     'disparorapido.com.br',
     'www.disparorapido.com.br',
+    'crm.disparorapido.com.br',
     'localhost:8082', // Development (different port)
   ],
 
