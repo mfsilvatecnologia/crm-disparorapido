@@ -1,6 +1,7 @@
 import { TenantConfig, TenantId } from './types';
 import { vendasConfig } from './vendas.config';
 import { publixConfig } from './publix.config';
+import { disparorapidoConfig } from './disparorapido.config';
 
 /**
  * All tenant configurations
@@ -8,6 +9,7 @@ import { publixConfig } from './publix.config';
 export const tenants: Record<TenantId, TenantConfig> = {
   vendas: vendasConfig,
   publix: publixConfig,
+  disparorapido: disparorapidoConfig,
 };
 
 /**
@@ -36,6 +38,10 @@ export function getTenantByDomain(hostname: string): TenantConfig {
     if (hostname.includes(':8081')) {
       console.log(`[getTenantByDomain] Using publix for port 8081`);
       return tenants.publix;
+    }
+    if (hostname.includes(':8082')) {
+      console.log(`[getTenantByDomain] Using disparorapido for port 8082`);
+      return tenants.disparorapido;
     }
 
     // Default para vendas em localhost sem porta ou porta 8080
@@ -77,5 +83,5 @@ export function getTenantById(id: TenantId): TenantConfig {
 /**
  * Export individual configs for convenience
  */
-export { vendasConfig, publixConfig };
+export { vendasConfig, publixConfig, disparorapidoConfig };
 export * from './types';
