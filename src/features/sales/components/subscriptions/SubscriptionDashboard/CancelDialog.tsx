@@ -17,7 +17,6 @@ export function CancelDialog({
   onSuccess,
 }: CancelDialogProps) {
   const [reason, setReason] = useState('');
-  const [cancelImmediately, setCancelImmediately] = useState(false);
   const { mutate: cancelSubscription, isPending } = useCancelSubscription();
 
   const handleConfirm = () => {
@@ -25,16 +24,23 @@ export function CancelDialog({
       {
         subscriptionId,
         data: {
-          cancelarImediatamente: cancelImmediately,
-          motivo: reason.trim() || undefined,
+          cancelInAsaas: true,
+          reason: reason.trim() || undefined,
         },
       },
       {
         onSuccess: () => {
-          onClose();
-          if (onSuccess) onSuccess();
+          // Limpa os campos
           setReason('');
-          setCancelImmediately(false);
+          // Fecha o modal
+          onClose();
+          // Callback de sucesso
+          if (onSuccess) onSuccess();
+        },
+        onError: (error) => {
+          console.error('Erro ao cancelar assinatura:', error);
+          // Mesmo em erro, podemos fechar o modal se desejar
+          // ou manter aberto para o usuário tentar novamente
         },
       }
     );
@@ -43,7 +49,6 @@ export function CancelDialog({
   const handleCancel = () => {
     onClose();
     setReason('');
-    setCancelImmediately(false);
   };
 
   if (!isOpen) return null;
@@ -129,52 +134,6 @@ export function CancelDialog({
                 <li>• Seus dados serão mantidos por 30 dias</li>
                 <li>• Você pode reativar a qualquer momento</li>
               </ul>
-            </div>
-
-            {/* Cancellation Options */}
-            <div className="mb-6">
-              <label className="mb-2 block text-sm font-semibold text-gray-900">
-                Quando cancelar?
-              </label>
-              <div className="space-y-2">
-                <label className="flex cursor-pointer items-start rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="cancelType"
-                    checked={!cancelImmediately}
-                    onChange={() => setCancelImmediately(false)}
-                    className="mt-0.5 h-4 w-4 text-blue-600"
-                    disabled={isPending}
-                  />
-                  <div className="ml-3">
-                    <span className="block text-sm font-medium text-gray-900">
-                      No fim do período atual
-                    </span>
-                    <span className="block text-xs text-gray-600">
-                      Você continuará com acesso até o próximo vencimento
-                    </span>
-                  </div>
-                </label>
-
-                <label className="flex cursor-pointer items-start rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="cancelType"
-                    checked={cancelImmediately}
-                    onChange={() => setCancelImmediately(true)}
-                    className="mt-0.5 h-4 w-4 text-blue-600"
-                    disabled={isPending}
-                  />
-                  <div className="ml-3">
-                    <span className="block text-sm font-medium text-gray-900">
-                      Cancelar imediatamente
-                    </span>
-                    <span className="block text-xs text-gray-600">
-                      Você perderá o acesso imediatamente
-                    </span>
-                  </div>
-                </label>
-              </div>
             </div>
 
             {/* Reason */}

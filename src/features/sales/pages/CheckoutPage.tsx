@@ -9,7 +9,7 @@ import { PlanSelection } from '../components/subscriptions/CheckoutFlow/PlanSele
 import { CheckoutConfirmation } from '../components/subscriptions/CheckoutFlow/CheckoutConfirmation';
 import { SuccessPage } from '../components/subscriptions/CheckoutFlow/SuccessPage';
 import { Product } from '../types/product.types';
-import { captureAffiliateCodeFromUrl } from '@/features/affiliates/utils/referralStorage';
+import { captureAffiliateCodeFromUrl, getStoredAffiliateCode } from '@/features/affiliates/utils/referralStorage';
 
 type CheckoutStep = 'selection' | 'confirmation' | 'success';
 
@@ -24,9 +24,12 @@ export function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   // Track if trial was already used (from API error or pre-check)
   const [trialUsed, setTrialUsed] = useState<boolean>(false);
+  const [affiliateCode, setAffiliateCode] = useState<string | null>(null);
 
   useEffect(() => {
     captureAffiliateCodeFromUrl(searchParams);
+    // Carrega código de afiliado do storage
+    setAffiliateCode(getStoredAffiliateCode());
   }, [searchParams]);
 
   const { data: products, isLoading: productsLoading } = useProducts();
@@ -164,6 +167,25 @@ export function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        {/* Affiliate Code Display */}
+        {affiliateCode && (
+          <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-4">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-green-900">
+                  Código de Indicação Aplicado
+                </p>
+                <p className="text-sm text-green-700">
+                  Ref: <span className="font-mono font-semibold">{affiliateCode}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">

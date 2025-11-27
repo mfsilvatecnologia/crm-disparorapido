@@ -94,12 +94,12 @@ export const createSubscriptionSchema = z.object({
  * Cancel Subscription DTO schema
  */
 export const cancelSubscriptionSchema = z.object({
-  motivo: z.string()
+  reason: z.string()
     .min(10, 'Motivo deve ter pelo menos 10 caracteres')
     .max(500, 'Motivo deve ter no máximo 500 caracteres')
     .optional(),
   
-  cancelarImediatamente: z.boolean()
+  cancelInAsaas: z.boolean()
     .default(false)
 });
 

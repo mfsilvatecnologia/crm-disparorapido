@@ -1,15 +1,24 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProducts } from '../hooks/subscriptions/useProducts';
 import { PricingTable } from '../components/subscriptions/PricingTable';
 import { FeatureComparison } from '../components/subscriptions/FeatureComparison';
+import { captureAffiliateCodeFromUrl, appendReferralCodeToUrl } from '@/features/affiliates/utils/referralStorage';
 
 export function PricingPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: products, isLoading, error } = useProducts();
 
+  // Captura código de afiliado da URL quando a página carrega
+  useEffect(() => {
+    captureAffiliateCodeFromUrl(searchParams);
+  }, [searchParams]);
+
   const handleSelectPlan = (productId: string) => {
-    // Redireciona para checkout com o plano selecionado
-    navigate(`/checkout?productId=${productId}`);
+    // Redireciona para checkout com o plano selecionado e propaga código de referência
+    const checkoutUrl = appendReferralCodeToUrl(`/checkout?productId=${productId}`);
+    navigate(checkoutUrl);
   };
 
   // Filtra produtos por categoria (exclui marketplace_leads que são créditos)

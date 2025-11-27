@@ -78,7 +78,7 @@ export function FinancialDashboardPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/payments')}
+              onClick={() => navigate('/app/payments')}
             >
               Ver todos
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -90,7 +90,7 @@ export function FinancialDashboardPage() {
                 <PaymentCard
                   key={payment.id}
                   payment={payment}
-                  onClick={() => navigate(`/payments/${payment.id}`)}
+                  onClick={() => navigate(`/app/payments/${payment.id}`)}
                 />
               ))}
               {(!recentPayments?.data || recentPayments.data.length === 0) && (

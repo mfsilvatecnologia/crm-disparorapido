@@ -7,6 +7,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cancelSubscription } from '../../api/subscriptionsApi';
 import { subscriptionKeys } from './useSubscription';
+import { subscriptionsKeys } from './useSubscriptions';
 import toast from 'react-hot-toast';
 import type { CancelSubscriptionSchema } from '../../schemas';
 
@@ -26,18 +27,16 @@ export function useCancelSubscription() {
     }) => cancelSubscription(subscriptionId, data),
     
     onSuccess: (subscription, variables) => {
-      // Invalidate and refetch subscription query
+      // Invalidate and refetch subscription queries
       queryClient.invalidateQueries({ 
         queryKey: subscriptionKeys.current() 
       });
+      queryClient.invalidateQueries({ 
+        queryKey: subscriptionsKeys.list() 
+      });
       
       // Show success message
-      const immediate = variables.data.cancelarImediatamente;
-      toast.success(
-        immediate 
-          ? 'Assinatura cancelada imediatamente.' 
-          : 'Assinatura será cancelada ao final do período atual.'
-      );
+      toast.success('Assinatura cancelada com sucesso!');
     },
     
     onError: (error: any) => {

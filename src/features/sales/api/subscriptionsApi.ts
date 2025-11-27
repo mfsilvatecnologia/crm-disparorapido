@@ -165,20 +165,18 @@ export async function fetchCurrentSubscription(): Promise<Subscription | null> {
 export async function cancelSubscription(
   subscriptionId: string,
   data: CancelSubscriptionSchema
-): Promise<Subscription> {
-  const response = await apiClient.patch<ApiResponse<Subscription>>(
-    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/cancel`,
+): Promise<void> {
+  const response = await apiClient.post<ApiResponse<null>>(
+    `${SUBSCRIPTIONS_PATH}/trial/${subscriptionId}/cancel`,
     data
   );
-  const result = response.data;
   
-  // Validate response
-  const validation = validateSubscription(result);
-  if (!validation.success) {
-    throw new Error('Invalid subscription data from API');
+  if (!response.success) {
+    throw new Error(response.message || 'Failed to cancel subscription');
   }
   
-  return result;
+  // API returns null on success, just return void
+  return;
 }
 
 /**
