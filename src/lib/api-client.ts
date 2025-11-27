@@ -49,11 +49,21 @@ class ApiClient {
   private getErrorMessage(data: any, fallback: string): string {
     // Se data.error é uma string diretamente
     if (typeof data?.error === 'string') {
+      // Verifica se há detalhes adicionais em details.detail
+      const detail = data?.details?.detail;
+      if (detail && typeof detail === 'string') {
+        return detail;
+      }
       return data.error;
     }
     
     // Se data.error é um objeto com message
     if (data?.error?.message) {
+      // Verifica se há detalhes adicionais em error.details.detail
+      const detail = data?.error?.details?.detail;
+      if (detail && typeof detail === 'string') {
+        return detail;
+      }
       return data.error.message;
     }
     
