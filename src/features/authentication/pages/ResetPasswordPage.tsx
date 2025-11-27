@@ -10,12 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/sha
 import { Label } from '@/shared/components/ui/label';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { useToast } from '@/shared/hooks/use-toast';
+import { useTenant } from '@/shared/contexts/TenantContext';
+import { TenantConfig } from '@/config/tenants/types';
 import { apiClient } from '@/shared/services/client';
 import { ResetPasswordSchema, ConfirmResetPasswordSchema } from '@/shared/services/schemas';
 import type { ResetPasswordRequest, ConfirmResetPasswordRequest } from '@/shared/services/schemas';
 
 // Componente para solicitar reset de senha
-function RequestResetForm() {
+function RequestResetForm({ tenant }: { tenant: TenantConfig }) {
   const { toast } = useToast();
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -92,7 +94,7 @@ function RequestResetForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md bg-gradient-card border-0 shadow-xl">
       <CardHeader>
         <CardTitle>Redefinir senha</CardTitle>
         <CardDescription>
@@ -117,8 +119,12 @@ function RequestResetForm() {
 
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full hover:opacity-90 transition-opacity" 
             disabled={resetMutation.isPending}
+            style={{
+              background: `linear-gradient(135deg, ${tenant.theme.primary} 0%, ${tenant.theme.accent} 100%)`,
+              color: tenant.theme.primaryForeground
+            }}
           >
             {resetMutation.isPending ? 'Enviando...' : 'Enviar instruções'}
           </Button>
@@ -138,7 +144,7 @@ function RequestResetForm() {
 }
 
 // Componente para confirmar reset com nova senha
-function ConfirmResetForm({ token }: { token: string }) {
+function ConfirmResetForm({ token, tenant }: { token: string; tenant: TenantConfig }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showSuccess, setShowSuccess] = useState(false);
@@ -182,7 +188,7 @@ function ConfirmResetForm({ token }: { token: string }) {
 
   if (showSuccess) {
     return (
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-gradient-card border-0 shadow-xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
             <CheckCircle className="h-6 w-6 text-green-600" />
@@ -197,7 +203,7 @@ function ConfirmResetForm({ token }: { token: string }) {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md bg-gradient-card border-0 shadow-xl">
       <CardHeader>
         <CardTitle>Nova senha</CardTitle>
         <CardDescription>
@@ -264,8 +270,12 @@ function ConfirmResetForm({ token }: { token: string }) {
 
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full hover:opacity-90 transition-opacity" 
             disabled={confirmMutation.isPending}
+            style={{
+              background: `linear-gradient(135deg, ${tenant.theme.primary} 0%, ${tenant.theme.accent} 100%)`,
+              color: tenant.theme.primaryForeground
+            }}
           >
             {confirmMutation.isPending ? 'Redefinindo...' : 'Redefinir senha'}
           </Button>
@@ -317,28 +327,90 @@ function getPasswordStrengthText(password: string): string {
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const { tenant } = useTenant();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary mb-4">
-            <Lock className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen flex" style={{ position: 'relative' }}>
+      {/* Left side - Hero */}
+      <div 
+        className="hidden lg:flex flex-1 items-center justify-center p-12 text-white"
+        style={{
+          background: `linear-gradient(135deg, ${tenant.theme.gradientFrom} 0%, ${tenant.theme.gradientVia || tenant.theme.gradientFrom} 50%, ${tenant.theme.gradientTo} 100%)`
+        }}
+      >
+        <div className="max-w-md text-center">
+          <div className="mb-8">
+            <div className="h-24 w-24 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-6 p-4">
+              <img
+                src={tenant.branding.logoLight || tenant.branding.logo}
+                alt={tenant.branding.companyName}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const icon = document.createElement('div');
+                    icon.innerHTML = '<svg class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>';
+                    parent.appendChild(icon);
+                  }
+                }}
+              />
+            </div>
+            <h1 className="text-4xl font-bold mb-4">{tenant.branding.companyName}</h1>
+            <p className="text-xl text-white/90">Recuperação de Senha</p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">LeadsRápido</h1>
+          
+          <div className="glass rounded-2xl p-6 text-left">
+            <h3 className="font-semibold mb-3">Dicas de Segurança:</h3>
+            <ul className="space-y-2 text-sm text-white/90">
+              <li>• Use senhas com pelo menos 8 caracteres</li>
+              <li>• Combine letras maiúsculas e minúsculas</li>
+              <li>• Inclua números e caracteres especiais</li>
+              <li>• Não reutilize senhas antigas</li>
+              <li>• Nunca compartilhe sua senha</li>
+            </ul>
+          </div>
         </div>
+      </div>
 
-        {/* Formulário baseado na presença do token */}
-        {token ? (
-          <ConfirmResetForm token={token} />
-        ) : (
-          <RequestResetForm />
-        )}
+      {/* Right side - Reset Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-background">
+        <div className="w-full max-w-md">
+          {/* Mobile header */}
+          <div className="text-center mb-8 lg:hidden">
+            <div 
+              className="h-16 w-16 rounded-xl flex items-center justify-center mx-auto mb-4 p-3"
+              style={{ backgroundColor: tenant.theme.primary }}
+            >
+              <img
+                src={tenant.branding.logoLight || tenant.branding.logo}
+                alt={tenant.branding.companyName}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const icon = document.createElement('div');
+                    icon.innerHTML = '<svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>';
+                    parent.appendChild(icon);
+                  }
+                }}
+              />
+            </div>
+            <h1 className="text-2xl font-bold">{tenant.branding.companyName}</h1>
+          </div>
 
-        {/* Footer */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>© 2024 LeadsRápido. Todos os direitos reservados.</p>
+          {/* Formulário baseado na presença do token */}
+          {token ? (
+            <ConfirmResetForm token={token} tenant={tenant} />
+          ) : (
+            <RequestResetForm tenant={tenant} />
+          )}
+
+          {/* Footer */}
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} {tenant.branding.companyName}. Todos os direitos reservados.</p>
+          </div>
         </div>
       </div>
     </div>
