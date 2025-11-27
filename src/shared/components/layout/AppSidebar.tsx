@@ -22,7 +22,8 @@ import {
   ArrowRightLeft,
   DollarSign,
   MessageCircle,
-  Link2
+  Link2,
+  Handshake
 } from 'lucide-react';
 import {
   Sidebar,
@@ -124,6 +125,13 @@ const salesItems = [
     url: '/app/credits',
     icon: Coins,
     description: 'Gerenciar créditos',
+    requiredFeature: 'enableBilling'
+  },
+  {
+    title: 'Afiliados',
+    url: '/app/afiliados',
+    icon: Handshake,
+    description: 'Programa de indicações e comissões',
     requiredFeature: 'enableBilling'
   },
   {

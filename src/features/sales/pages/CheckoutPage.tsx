@@ -9,6 +9,7 @@ import { PlanSelection } from '../components/subscriptions/CheckoutFlow/PlanSele
 import { CheckoutConfirmation } from '../components/subscriptions/CheckoutFlow/CheckoutConfirmation';
 import { SuccessPage } from '../components/subscriptions/CheckoutFlow/SuccessPage';
 import { Product } from '../types/product.types';
+import { captureAffiliateCodeFromUrl } from '@/features/affiliates/utils/referralStorage';
 
 type CheckoutStep = 'selection' | 'confirmation' | 'success';
 
@@ -23,6 +24,10 @@ export function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   // Track if trial was already used (from API error or pre-check)
   const [trialUsed, setTrialUsed] = useState<boolean>(false);
+
+  useEffect(() => {
+    captureAffiliateCodeFromUrl(searchParams);
+  }, [searchParams]);
 
   const { data: products, isLoading: productsLoading } = useProducts();
   const trialMutation = useTrialActivation();

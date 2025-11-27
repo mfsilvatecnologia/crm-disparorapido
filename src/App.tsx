@@ -25,17 +25,18 @@ import { CampanhasPage } from "./features/campaigns";
 import { StageConfigPage } from "./features/campaign-stages/pages/StageConfigPage";
 import { CampaignFunnelPage } from "./features/campaign-stages/pages/CampaignFunnelPage";
 import { CampaignDashboard } from "./features/campaign-stages/components/metrics/CampaignDashboard";
-import { 
-  PricingPage, 
-  CheckoutPage, 
-  SubscriptionManagementPage, 
-  CreditPackagesPage, 
+import {
+  PricingPage,
+  CheckoutPage,
+  SubscriptionManagementPage,
+  CreditPackagesPage,
   MarketplacePage,
   PaymentHistoryPage,
   PaymentDetailsPage,
   CreditTransactionsPage,
   FinancialDashboardPage
 } from "./features/sales/pages";
+import { AffiliateCommissionsPage, AffiliateDashboardPage } from "./features/affiliates/pages";
 import { NotFound } from "./shared/pages";
 import { BillingConfigPage } from "./features/campaign-stages/pages/BillingConfigPage";
 import { FeatureDemoPage } from "./shared/components/features/FeatureDemoPage";
@@ -107,7 +108,11 @@ function AppRoutes() {
           <Route path="campaigns/:id/metrics" element={<CampaignDashboard />} />
           <Route path="campaigns/:id/stages" element={<StageConfigPage />} />
           <Route path="billing" element={<BillingConfigPage />} />
-          
+
+          {/* Affiliates */}
+          <Route path="afiliados" element={<AffiliateDashboardPage />} />
+          <Route path="afiliados/comissoes" element={<AffiliateCommissionsPage />} />
+
           {/* Sales & Subscriptions Routes */}
           <Route path="subscription" element={<SubscriptionManagementPage />} />
           <Route path="credits" element={<CreditPackagesPage />} />
