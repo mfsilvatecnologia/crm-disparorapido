@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useProducts } from '../hooks/subscriptions/useProducts';
 import { useTrialActivation } from '../hooks/subscriptions/useTrialActivation';
+import { useDirectSubscription } from '../hooks/subscriptions/useDirectSubscription';
+import { useHasUsedTrial } from '../hooks/subscriptions/useHasUsedTrial';
 import { PlanSelection } from '../components/subscriptions/CheckoutFlow/PlanSelection';
 import { CheckoutConfirmation } from '../components/subscriptions/CheckoutFlow/CheckoutConfirmation';
 import { SuccessPage } from '../components/subscriptions/CheckoutFlow/SuccessPage';
@@ -19,9 +21,22 @@ export function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('selection');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  // Track if trial was already used (from API error or pre-check)
+  const [trialUsed, setTrialUsed] = useState<boolean>(false);
 
   const { data: products, isLoading: productsLoading } = useProducts();
   const trialMutation = useTrialActivation();
+  const directMutation = useDirectSubscription();
+  
+  // Pre-check if trial was already used
+  const { data: hasUsedTrialFromAPI, isLoading: checkingTrialUsage } = useHasUsedTrial();
+
+  // Update trialUsed state when API check completes
+  useEffect(() => {
+    if (hasUsedTrialFromAPI !== undefined) {
+      setTrialUsed(hasUsedTrialFromAPI);
+    }
+  }, [hasUsedTrialFromAPI]);
 
   // Carrega produto selecionado da URL
   useEffect(() => {
@@ -48,27 +63,67 @@ export function CheckoutPage() {
     setCurrentStep('confirmation');
   };
 
+  /**
+   * Handle subscription confirmation
+   * 
+   * Strategy:
+   * 1. If product has trial AND user hasn't used trial -> use trial endpoint
+   * 2. If product has trial but user already used trial -> use direct endpoint (no trial)
+   * 3. If product has no trial -> use direct endpoint
+   */
   const handleConfirm = async () => {
     if (!selectedProduct || !isAuthenticated) return;
 
     // Limpa erro anterior
     setErrorMessage('');
 
+    const productHasTrial = selectedProduct.trialDays > 0;
+    const shouldUseTrial = productHasTrial && !trialUsed;
+
     try {
-      await trialMutation.mutateAsync({
-        produtoId: selectedProduct.id,
-      });
+      if (shouldUseTrial) {
+        // Attempt trial creation
+        await trialMutation.mutateAsync({
+          produtoId: selectedProduct.id,
+        });
+      } else {
+        // Direct subscription (no trial)
+        await directMutation.mutateAsync({
+          produtoId: selectedProduct.id,
+          billingCycle: 'MONTHLY',
+          value: selectedProduct.priceMonthly,
+          hasTrial: false,
+          trialDays: 0,
+          description: `${selectedProduct.name} - Mensal`,
+        });
+      }
       
       setCurrentStep('success');
     } catch (error: any) {
-      // O api-client já extraiu a mensagem correta da API
-      if (error?.message) {
-        setErrorMessage(error.message);
+      const errorMsg = error?.message || '';
+      
+      // Check if error is about trial already used
+      const isTrialAlreadyUsedError = 
+        errorMsg.includes('já utilizou') || 
+        errorMsg.includes('período de teste gratuito') ||
+        errorMsg.includes('BUSINESS_RULE_VIOLATION');
+      
+      if (isTrialAlreadyUsedError && !trialUsed) {
+        // Mark trial as used and show message with option to continue
+        setTrialUsed(true);
+        setErrorMessage(
+          'Você já utilizou seu período de teste gratuito. Clique em "Assinar Plano" para continuar com a assinatura paga.'
+        );
+      } else if (errorMsg) {
+        setErrorMessage(errorMsg);
       } else {
         setErrorMessage('Ocorreu um erro inesperado. Tente novamente.');
       }
     }
   };
+
+  // Determine if currently processing
+  const isProcessing = trialMutation.isPending || directMutation.isPending;
 
   const handleGoToDashboard = () => {
     navigate('/app');
@@ -152,8 +207,9 @@ export function CheckoutPage() {
                 setCurrentStep('selection');
               }}
               onConfirm={handleConfirm}
-              isLoading={trialMutation.isPending}
+              isLoading={isProcessing}
               errorMessage={errorMessage}
+              trialUsed={trialUsed}
             />
           )}
 

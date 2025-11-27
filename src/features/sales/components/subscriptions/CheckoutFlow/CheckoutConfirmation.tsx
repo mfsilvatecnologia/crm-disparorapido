@@ -10,6 +10,8 @@ interface CheckoutConfirmationProps {
   onCancel?: () => void;
   isLoading?: boolean;
   errorMessage?: string;
+  /** If true, indicates user has already used their trial - show direct subscription flow */
+  trialUsed?: boolean;
 }
 
 export function CheckoutConfirmation({
@@ -21,12 +23,18 @@ export function CheckoutConfirmation({
   onCancel,
   isLoading = false,
   errorMessage,
+  trialUsed = false,
 }: CheckoutConfirmationProps) {
-  const hasTrial = product.trialDays > 0;
+  // Product has trial AND user hasn't used it yet
+  const productHasTrial = product.trialDays > 0;
+  const showTrialFlow = productHasTrial && !trialUsed;
 
   // Calcula datas se não fornecidas
   const calculatedTrialEnd = trialEndDate || new Date(trialStartDate.getTime() + product.trialDays * 24 * 60 * 60 * 1000);
   const calculatedFirstPayment = firstPaymentDate || new Date(calculatedTrialEnd.getTime() + 24 * 60 * 60 * 1000);
+  
+  // For direct subscription (no trial), first payment is today
+  const directPaymentDate = new Date();
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
@@ -72,6 +80,38 @@ export function CheckoutConfirmation({
           </div>
         )}
 
+        {/* Info box when trial was already used */}
+        {trialUsed && productHasTrial && (
+          <div className="mb-6 rounded-md bg-blue-50 p-4 border border-blue-200">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-blue-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Assinatura Direta
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>
+                    Como você já utilizou o período de teste gratuito, sua assinatura será ativada 
+                    imediatamente após o pagamento.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Resumo do Plano */}
         <div className="mb-6 rounded-md bg-gray-50 p-4">
           <div className="flex items-start justify-between">
@@ -94,26 +134,31 @@ export function CheckoutConfirmation({
 
         {/* Timeline */}
         <div className="mb-6 space-y-4">
-          {/* Início do Trial */}
+          {/* Início do Trial ou Assinatura */}
           <div className="flex items-start">
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
               <span className="text-sm font-semibold text-blue-600">1</span>
             </div>
             <div className="ml-4">
               <h5 className="font-medium text-gray-900">
-                {hasTrial ? 'Início do Período de Teste' : 'Início da Assinatura'}
+                {showTrialFlow ? 'Início do Período de Teste' : 'Início da Assinatura'}
               </h5>
               <p className="text-sm text-gray-600">{formatDate(trialStartDate)}</p>
-              {hasTrial && (
+              {showTrialFlow && (
                 <p className="mt-1 text-sm text-gray-500">
                   Você terá {product.trialDays} dias para experimentar todos os recursos gratuitamente
+                </p>
+              )}
+              {!showTrialFlow && (
+                <p className="mt-1 text-sm text-gray-500">
+                  Acesso liberado imediatamente após a confirmação do pagamento
                 </p>
               )}
             </div>
           </div>
 
-          {/* Fim do Trial */}
-          {hasTrial && (
+          {/* Fim do Trial - só mostra se tiver trial */}
+          {showTrialFlow && (
             <div className="flex items-start">
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
                 <span className="text-sm font-semibold text-blue-600">2</span>
@@ -129,22 +174,27 @@ export function CheckoutConfirmation({
           )}
 
           {/* Primeira Cobrança */}
-          {firstPaymentDate && (
-            <div className="flex items-start">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
-                <span className="text-sm font-semibold text-green-600">
-                  {hasTrial ? '3' : '2'}
-                </span>
-              </div>
-              <div className="ml-4">
-                <h5 className="font-medium text-gray-900">Primeira Cobrança</h5>
-                <p className="text-sm text-gray-600">{formatDate(firstPaymentDate)}</p>
-                <p className="mt-1 text-sm text-gray-500">
-                  Valor: {formatPrice(product.priceMonthly)}
-                </p>
-              </div>
+          <div className="flex items-start">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
+              <span className="text-sm font-semibold text-green-600">
+                {showTrialFlow ? '3' : '2'}
+              </span>
             </div>
-          )}
+            <div className="ml-4">
+              <h5 className="font-medium text-gray-900">
+                {showTrialFlow ? 'Primeira Cobrança' : 'Pagamento'}
+              </h5>
+              <p className="text-sm text-gray-600">
+                {showTrialFlow 
+                  ? formatDate(firstPaymentDate || calculatedFirstPayment) 
+                  : formatDate(directPaymentDate)
+                }
+              </p>
+              <p className="mt-1 text-sm text-gray-500">
+                Valor: {formatPrice(product.priceMonthly)}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Termos e Condições */}
@@ -153,8 +203,8 @@ export function CheckoutConfirmation({
             Importante
           </h5>
           <ul className="space-y-1 text-sm text-yellow-700">
-            {hasTrial && (
-              <li>• Cancele antes de {trialEndDate && formatDate(trialEndDate)} para não ser cobrado</li>
+            {showTrialFlow && (
+              <li>• Cancele antes de {formatDate(calculatedTrialEnd)} para não ser cobrado</li>
             )}
             <li>• A assinatura renova automaticamente</li>
             <li>• Você pode cancelar a qualquer momento</li>
@@ -202,7 +252,7 @@ export function CheckoutConfirmation({
                 Processando...
               </span>
             ) : (
-              `${hasTrial ? 'Iniciar Teste Grátis' : 'Confirmar Assinatura'}`
+              showTrialFlow ? 'Iniciar Teste Grátis' : 'Assinar Plano'
             )}
           </button>
         </div>

@@ -261,3 +261,78 @@ export async function updatePaymentMethod(
   
   return data;
 }
+
+/**
+ * Direct subscription request payload (POST /subscriptions)
+ */
+export interface CreateDirectSubscriptionRequest {
+  produtoId: string;
+  billingCycle?: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'YEARLY';
+  value?: number;
+  hasTrial?: boolean;
+  trialDays?: number;
+  description?: string;
+  maxPayments?: number | null;
+}
+
+/**
+ * Create a direct subscription (without trial validation)
+ * Use this endpoint when customer has already used their trial
+ */
+export async function createDirectSubscription(
+  data: CreateDirectSubscriptionRequest
+): Promise<Subscription> {
+  try {
+    const requestData = {
+      ...data,
+      billingCycle: data.billingCycle || 'MONTHLY',
+      hasTrial: data.hasTrial ?? false,
+      trialDays: data.trialDays ?? 0,
+    };
+
+    const response = await apiClient.post<ApiResponse<Subscription>>(
+      SUBSCRIPTIONS_PATH,
+      requestData
+    );
+    
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to create subscription');
+    }
+    
+    return response.data;
+  } catch (error: any) {
+    // Extract detailed error message from API response
+    let errorMessage = 'Erro ao criar assinatura. Tente novamente.';
+    
+    if (error?.data) {
+      if (error.data.details?.detail) {
+        errorMessage = error.data.details.detail;
+      } else if (error.data.error) {
+        errorMessage = error.data.error;
+      } else if (error.data.message) {
+        errorMessage = error.data.message;
+      }
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
+    const enhancedError = new Error(errorMessage);
+    (enhancedError as any).originalError = error;
+    throw enhancedError;
+  }
+}
+
+/**
+ * Check if company has ever used a trial subscription
+ */
+export async function checkHasUsedTrial(): Promise<boolean> {
+  try {
+    const subscriptions = await fetchAllSubscriptions();
+    
+    // Check if any subscription has hasTrial = true
+    return subscriptions.some(sub => sub.hasTrial === true);
+  } catch (error) {
+    // In case of error, assume trial hasn't been used (allow trial attempt)
+    return false;
+  }
+}
