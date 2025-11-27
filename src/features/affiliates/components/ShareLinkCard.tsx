@@ -25,7 +25,7 @@ export function ShareLinkCard({ link, fallbackCode, isLoading }: ShareLinkCardPr
   const shareLink = useMemo(() => {
     if (link) return link;
     if (fallbackCode && typeof window !== 'undefined') {
-      const baseUrl = `${window.location.origin}/checkout`;
+      const baseUrl = `${window.location.origin}/precos`;
       return `${baseUrl}?ref=${fallbackCode}`;
     }
     return '';

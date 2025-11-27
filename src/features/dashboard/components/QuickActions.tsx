@@ -92,7 +92,7 @@ export function QuickActions({ actions, className = '' }: QuickActionsProps) {
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold text-gray-900">{action.title}</h3>
                       {action.badge && (
-                        <Badge variant={action.badge.variant} className="text-xs">
+                        <Badge variant={action.badge.variant} className="text-xs min-w-[4.5rem] justify-center">
                           {action.badge.text}
                         </Badge>
                       )}
