@@ -49,13 +49,13 @@ export const disparorapidoConfig: TenantConfig = {
   features: {
     // Disparo Rápido features configuration
     enableBasicFeatures: true,
-    enableCampaigns: true,
+    enableCampaigns: false,
     enablePipeline: false,
-    enableScraping: true,
-    enableAnalytics: true,
+    enableScraping: false,
+    enableAnalytics: false,
     enableMarketplace: false,
-    enableBilling: true,
-    enableWorkers: true,
+    enableBilling: false,
+    enableWorkers: false,
     enablePlanos: true,
   },
 
