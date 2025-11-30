@@ -5,17 +5,20 @@
  * Compatível com o sistema de cursor pagination do backend
  */
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 
 export interface CursorPaginationProps {
   hasMore: boolean;
   hasPrevious: boolean;
   onNext: () => void;
   onPrevious: () => void;
+  onFirst?: () => void;
   isLoading?: boolean;
   totalReturned?: number;
   limit?: number;
+  currentPage?: number;
   className?: string;
 }
 
@@ -24,25 +27,48 @@ export function CursorPagination({
   hasPrevious,
   onNext,
   onPrevious,
+  onFirst,
   isLoading = false,
   totalReturned,
   limit,
+  currentPage,
   className = '',
 }: CursorPaginationProps) {
   return (
-    <div className={`flex items-center justify-between ${className}`}>
-      {/* Info */}
-      <div className="text-sm text-muted-foreground">
-        {totalReturned !== undefined && (
-          <span>
-            {totalReturned} {totalReturned === 1 ? 'item' : 'itens'}
-            {limit && ` (max ${limit} por página)`}
-          </span>
+    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}>
+      {/* Left side - Info */}
+      <div className="flex items-center gap-3 text-sm">
+        {currentPage !== undefined && (
+          <Badge variant="secondary" className="font-mono">
+            Página {currentPage}
+          </Badge>
         )}
+        <div className="text-muted-foreground">
+          {totalReturned !== undefined && (
+            <span>
+              Mostrando <strong>{totalReturned}</strong> {totalReturned === 1 ? 'registro' : 'registros'}
+              {limit && ` (até ${limit} por página)`}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Navigation */}
+      {/* Right side - Navigation */}
       <div className="flex items-center gap-2">
+        {/* First page button (optional) */}
+        {onFirst && hasPrevious && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onFirst}
+            disabled={!hasPrevious || isLoading}
+            title="Primeira página"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+        )}
+
+        {/* Previous button */}
         <Button
           variant="outline"
           size="sm"
@@ -51,9 +77,21 @@ export function CursorPagination({
           className="flex items-center gap-1"
         >
           <ChevronLeft className="h-4 w-4" />
-          Anterior
+          <span className="hidden sm:inline">Anterior</span>
         </Button>
 
+        {/* Status indicator */}
+        <div className="px-3 py-1 text-xs text-muted-foreground">
+          {isLoading ? (
+            <span className="animate-pulse">Carregando...</span>
+          ) : (
+            <span className="text-muted-foreground/60">
+              {hasMore ? '•••' : 'Última'}
+            </span>
+          )}
+        </div>
+
+        {/* Next button */}
         <Button
           variant="outline"
           size="sm"
@@ -61,7 +99,7 @@ export function CursorPagination({
           disabled={!hasMore || isLoading}
           className="flex items-center gap-1"
         >
-          Próxima
+          <span className="hidden sm:inline">Próxima</span>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
