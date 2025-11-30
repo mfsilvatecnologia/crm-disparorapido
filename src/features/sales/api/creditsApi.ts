@@ -31,12 +31,24 @@ export const getCreditBalance = fetchCreditBalance;
 
 /**
  * Fetch paginated credit transaction list with filters (Backend API)
+ * Uses cursor-based pagination
  */
 export async function fetchCreditTransactions(
   params: CreditTransactionListParams
 ): Promise<CreditTransactionListResponse> {
   const response = await apiClient.get('/api/v1/payments/credits/transactions', { params });
-  return creditTransactionListResponseSchema.parse(response.data) as CreditTransactionListResponse;
+
+  // API returns { success: true, data: { data: [...], pagination: {...} } }
+  const responseData = (response as any)?.data || response;
+
+  // Extract the paginated data structure
+  const paginatedData = responseData.data || responseData;
+
+  if (!paginatedData || typeof paginatedData !== 'object') {
+    throw new Error('Invalid credit transactions response from API');
+  }
+
+  return creditTransactionListResponseSchema.parse(paginatedData) as CreditTransactionListResponse;
 }
 
 // Alias for backward compatibility

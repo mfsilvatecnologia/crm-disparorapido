@@ -32,7 +32,7 @@ export const creditTransactionSchema = z.object({
     name: z.string(),
   }).nullable(),
   description: z.string(),
-  createdAt: z.string().datetime(),
+  createdAt: z.string(), // ISO 8601 datetime string (may not include timezone)
 });
 
 /**
@@ -45,9 +45,39 @@ export const creditTransactionListParamsSchema = z.object({
 });
 
 /**
- * Credit Transaction List Response Schema (Backend API)
+ * Pagination Metadata Schema (Cursor-based)
  */
-export const creditTransactionListResponseSchema = z.array(creditTransactionSchema);
+export const creditTransactionPaginationMetaSchema = z.object({
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+  limit: z.number(),
+  totalReturned: z.number(),
+});
+
+/**
+ * Credit Transaction List Response Schema (Backend API)
+ * Paginated response with cursor metadata
+ */
+export const creditTransactionListResponseSchema = z.object({
+  data: z.array(creditTransactionSchema),
+  pagination: creditTransactionPaginationMetaSchema,
+});
+
+/**
+ * Credit Transaction List API Response Schema
+ * Full API response wrapper
+ */
+export const creditTransactionListApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: creditTransactionListResponseSchema,
+  message: z.string().optional(),
+  timestamp: z.string().optional(),
+  trace: z.object({
+    trace_id: z.string(),
+    span_id: z.string(),
+    requestId: z.string(),
+  }).optional(),
+});
 
 /**
  * Credit Balance Schema

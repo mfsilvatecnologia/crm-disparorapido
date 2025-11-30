@@ -49,19 +49,34 @@ export interface CreditTransaction {
 
 /**
  * Credit Transaction List Query Parameters (Backend API)
- * Used for filtering and pagination
+ * Used for filtering and cursor pagination
  */
 export interface CreditTransactionListParams {
-  limit?: number;                    // Items per page (default: 10)
-  offset?: number;                   // Offset for pagination (default: 0)
+  limit?: number;                    // Items per page (default: 10, max: 100)
+  cursor?: string;                   // Pagination cursor from previous response
   type?: CreditTransactionType;      // Filter by transaction type
+  startDate?: string;                // Filter transactions after this date (ISO 8601)
+  endDate?: string;                  // Filter transactions before this date (ISO 8601)
+}
+
+/**
+ * Pagination Metadata (Cursor-based)
+ */
+export interface CreditTransactionPaginationMeta {
+  hasMore: boolean;                  // Whether there are more pages
+  nextCursor: string | null;         // Cursor for next page
+  limit: number;                     // Current page limit
+  totalReturned: number;             // Number of items in this page
 }
 
 /**
  * Credit Transaction List Response (Backend API)
  * Backend API response for GET /payments/credits/transactions
  */
-export type CreditTransactionListResponse = CreditTransaction[];
+export interface CreditTransactionListResponse {
+  data: CreditTransaction[];
+  pagination: CreditTransactionPaginationMeta;
+}
 
 /**
  * Credit Balance

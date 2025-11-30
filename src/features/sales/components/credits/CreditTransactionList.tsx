@@ -132,8 +132,16 @@ export function CreditTransactionList({ params }: CreditTransactionListProps) {
     );
   }
 
-  // Empty state
-  if (!data || data.length === 0) {
+  // Debug
+  console.log('CreditTransactionList - data received:', data);
+  console.log('CreditTransactionList - is array?', Array.isArray(data));
+  console.log('CreditTransactionList - data.data:', data?.data);
+
+  // Empty state - check both old array format and new paginated format
+  const transactions = Array.isArray(data) ? data : data?.data;
+  console.log('CreditTransactionList - transactions:', transactions);
+
+  if (!transactions || transactions.length === 0) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
@@ -148,7 +156,7 @@ export function CreditTransactionList({ params }: CreditTransactionListProps) {
   // Success state
   return (
     <div className="space-y-4">
-      {data.map((transaction) => (
+      {transactions.map((transaction) => (
         <TransactionCard key={transaction.id} transaction={transaction} />
       ))}
     </div>

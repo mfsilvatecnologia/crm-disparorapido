@@ -1,6 +1,6 @@
 /**
  * CreditTransactionsPage
- * Page for viewing credit transaction history
+ * Page for viewing credit transaction history with cursor pagination
  */
 
 import { useState } from 'react';
@@ -8,42 +8,64 @@ import { useNavigate } from 'react-router-dom';
 import { CreditBalanceCard } from '../components/credits/CreditBalanceCard';
 import { CreditTransactionList } from '../components/credits/CreditTransactionList';
 import { TransactionTypeFilter } from '../components/credits/TransactionTypeFilter';
-import { Pagination } from '@/shared/components/Pagination';
-import { useCreditTransactions } from '../hooks/credits/useCreditTransactions';
+import { CursorPagination } from '@/shared/components/CursorPagination';
+import { useCreditTransactionHistory } from '../hooks/credits/useCreditTransactionHistory';
 import { useCreditBalance } from '../hooks/credits/useCreditBalance';
-import { CreditTransactionType, CreditTransactionFilters } from '../types';
+import { CreditTransactionType, CreditTransactionListParams } from '../types';
 
 /**
  * CreditTransactionsPage Component
  */
 export function CreditTransactionsPage() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<CreditTransactionFilters>({
-    type: undefined,
-    page: 1,
-    limit: 10,
-  });
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+  const [type, setType] = useState<CreditTransactionType | undefined>(undefined);
+  const limit = 10;
 
-  const params = {
-    page: filters.page,
-    limit: filters.limit,
-    type: filters.type,
+  const params: CreditTransactionListParams = {
+    cursor,
+    limit,
+    type,
   };
 
-  const { data } = useCreditTransactions(params);
+  const { data, isLoading } = useCreditTransactionHistory(params);
   const { balance, estimatedLeads } = useCreditBalance();
 
-  const handleTypeChange = (type?: CreditTransactionType) => {
-    setFilters((prev) => ({ ...prev, type, page: 1 }));
+  // Debug: verificar estrutura dos dados
+  console.log('=== DEBUG PAGINATION ===');
+  console.log('Full data:', data);
+  console.log('Pagination object:', data?.pagination);
+  console.log('hasMore:', data?.pagination?.hasMore);
+  console.log('nextCursor:', data?.pagination?.nextCursor);
+  console.log('Cursor history length:', cursorHistory.length);
+  console.log('Current cursor:', cursor);
+  console.log('=======================');
+
+  const handleTypeChange = (newType?: CreditTransactionType) => {
+    setType(newType);
+    setCursor(undefined);
+    setCursorHistory([]);
   };
 
-  const handlePageChange = (page: number) => {
-    setFilters((prev) => ({ ...prev, page }));
+  const handleNext = () => {
+    if (data?.pagination.nextCursor) {
+      // Save current cursor to history
+      if (cursor) {
+        setCursorHistory((prev) => [...prev, cursor]);
+      }
+      // Move to next page
+      setCursor(data.pagination.nextCursor);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevious = () => {
+    // Pop last cursor from history
+    const previousCursor = cursorHistory[cursorHistory.length - 1];
+    setCursorHistory((prev) => prev.slice(0, -1));
+    setCursor(previousCursor);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleItemsPerPageChange = (limit: number) => {
-    setFilters((prev) => ({ ...prev, limit, page: 1 }));
   };
 
   return (
@@ -68,7 +90,7 @@ export function CreditTransactionsPage() {
       {/* Filter */}
       <div className="bg-card rounded-lg border p-4">
         <TransactionTypeFilter
-          value={filters.type}
+          value={type}
           onChange={handleTypeChange}
         />
       </div>
@@ -76,16 +98,21 @@ export function CreditTransactionsPage() {
       {/* Transaction List */}
       <CreditTransactionList params={params} />
 
-      {/* Pagination */}
-      {data?.pagination && (
-        <Pagination
-          currentPage={data.pagination.currentPage}
-          totalPages={data.pagination.totalPages}
-          totalItems={data.pagination.totalItems}
-          itemsPerPage={data.pagination.itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+      {/* Cursor Pagination */}
+      {console.log('🎯 Rendering pagination? data exists:', !!data)}
+      {data && (
+        <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          {console.log('✅ Pagination component rendering!')}
+          <CursorPagination
+            hasMore={data.pagination?.hasMore ?? false}
+            hasPrevious={cursorHistory.length > 0}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            isLoading={isLoading}
+            totalReturned={data.pagination?.totalReturned ?? (Array.isArray(data.data) ? data.data.length : 0)}
+            limit={data.pagination?.limit ?? limit}
+          />
+        </div>
       )}
     </div>
   );

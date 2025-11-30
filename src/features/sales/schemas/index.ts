@@ -24,6 +24,7 @@ export {
   creditTransactionSchema,
   creditTransactionListParamsSchema,
   creditTransactionListResponseSchema,
+  creditTransactionListApiResponseSchema,
   creditBalanceSchema,
   creditBalanceResponseSchema,
   creditPackageSchema,
