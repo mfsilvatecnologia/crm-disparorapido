@@ -3,8 +3,8 @@ import { TenantConfig } from './types';
 /**
  * Vendas.IA Tenant Configuration
  */
-export const vendasConfig: TenantConfig = {
-  id: 'vendas',
+export const vendasIaConfig: TenantConfig = {
+  id: 'vendas-ia',
   name: 'Vendas.IA',
 
   domains: [

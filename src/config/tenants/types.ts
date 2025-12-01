@@ -3,7 +3,7 @@
  * Define the structure for multi-tenant configuration
  */
 
-export type TenantId = 'vendas' | 'publix' | 'disparorapido';
+export type TenantId = 'vendas-ia' | 'publix' | 'disparo-rapido' | 'lean-quality' | 'ph3a';
 
 export interface TenantTheme {
   // Primary colors

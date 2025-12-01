@@ -8,7 +8,7 @@ As seguintes CSS variables são definidas dinamicamente pelo TenantContext:
 
 ```css
 :root {
-  --tenant-primary: #2563eb; /* Exemplo para vendas */
+  --tenant-primary: #2563eb; /* Exemplo para vendas-ia */
   --tenant-primary-foreground: #ffffff;
   --tenant-secondary: #64748b;
   --tenant-secondary-foreground: #ffffff;
@@ -130,13 +130,22 @@ O TenantProvider adiciona classes CSS ao body para permitir targeting específic
 
 ```css
 /* Estilos específicos para Vendas.IA */
-body.tenant-vendas .custom-element {
-  /* Estilos específicos para vendas */
+body.tenant-vendas-ia .custom-element {
+  /* Estilos específicos para vendas-ia */
 }
 
 /* Estilos específicos para Publix.IA */
 body.tenant-publix .custom-element {
   /* Estilos específicos para publix */
+}
+body.tenant-disparo-rapido .custom-element {
+  /* Estilos específicos para disparo-rapido */
+}
+body.tenant-lean-quality .custom-element {
+  /* Estilos específicos para lean-quality */
+}
+body.tenant-ph3a .custom-element {
+  /* Estilos específicos para ph3a */
 }
 ```
 
@@ -152,7 +161,7 @@ function MyComponent() {
     <div>
       <h1>Bem-vindo ao {tenant.branding.companyName}</h1>
       
-      {isTenant('vendas') && (
+      {isTenant('vendas-ia') && (
         <p>Funcionalidade específica do Vendas.IA</p>
       )}
       

@@ -84,7 +84,7 @@ export type ApiKey = z.infer<typeof ApiKeySchema>;
 // User and Auth schemas
 export const UserSchema = z.object({
   id: z.string(),
-  sub: z.string(),
+  sub: z.string().optional(), // Opcional - vem de alguns endpoints mas não todos
   email: z.string().email(),
   name: z.string().optional(),
   nome: z.string().optional(),
@@ -95,8 +95,8 @@ export const UserSchema = z.object({
   createdAt: z.string().optional(),
   created_at: z.string().optional(), // Suporta snake_case
   updated_at: z.string().optional(), // Suporta snake_case
-  empresa_id: z.string(), // ID da empresa do usuário (obrigatório na resposta de login)
-  roles: z.array(z.string()),
+  empresa_id: z.string().optional(), // Opcional - não vem em /users/me
+  roles: z.array(z.string()).optional(), // Opcional - não vem em todos os endpoints
   role: z.union([
     z.enum(['admin', 'org_admin', 'agent', 'viewer', 'user', 'usuario']),
     z.string() // Permite qualquer string para ser mais flexível
@@ -104,7 +104,7 @@ export const UserSchema = z.object({
   user_metadata: z.object({
     empresa_id: z.string().optional(),
     role: z.string().optional(),
-  }),
+  }).optional(), // Opcional - não vem em /users/me
   organizationId: z.string().optional(),
   avatar: z.string().optional(),
   updatedAt: z.string().optional(),

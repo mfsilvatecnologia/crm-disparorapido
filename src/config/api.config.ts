@@ -17,7 +17,7 @@ interface ApiConfig {
  * API configurations per tenant
  */
 const API_CONFIGS: Record<TenantId, ApiConfig> = {
-  vendas: {
+  'vendas': {
     baseURL: import.meta.env.VITE_API_BASE_URL || 
              (process.env.NODE_ENV === 'production' 
                ? 'https://api.vendas.ia.br' 
@@ -30,11 +30,39 @@ const API_CONFIGS: Record<TenantId, ApiConfig> = {
     baseURL: import.meta.env.VITE_API_BASE_URL || 
              (process.env.NODE_ENV === 'production' 
                ? 'https://api.publix.ia.br' 
-               : 'http://localhost:3001'), // Different port for publix in dev
+               : 'http://localhost:3000'),
     timeout: 30000,
     retries: 3,
     retryDelay: 1000,
   },
+  'disparorapido': {
+    baseURL: import.meta.env.VITE_API_BASE_URL || 
+             (process.env.NODE_ENV === 'production' 
+               ? 'https://api.disparorapido.ia.br' 
+               : 'http://localhost:3000'),
+    timeout: 30000,
+    retries: 3,
+    retryDelay: 1000,
+  },
+    ph3a: {
+    baseURL: import.meta.env.VITE_API_BASE_URL || 
+             (process.env.NODE_ENV === 'production' 
+               ? 'https://api.ph3a.cd2.io' 
+               : 'http://localhost:3000'),
+    timeout: 30000,
+    retries: 3,
+    retryDelay: 1000,
+  },
+  'lean': {
+    baseURL: import.meta.env.VITE_API_BASE_URL || 
+             (process.env.NODE_ENV === 'production' 
+               ? 'https://api.leanquality.com.br' 
+               : 'http://localhost:3000'),
+    timeout: 30000,
+    retries: 3,
+    retryDelay: 1000,
+  },
+
 };
 
 /**

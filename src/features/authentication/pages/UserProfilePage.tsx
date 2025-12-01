@@ -388,7 +388,7 @@ export default function UserProfilePage() {
             </Card>
 
             {/* Security Info */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Informações de Segurança</CardTitle>
               </CardHeader>
@@ -433,7 +433,7 @@ export default function UserProfilePage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </TabsContent>
         </Tabs>
       </div>

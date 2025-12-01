@@ -21,7 +21,12 @@ export function CreditsBadge() {
     return null;
   }
 
-  const displayBalance = balance.saldoCreditosCentavos / 100;
+  const displayBalance = balance.saldoCreditosCentavos ;
+  const formattedBalance = displayBalance.toLocaleString('pt-BR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    minimumIntegerDigits: 1,
+  });
 
   return (
     <Button
@@ -31,7 +36,9 @@ export function CreditsBadge() {
       className="flex items-center gap-2 hover:bg-accent"
     >
       <Coins className="h-4 w-4 text-amber-500" />
-      <span className="text-sm font-medium">{displayBalance.toFixed(0)}</span>
+      <span className="text-sm font-medium min-w-[4rem] text-right tabular-nums">
+        {formattedBalance}
+      </span>
       <Badge variant="secondary" className="text-xs">
         créditos
       </Badge>

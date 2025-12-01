@@ -95,7 +95,7 @@ export function TenantProvider({ children, forceTenant }: TenantProviderProps) {
     }
 
     // Add tenant class to body for CSS targeting
-    document.body.classList.remove('tenant-vendas', 'tenant-publix');
+    document.body.classList.remove('tenant-vendas-ia', 'tenant-publix', 'tenant-disparo-rapido', 'tenant-lean-quality', 'tenant-ph3a');
     document.body.classList.add(`tenant-${tenant.id}`);
   }, [tenant]);
 

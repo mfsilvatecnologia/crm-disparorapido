@@ -1,22 +1,26 @@
 import { TenantConfig, TenantId } from './types';
-import { vendasConfig } from './vendas.config';
+import { vendasIaConfig } from './vendas-ia.config';
 import { publixConfig } from './publix.config';
-import { disparorapidoConfig } from './disparorapido.config';
+import { disparorapidoConfig } from './disparo-rapido.config';
+import { leanQualityConfig } from './lean-quality.config';
+import { ph3aConfig } from './ph3a.config';
 
 /**
  * All tenant configurations
  */
 export const tenants: Record<TenantId, TenantConfig> = {
-  vendas: vendasConfig,
+  'vendas-ia': vendasIaConfig,
   publix: publixConfig,
-  disparorapido: disparorapidoConfig,
+  'disparo-rapido': disparorapidoConfig,
+  'lean-quality': leanQualityConfig,
+  ph3a: ph3aConfig,
 };
 
 /**
  * Default tenant (fallback)
  * Used when domain doesn't match any tenant
  */
-export const DEFAULT_TENANT_ID: TenantId = 'vendas';
+export const DEFAULT_TENANT_ID: TenantId = 'vendas-ia';
 
 /**
  * Get tenant configuration by domain
@@ -35,18 +39,26 @@ export function getTenantByDomain(hostname: string): TenantConfig {
     }
 
     // Se não encontrou com porta, usar fallback por porta
-    if (hostname.includes(':8081')) {
-      console.log(`[getTenantByDomain] Using publix for port 8081`);
+    if (hostname.includes(':3001')) {
+      console.log(`[getTenantByDomain] Using publix for port 3001`);
       return tenants.publix;
     }
-    if (hostname.includes(':8082')) {
-      console.log(`[getTenantByDomain] Using disparorapido for port 8082`);
-      return tenants.disparorapido;
+    if (hostname.includes(':3002')) {
+      console.log(`[getTenantByDomain] Using disparo-rapido for port 3002`);
+      return tenants['disparo-rapido'];
+    }
+    if (hostname.includes(':3003')) {
+      console.log(`[getTenantByDomain] Using lean-quality for port 3003`);
+      return tenants['lean-quality'];
+    }
+    if (hostname.includes(':3004')) {
+      console.log(`[getTenantByDomain] Using ph3a for port 3004`);
+      return tenants.ph3a;
     }
 
-    // Default para vendas em localhost sem porta ou porta 8080
-    console.log(`[getTenantByDomain] Using vendas as default for localhost`);
-    return tenants.vendas;
+    // Default para vendas-ia em localhost sem porta ou porta 3000
+    console.log(`[getTenantByDomain] Using vendas-ia as default for localhost`);
+    return tenants['vendas-ia'];
   }
 
   // Para domínios de produção, remover porta para comparação
@@ -83,5 +95,5 @@ export function getTenantById(id: TenantId): TenantConfig {
 /**
  * Export individual configs for convenience
  */
-export { vendasConfig, publixConfig, disparorapidoConfig };
+export { vendasIaConfig, publixConfig, disparorapidoConfig, leanQualityConfig, ph3aConfig };
 export * from './types';

@@ -6,18 +6,15 @@ This directory contains the logo assets for each tenant.
 
 ```
 logos/
-├── vendas/
+├── vendas-ia/
 │   ├── logo.svg          # Main logo (recommended)
 │   ├── logo.png          # PNG fallback
 │   ├── logo-light.svg    # Light version for dark backgrounds (optional)
 │   ├── logo-light.png    # PNG fallback for light version
 │   └── favicon.ico       # Favicon
-└── publix/
-    ├── logo.svg          # Main logo (recommended)
-    ├── logo.png          # PNG fallback
-    ├── logo-light.svg    # Light version for dark backgrounds (optional)
-    ├── logo-light.png    # PNG fallback for light version
-    └── favicon.ico       # Favicon
+├── publix/
+...
+└── ph3a/
 ```
 
 ## Logo Requirements
@@ -36,8 +33,11 @@ logos/
 ## Configuration
 
 Logos are configured in the tenant configuration files:
-- `src/config/tenants/vendas.config.ts`
+- `src/config/tenants/vendas-ia.config.ts`
 - `src/config/tenants/publix.config.ts`
+- `src/config/tenants/disparo-rapido.config.ts`
+- `src/config/tenants/lean-quality.config.ts`
+- `src/config/tenants/ph3a.config.ts`
 
 Update the `branding.logo`, `branding.logoLight`, and `branding.favicon` paths accordingly.
 
