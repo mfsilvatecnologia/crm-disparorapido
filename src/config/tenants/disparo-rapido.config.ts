@@ -42,13 +42,13 @@ export const disparorapidoConfig: TenantConfig = {
 
   features: {
     enableBasicFeatures: true,
-    enableCampaigns: true,
+    enableCampaigns: false,
     enablePipeline: false,
-    enableScraping: true,
+    enableScraping: false,
     enableAnalytics: false,
     enableMarketplace: false,
     enableBilling: true,
-    enableWorkers: true,
+    enableWorkers: false,
     enablePlanos: true,
   },
 
