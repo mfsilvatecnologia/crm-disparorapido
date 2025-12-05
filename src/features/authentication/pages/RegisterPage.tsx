@@ -1,13 +1,14 @@
 // RegisterPage Component - User registration form
 import React, { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { Zap, Loader2 } from 'lucide-react'
+import { Zap, Loader2, ShieldCheck, Lock, Fingerprint, BadgeCheck } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { useAuth } from '@/shared/contexts/AuthContext'
+import { useTenant } from '@/shared/contexts/TenantContext'
 import { registerUser, type RegisterRequest } from "../services/auth"
 
 interface RegisterFormData {
@@ -20,6 +21,7 @@ interface RegisterFormData {
 
 export function RegisterPage() {
   const { isAuthenticated } = useAuth()
+  const { tenant } = useTenant()
   const navigate = useNavigate()
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
@@ -137,47 +139,62 @@ export function RegisterPage() {
     }
   }
 
+  const brandLogo = tenant.branding.logoLight || tenant.branding.logo
+  const brandName = tenant.branding.companyName
+  const brandTagline = tenant.branding.companyTagline || 'Ambiente protegido para o seu time'
+
   return (
-    <div className="min-h-screen flex">
-      {/* Left side - Hero */}
-      <div className="hidden lg:flex flex-1 bg-gradient-hero items-center justify-center p-12 text-white">
-        <div className="max-w-md text-center">
-          <div className="mb-8">
-            <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4">
-              <Zap className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold mb-4">LeadCRM</h1>
-            <p className="text-xl text-white/90">Sistema Multi-Empresa de Lead Generation</p>
-          </div>
+    <div
+      className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden px-4 py-10"
+      style={{
+        background: `linear-gradient(135deg, ${tenant.theme.gradientFrom} 0%, ${tenant.theme.gradientVia || tenant.theme.gradientFrom} 50%, ${tenant.theme.gradientTo} 100%)`
+      }}
+    >
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.12),transparent_35%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.08),transparent_45%)]" />
 
-          <div className="glass rounded-2xl p-6 text-left">
-            <h3 className="font-semibold mb-3">Comece agora mesmo:</h3>
-            <ul className="space-y-2 text-sm text-white/90">
-              <li>• Cadastro rápido e gratuito</li>
-              <li>• Configure sua empresa</li>
-              <li>• Gerencie leads eficientemente</li>
-              <li>• Pipeline de vendas visual</li>
-              <li>• Analytics em tempo real</li>
-            </ul>
+      <div className="relative w-full max-w-3xl mx-auto">
+        <div className="text-center mb-8">
+          <div
+            className="h-14 w-14 rounded-xl flex items-center justify-center mx-auto mb-4 p-2 border border-white/40 shadow-glow"
+            style={{ backgroundColor: tenant.theme.primary }}
+          >
+            {brandLogo ? (
+              <img
+                src={brandLogo}
+                alt={brandName}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  const parent = e.currentTarget.parentElement
+                  if (parent) {
+                    const fallback = document.createElement('div')
+                    fallback.innerHTML = '<svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>'
+                    parent.appendChild(fallback)
+                  }
+                }}
+              />
+            ) : (
+              <Zap className="h-7 w-7 text-white" />
+            )}
           </div>
+          <h1 className="text-2xl font-bold">{brandName}</h1>
+          <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2 justify-center">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            {brandTagline}
+          </p>
         </div>
-      </div>
 
-      {/* Right side - Registration Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8 lg:hidden">
-            <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center mx-auto mb-4">
-              <Zap className="h-6 w-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold">LeadCRM</h1>
-          </div>
-
-          <Card className="bg-gradient-card border-0 shadow-xl">
+        <Card className="bg-gradient-card border-0 shadow-xl">
             <CardHeader className="text-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                <ShieldCheck className="h-4 w-4" />
+                Conexão protegida
+              </div>
               <CardTitle className="text-2xl">Criar Nova Conta</CardTitle>
               <CardDescription>
-                Registre sua empresa no LeadCRM
+                Registre sua empresa no {brandName}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -304,6 +321,21 @@ export function RegisterPage() {
                     'Criar Conta'
                   )}
                 </Button>
+
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-primary" />
+                    <span>Canal HTTPS com certificado ativo e criptografia durante o cadastro.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Fingerprint className="h-4 w-4 text-primary" />
+                    <span>Confirmação por email para ativar sua conta e evitar uso indevido.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BadgeCheck className="h-4 w-4 text-primary" />
+                    <span>Tratamento de dados conforme LGPD e auditoria de acessos.</span>
+                  </div>
+                </div>
               </form>
 
               <div className="mt-6 space-y-4">
@@ -326,8 +358,31 @@ export function RegisterPage() {
               </div>
             </CardContent>
           </Card>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border bg-background/70 p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-primary font-semibold mb-2">
+              <Lock className="h-4 w-4" />
+              <span>TLS 1.3</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Tráfego criptografado do início ao fim para proteger seus dados.</p>
+          </div>
+          <div className="rounded-xl border bg-background/70 p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-primary font-semibold mb-2">
+              <Fingerprint className="h-4 w-4" />
+              <span>Confirmação</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Verificação por email e bloqueio automático de acessos suspeitos.</p>
+          </div>
+          <div className="rounded-xl border bg-background/70 p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-primary font-semibold mb-2">
+              <BadgeCheck className="h-4 w-4" />
+              <span>LGPD</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Processos auditáveis e tratamento de dados conforme LGPD.</p>
+          </div>
+        </div>
         </div>
       </div>
-    </div>
   )
 }
