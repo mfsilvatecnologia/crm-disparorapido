@@ -33,7 +33,7 @@ Response:
     "id": 1,
     "name": "João Silva", 
     "email": "joao@empresa.com",
-    "tenant_id": "vendas"
+    "tenant_id": "vendas-ia"
   },
   "token": "jwt_token_here",
   "permissions": {
@@ -58,7 +58,7 @@ O token JWT deve conter as permissões para validação no frontend:
     "pipeline": ["read"]
   },
   "roles": ["empresa_admin"],
-  "tenant_id": "vendas",
+  "tenant_id": "vendas-ia",
   "exp": 1640995200
 }
 ```
