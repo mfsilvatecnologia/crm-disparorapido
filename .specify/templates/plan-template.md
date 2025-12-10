@@ -31,13 +31,17 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- API-First Backend Authority: Frontend only consumes backend contracts (swagger/OpenSpec); new endpoints are specified before UI work.
+- Test-First Delivery: Contract/integration tests are planned before implementation with expected suites/commands noted.
+- Feature-Modular Boundaries: Feature directories and public APIs are respected; no cross-feature internals; shared additions justified.
+- Anti-Entropy Simplicity: Scope is trimmed to MVP, speculative work removed, docs/tasks are executable; highlight any commit-size risks.
+- Spec-Driven Change Control: Change-id + constitution version recorded; OpenSpec proposal approved/validated; exceptions include mitigation, owner, and expiry.
 
 ## Project Structure
 
 ### Documentation (this feature)
 
-```
+```text
 specs/[###-feature]/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
@@ -55,7 +59,7 @@ specs/[###-feature]/
   not include Option labels.
 -->
 
-```
+```text
 # [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
 ├── models/
@@ -96,7 +100,7 @@ directories captured above]
 
 ## Complexity Tracking
 
-*Fill ONLY if Constitution Check has violations that must be justified*
+> **Fill ONLY if Constitution Check has violations that must be justified**
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|

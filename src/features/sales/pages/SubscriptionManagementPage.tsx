@@ -19,6 +19,21 @@ export function SubscriptionManagementPage() {
     refetch();
   };
 
+  const getPaymentUrl = (subscription: Subscription): string | null => {
+    // Se tiver URL direta da API, usar ela
+    if (subscription.asaasInvoiceUrl) {
+      return subscription.asaasInvoiceUrl;
+    }
+    
+    // Se tiver asaasSubscriptionId, montar URL do Asaas
+    if (subscription.asaasSubscriptionId) {
+      // URL base do Asaas para visualização de assinatura
+      return `https://www.asaas.com/subscription/${subscription.asaasSubscriptionId}`;
+    }
+    
+    return null;
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -72,7 +87,7 @@ export function SubscriptionManagementPage() {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(value / 100); // Assuming value is in cents
+    }).format(value); // Backend already returns value in BRL
   };
 
   return (
@@ -192,20 +207,35 @@ export function SubscriptionManagementPage() {
                       {formatDate(subscription.startDate)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      {(subscription.status === 'active' || subscription.status === 'trialing') && (
-                        <button
-                          onClick={() => handleCancelClick(subscription)}
-                          className="text-red-600 hover:text-red-900 transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      )}
-                      {subscription.status === 'cancelada' && (
-                        <span className="text-gray-400">Cancelada</span>
-                      )}
-                      {subscription.status === 'suspensa' && (
-                        <span className="text-yellow-600">Suspensa</span>
-                      )}
+                      <div className="flex flex-col gap-2 items-end">
+                        {getPaymentUrl(subscription) && (
+                          <a
+                            href={getPaymentUrl(subscription)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900 transition-colors"
+                          >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Ver Fatura
+                          </a>
+                        )}
+                        {(subscription.status === 'active' || subscription.status === 'trialing') && (
+                          <button
+                            onClick={() => handleCancelClick(subscription)}
+                            className="text-red-600 hover:text-red-900 transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        )}
+                        {subscription.status === 'cancelada' && (
+                          <span className="text-gray-400">Cancelada</span>
+                        )}
+                        {subscription.status === 'suspensa' && (
+                          <span className="text-yellow-600">Suspensa</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

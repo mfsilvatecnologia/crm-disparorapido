@@ -66,7 +66,16 @@ import { useLeads } from '../hooks/useLeads';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { formatCurrency } from '@/shared/utils/utils';
 import { AdvancedPagination } from '@/shared/components/common/AdvancedPagination';
-import { LeadDetailsDialog } from '../components/LeadDetailsDialog';
+import { 
+  LeadDetailsDialog,
+  BulkActionsBar,
+  SavedFilters,
+  LeadTemperature,
+  LastActivityIndicator,
+  LeadQuickActions,
+  LeadQuickView,
+  type SavedFilter
+} from '../components';
 import type { Lead } from '@/shared/services/schemas';
 
 type ViewMode = 'table' | 'cards' | 'kanban';
@@ -96,6 +105,10 @@ export default function LeadsPage() {
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
+  
+  // Estados para novos componentes
+  const [hoveredLead, setHoveredLead] = useState<Lead | null>(null);
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
 
   // Use real leads hook with pagination
   const { data: leadsData, isLoading, error } = useLeads({
@@ -307,6 +320,53 @@ export default function LeadsPage() {
     setSelectedLead(null);
   };
 
+  // Handlers para novos componentes
+  const handleApplyFilter = (filters: SavedFilter['filters']) => {
+    setFilterStatus((filters.status as FilterStatus) || 'all');
+    setQualityRange(filters.qualityRange || { min: 0, max: 100 });
+    setSelectedSegments(filters.segments || []);
+    setSelectedSources(filters.sources || []);
+    setDateRange(filters.dateRange || { from: '', to: '' });
+    setSearchTerm(filters.searchTerm || '');
+    if (filters.sortBy) setSortBy(filters.sortBy);
+    if (filters.sortOrder) setSortOrder(filters.sortOrder);
+  };
+
+  const handleBulkStatusChange = async (status: string) => {
+    console.log('Bulk status change:', { leadIds: selectedLeads, newStatus: status });
+    // TODO: Implementar chamada API
+    setSelectedLeads([]);
+  };
+
+  const handleBulkAssign = async (userId: string) => {
+    console.log('Bulk assign:', { leadIds: selectedLeads, userId });
+    // TODO: Implementar chamada API
+    setSelectedLeads([]);
+  };
+
+  const handleBulkAddTags = async (tags: string[]) => {
+    console.log('Bulk add tags:', { leadIds: selectedLeads, tags });
+    // TODO: Implementar chamada API
+    setSelectedLeads([]);
+  };
+
+  const handleBulkDelete = async () => {
+    console.log('Bulk delete:', { leadIds: selectedLeads });
+    // TODO: Implementar chamada API
+    setSelectedLeads([]);
+  };
+
+  const handleBulkExport = () => {
+    exportLeads();
+  };
+
+  const handleLeadHover = (lead: Lead | null, event?: React.MouseEvent) => {
+    setHoveredLead(lead);
+    if (event && lead) {
+      setHoverPosition({ x: event.clientX, y: event.clientY });
+    }
+  };
+
   const getQualityColor = (score: number) => {
     if (score >= 90) return 'text-green-600';
     if (score >= 80) return 'text-blue-600';
@@ -400,7 +460,7 @@ export default function LeadsPage() {
               </p>
               {error && typeof error === 'object' && 'status' in error && (
                 <p className="text-xs text-red-600">
-                  Status: {error.status}
+                  Status: {String(error.status)}
                 </p>
               )}
             </div>
@@ -455,6 +515,20 @@ export default function LeadsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      {/* Bulk Actions Bar */}
+      {selectedLeads.length > 0 && (
+        <BulkActionsBar
+          selectedCount={selectedLeads.length}
+          selectedLeads={sortedLeads.filter(l => selectedLeads.includes(l.id || ''))}
+          onClearSelection={() => setSelectedLeads([])}
+          onStatusChange={handleBulkStatusChange}
+          onAssign={handleBulkAssign}
+          onAddTags={handleBulkAddTags}
+          onDelete={handleBulkDelete}
+          onExport={handleBulkExport}
+        />
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -687,6 +761,23 @@ export default function LeadsPage() {
             </div>
           </div>
 
+          {/* Saved Filters */}
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <SavedFilters
+              currentFilters={{
+                searchTerm: searchTerm,
+                status: filterStatus,
+                qualityRange,
+                segments: selectedSegments,
+                sources: selectedSources,
+                dateRange,
+                sortBy,
+                sortOrder
+              }}
+              onApplyFilter={handleApplyFilter}
+            />
+          </div>
+
           {/* Filtros Avançados */}
           {showAdvancedFilters && (
             <div className="border-t border-gray-200 pt-4 space-y-4">
@@ -895,11 +986,13 @@ export default function LeadsPage() {
                   </TableHead>
                   <TableHead className="font-semibold">Lead</TableHead>
                   <TableHead className="font-semibold">Empresa</TableHead>
+                  <TableHead className="font-semibold">Temperatura</TableHead>
                   <TableHead className="font-semibold">Segmento</TableHead>
                   <TableHead className="font-semibold">Qualidade</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="font-semibold">Última Ativ.</TableHead>
                   <TableHead className="font-semibold">Fonte</TableHead>
-                  <TableHead className="font-semibold">Custo</TableHead>
+                  <TableHead className="font-semibold">Ações</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -940,6 +1033,12 @@ export default function LeadsPage() {
                         </p>
                       </div>
                     </TableCell>
+                    <TableCell
+                      onMouseEnter={(e) => handleLeadHover(lead, e)}
+                      onMouseLeave={() => handleLeadHover(null)}
+                    >
+                      <LeadTemperature score={lead.scoreQualificacao || 0} />
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="border-gray-300">
                         {lead.segmento || 'Não informado'}
@@ -964,15 +1063,19 @@ export default function LeadsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      <LastActivityIndicator lastActivityDate={lead.updatedAt || lead.createdAt || new Date().toISOString()} />
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1">
                         <span className="text-lg">{getSourceIcon(lead.fonte || '')}</span>
                         <span className="text-sm text-gray-600 capitalize">{lead.fonte || 'Não informado'}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <span className="text-sm font-medium text-gray-900">
-                        -
-                      </span>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <LeadQuickActions 
+                        lead={lead}
+                        compact={true}
+                      />
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -1242,6 +1345,14 @@ export default function LeadsPage() {
         onClose={handleCloseDialogs}
         onEdit={handleEditLead}
       />
+
+      {/* Quick View Hover */}
+      {hoveredLead && (
+        <LeadQuickView 
+          lead={hoveredLead}
+          position={hoverPosition}
+        />
+      )}
     </div>
   );
 }

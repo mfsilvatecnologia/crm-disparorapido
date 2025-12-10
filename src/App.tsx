@@ -15,7 +15,8 @@ import { Dashboard } from "./features/dashboard";
 import { LeadsPage } from "./features/leads";
 import { LeadAgentPage } from "./features/lead-agent";
 import { AdminPage } from "./features/admin";
-import { SearchTermsPage, ScrapingPage, WorkerMonitorPage } from "./features/scraping";
+import { SearchTermsPage, ScrapingPage } from "./features/scraping";
+// import { WorkerMonitorPage } from "./features/scraping"; // Removido - workers agora são automáticos
 import { MessagesPage, VinculacoesPendentesPage } from "./features/disparorapido/pages";
 import { UsersPage } from "./features/user-management";
 import { EmpresasPage, CadastroEmpresaPage } from "./features/companies";
@@ -97,7 +98,8 @@ function AppRoutes() {
           <Route path="leads" element={<LeadsPage />} />
           <Route path="leads/:id/edit" element={<LeadAgentPage />} />
           <Route path="lead-agent" element={<LeadAgentPage />} />
-          <Route path="workers" element={<WorkerMonitorPage />} />
+          {/* <Route path="workers" element={<WorkerMonitorPage />} /> */}
+          {/* Rota comentada - workers agora são automáticos, gerenciados pela tela de Scraping */}
           <Route path="search-terms" element={<SearchTermsPage />} />
           <Route path="scraping" element={<ScrapingPage />} />
           <Route path="empresas" element={<EmpresasPage />} />

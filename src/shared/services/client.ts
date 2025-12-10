@@ -349,6 +349,14 @@ class ApiClient {
     });
   }
 
+  async forceLogin(credentials: LoginRequest): Promise<AuthResponse> {
+    // Add force_login flag to terminate existing sessions and login
+    return this.request('/api/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ ...credentials, force_login: true }),
+    }, AuthResponseSchema);
+  }
+
   async resetPassword(data: ResetPasswordRequest): Promise<{ success: boolean; message: string }> {
     return this.request('/api/v1/auth/reset-password', {
       method: 'POST',
@@ -617,7 +625,10 @@ class ApiClient {
       const query = searchParams.toString() ? `?${searchParams}` : '';
       const url = `/api/v1/leads${query}`;
       
-      const response = await this.request(url, {}, LeadsResponseSchema);
+      const response = await this.request(url, {});
+
+      // Log da resposta bruta para debug
+      console.log('🔍 Raw API Response:', JSON.stringify(response, null, 2));
 
       // Validar a resposta com o schema
       try {
@@ -719,12 +730,20 @@ class ApiClient {
       to: period.to,
     });
     
-    return this.request(`/api/v1/analytics?${params}`, {}, z.array(AnalyticsDataSchema));
+    const response = await this.request(`/api/v1/analytics?${params}`, {});
+    if (response && typeof response === 'object' && 'data' in response) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    return Array.isArray(response) ? response : [];
   }
 
   // API Keys
   async getApiKeys(): Promise<ApiKey[]> {
-    return this.request('/api/v1/api-keys', {}, z.array(ApiKeySchema));
+    const response = await this.request('/api/v1/api-keys', {});
+    if (response && typeof response === 'object' && 'data' in response) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    return Array.isArray(response) ? response : [];
   }
 
   async createApiKey(data: { name: string; permissions: string[] }): Promise<ApiKey> {
@@ -817,7 +836,11 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    return this.request(`/api/v1/segments${query}`, {}, z.array(SegmentSchema));
+    const response = await this.request(`/api/v1/segments${query}`, {});
+    if (response && typeof response === 'object' && 'data' in response) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    return Array.isArray(response) ? response : [];
   }
 
   async getSegment(id: string): Promise<Segment> {
@@ -858,7 +881,11 @@ class ApiClient {
 
   // Pipeline
   async getPipelineStages(): Promise<PipelineStage[]> {
-    return this.request('/api/v1/pipeline/stages', {}, z.array(PipelineStageSchema));
+    const response = await this.request('/api/v1/pipeline/stages', {});
+    if (response && typeof response === 'object' && 'data' in response) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    return Array.isArray(response) ? response : [];
   }
 
   async getPipelineItems(params?: {
@@ -874,7 +901,11 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    return this.request(`/api/v1/pipeline/items${query}`, {}, z.array(PipelineItemSchema));
+    const response = await this.request(`/api/v1/pipeline/items${query}`, {});
+    if (response && typeof response === 'object' && 'data' in response) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    return Array.isArray(response) ? response : [];
   }
 
   async getPipelineStats(params?: {
@@ -1029,26 +1060,39 @@ class ApiClient {
     const response = await this.request('/api/v1/scraping/jobs', {
       method: 'POST',
       body: JSON.stringify(data),
-    }, z.object({
-      success: z.boolean(),
-      data: ScrapingJobSchema,
-      message: z.string().optional()
-    }));
-    return response.data;
+    });
+    
+    // Handle different response formats
+    if (response && typeof response === 'object') {
+      if ('data' in response) {
+        return response.data;
+      }
+      return response as ScrapingJob;
+    }
+    
+    throw new Error('Invalid response format');
   }
 
   async createBulkScrapingJobs(jobs: CreateScrapingJob[]): Promise<ScrapingJob[]> {
-    return this.request('/api/v1/scraping/jobs/bulk', {
+    const response = await this.request('/api/v1/scraping/jobs/bulk', {
       method: 'POST',
       body: JSON.stringify({ jobs }),
-    }, z.array(ScrapingJobSchema));
+    });
+    if (response && typeof response === 'object' && 'data' in response) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    return Array.isArray(response) ? response : [];
   }
 
   async createSegmentedScrapingJob(segmento: string, localizacoes: string[]): Promise<ScrapingJob[]> {
-    return this.request('/api/v1/scraping/jobs/segmented', {
+    const response = await this.request('/api/v1/scraping/jobs/segmented', {
       method: 'POST',
       body: JSON.stringify({ segmento, localizacoes }),
-    }, z.array(ScrapingJobSchema));
+    });
+    if (response && typeof response === 'object' && 'data' in response) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    return Array.isArray(response) ? response : [];
   }
 
   async getScrapingStats(): Promise<ScrapingStats> {
@@ -1087,7 +1131,15 @@ class ApiClient {
   }
 
   async getScrapingTemplates(): Promise<ScrapingTemplate[]> {
-    return this.request('/api/v1/scraping/templates', {}, z.array(ScrapingTemplateSchema));
+    const response = await this.request('/api/v1/scraping/templates', {});
+    
+    // Se a resposta for um objeto com data, extrair o array
+    if (response && typeof response === 'object' && 'data' in response) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    
+    // Se já for um array, retornar diretamente
+    return Array.isArray(response) ? response : [];
   }
 
   // Worker Status

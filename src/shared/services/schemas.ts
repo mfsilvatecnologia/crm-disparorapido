@@ -116,6 +116,7 @@ export const LoginSchema = z.object({
   device_id: z.string(),
   device_fingerprint: z.string(),
   client_type: z.enum(['web', 'extension']),
+  force_login: z.boolean().optional(), // Optional flag to force login and terminate existing sessions
 });
 
 export const ResetPasswordSchema = z.object({
@@ -488,7 +489,7 @@ export const LeadAddressSchema = z.object({
 });
 
 export const LeadSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   empresaId: z.string().nullable().optional(), // Pode ser string vazia "" ou null
   nomeEmpresa: z.string().nullable().optional(), // Pode ser null
   nomeContato: z.string().nullable().optional(),
@@ -504,15 +505,15 @@ export const LeadSchema = z.object({
   receitaAnualEstimada: z.number().nullable().optional(),
   endereco: LeadAddressSchema.nullable().optional(),
   status: z.enum(['novo', 'qualificado', 'contatado', 'convertido', 'descartado', 'privado']).nullable().optional(),
-  scoreQualificacao: z.number().min(0).max(100).default(0),
+  scoreQualificacao: z.number().min(0).max(100).optional().default(0),
   tags: z.array(z.string()).nullable().optional(),
   observacoes: z.string().nullable().optional(),
   fonte: z.string().nullable().optional(),
   dadosOriginais: z.record(z.unknown()).nullable().optional(),
   custoAquisicao: z.number().nullable().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+}).passthrough(); // Permite campos extras que não estão no schema
 
 // Schema de resposta da API real
 export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
@@ -543,25 +544,25 @@ export const LeadAccessSchema = z.object({
 
 // Schema específico para a resposta de leads
 export const LeadsResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.array(LeadSchema),
+  success: z.boolean().optional(),
+  data: z.array(LeadSchema).optional(),
   pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-    hasNext: z.boolean(),
-    hasPrev: z.boolean(),
+    page: z.number().optional(),
+    limit: z.number().optional(),
+    total: z.number().optional(),
+    totalPages: z.number().optional(),
+    hasNext: z.boolean().optional(),
+    hasPrev: z.boolean().optional(),
     firstPage: z.number().optional(),
     lastPage: z.number().optional(),
-  }),
+  }).optional(),
   timestamp: z.string().optional(),
   trace: z.object({
-    trace_id: z.string(),
-    span_id: z.string(),
-    requestId: z.string(),
+    trace_id: z.string().optional(),
+    span_id: z.string().optional(),
+    requestId: z.string().optional(),
   }).optional(),
-});
+}).passthrough(); // Permite campos extras
 
 export type LeadsResponse = z.infer<typeof LeadsResponseSchema>;
 
