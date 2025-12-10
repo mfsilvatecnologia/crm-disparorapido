@@ -1,0 +1,505 @@
+openapi: 3.0.3
+info:
+  title: PH3A Enrichment API - Enriquecimento de Leads
+  description: Endpoints para compra e visualização de dados enriquecidos via PH3A
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+  - url: https://api.leadsrapido.com/api
+
+paths:
+  /ph3a/packages:
+    get:
+      summary: Listar pacotes de enriquecimento disponíveis
+      description: Retorna todos os pacotes disponíveis com preços e informações
+      operationId: getEnrichmentPackages
+      tags:
+        - PH3A
+      responses:
+        '200':
+          description: Pacotes retornados com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrichmentPackage'
+
+  /ph3a/enrich:
+    post:
+      summary: Comprar enriquecimento para um lead
+      description: Inicia processo de enriquecimento, deduz créditos apenas após sucesso
+      operationId: purchaseEnrichment
+      tags:
+        - PH3A
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrichmentPurchaseRequest'
+      responses:
+        '201':
+          description: Enriquecimento iniciado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichmentTransaction'
+        '400':
+          description: Requisição inválida (créditos insuficientes, pacote já comprado, etc)
+          content:
+            application/json:
+              schema:
+                $ref: './api-leads.yaml#/components/schemas/Error'
+              examples:
+                insufficient_credits:
+                  value:
+                    error: "INSUFFICIENT_CREDITS"
+                    message: "Créditos insuficientes. Necessário: 100, Disponível: 50"
+                already_purchased:
+                  value:
+                    error: "ALREADY_PURCHASED"
+                    message: "Pacote já adquirido recentemente. Expira em: 2026-03-01"
+        '404':
+          description: Lead não encontrado
+        '500':
+          description: Erro ao processar enriquecimento
+
+  /ph3a/dossier/{leadId}:
+    get:
+      summary: Obter dossiê completo de um lead
+      description: Retorna todos os dados enriquecidos disponíveis para o lead
+      operationId: getDossier
+      tags:
+        - PH3A
+      parameters:
+        - name: leadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dossiê retornado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DossierData'
+        '404':
+          description: Lead não encontrado ou sem dados enriquecidos
+        '410':
+          description: Dados expirados (> 90 dias)
+
+  /ph3a/history/{leadId}:
+    get:
+      summary: Histórico de enriquecimentos de um lead
+      description: Lista todas as compras de enriquecimento para o lead
+      operationId: getEnrichmentHistory
+      tags:
+        - PH3A
+      parameters:
+        - name: leadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Histórico retornado com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrichmentTransaction'
+
+components:
+  schemas:
+    EnrichmentPackage:
+      type: object
+      required:
+        - id
+        - code
+        - name
+        - cost
+        - dataSource
+        - isActive
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          enum:
+            - financial_health
+            - enriched_profile
+            - digital_trace
+            - market_affinity
+            - registry_validation
+            - complete
+        name:
+          type: string
+          example: "Saúde Financeira"
+        description:
+          type: string
+          example: "Score de crédito, risco e capacidade de compra"
+        cost:
+          type: integer
+          minimum: 1
+          description: Custo em créditos
+          example: 100
+        dataSource:
+          type: string
+          enum: [DataFraud, DataBusca, DataTag, DataAffinity, Multiple]
+          example: "DataFraud"
+        features:
+          type: array
+          items:
+            type: string
+          example:
+            - "Score de crédito (0-1000)"
+            - "Nível de risco"
+            - "Capacidade de compra estimada"
+        estimatedTime:
+          type: integer
+          description: Tempo estimado em segundos
+          example: 5
+        isActive:
+          type: boolean
+          example: true
+
+    EnrichmentPurchaseRequest:
+      type: object
+      required:
+        - leadId
+        - packageCode
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        packageCode:
+          type: string
+          enum:
+            - financial_health
+            - enriched_profile
+            - digital_trace
+            - market_affinity
+            - registry_validation
+            - complete
+
+    EnrichmentTransaction:
+      type: object
+      required:
+        - id
+        - leadId
+        - packageCode
+        - status
+        - cost
+        - userId
+        - userName
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        leadId:
+          type: string
+          format: uuid
+        packageCode:
+          type: string
+          enum:
+            - financial_health
+            - enriched_profile
+            - digital_trace
+            - market_affinity
+            - registry_validation
+            - complete
+        status:
+          type: string
+          enum: [pending, success, failed, refunded]
+          example: "success"
+        cost:
+          type: integer
+          example: 100
+        userId:
+          type: string
+          format: uuid
+        userName:
+          type: string
+          example: "João Silva"
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        retryCount:
+          type: integer
+          minimum: 0
+          maximum: 3
+          example: 0
+
+    DossierData:
+      type: object
+      required:
+        - leadId
+        - expiresAt
+        - createdAt
+        - updatedAt
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        financialHealth:
+          $ref: '#/components/schemas/FinancialHealth'
+        enrichedProfile:
+          $ref: '#/components/schemas/EnrichedProfile'
+        digitalTrace:
+          $ref: '#/components/schemas/DigitalTrace'
+        marketAffinity:
+          $ref: '#/components/schemas/MarketAffinity'
+        registryValidation:
+          $ref: '#/components/schemas/RegistryValidation'
+        expiresAt:
+          type: string
+          format: date-time
+          description: Data de expiração (90 dias)
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    FinancialHealth:
+      type: object
+      nullable: true
+      required:
+        - riskLevel
+        - source
+        - updatedAt
+      properties:
+        creditScore:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          nullable: true
+          example: 850
+        creditScoreD30:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          nullable: true
+          example: 820
+        riskLevel:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+          example: "LOW"
+        purchaseCapacityMin:
+          type: integer
+          nullable: true
+          description: Valor em centavos
+          example: 120000000
+        purchaseCapacityMax:
+          type: integer
+          nullable: true
+          description: Valor em centavos
+          example: 150000000
+        flags:
+          type: array
+          items:
+            type: string
+          example: ["no_restrictions", "positive_history"]
+        source:
+          type: string
+          enum: [DataFraud]
+        updatedAt:
+          type: string
+          format: date-time
+
+    EnrichedProfile:
+      type: object
+      nullable: true
+      required:
+        - source
+        - updatedAt
+      properties:
+        ageRange:
+          type: string
+          nullable: true
+          example: "35-40 anos"
+        maritalStatus:
+          type: string
+          nullable: true
+          example: "Casado(a)"
+        probableRole:
+          type: string
+          nullable: true
+          example: "Diretor / Gerente Sênior"
+        additionalContacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        source:
+          type: string
+          enum: [DataBusca]
+        updatedAt:
+          type: string
+          format: date-time
+
+    Contact:
+      type: object
+      required:
+        - type
+        - valueMasked
+        - label
+        - verified
+      properties:
+        type:
+          type: string
+          enum: [phone, email]
+        value:
+          type: string
+          description: Pode estar mascarado (LGPD)
+          example: "(11) 3030-****"
+        valueMasked:
+          type: string
+          description: Versão sempre mascarada
+          example: "(11) ****-****"
+        label:
+          type: string
+          enum: [Comercial, Corporativo, Pessoal, Outro]
+        verified:
+          type: boolean
+
+    DigitalTrace:
+      type: object
+      nullable: true
+      required:
+        - temperature
+        - source
+        - updatedAt
+      properties:
+        temperature:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, VERY_HIGH]
+        visits30d:
+          type: integer
+          minimum: 0
+          example: 12
+        avgTimeSeconds:
+          type: integer
+          minimum: 0
+          example: 300
+        intentTags:
+          type: array
+          items:
+            type: string
+          example: ["Compra Imediata", "Alto Padrão", "Zona Sul"]
+        isOnlineNow:
+          type: boolean
+        insight:
+          type: string
+          nullable: true
+          example: "Visitou a página 'Financiamento' 3 vezes na última semana"
+        source:
+          type: string
+          enum: [DataTag]
+        updatedAt:
+          type: string
+          format: date-time
+
+    MarketAffinity:
+      type: object
+      nullable: true
+      required:
+        - grade
+        - classification
+        - compatibilityPercentile
+        - source
+        - updatedAt
+      properties:
+        grade:
+          type: string
+          enum: [A+, A, B, C, D, E]
+          example: "A+"
+        classification:
+          type: string
+          example: "Perfil Premium"
+        compatibilityPercentile:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 95
+        similarProfiles:
+          type: array
+          items:
+            type: string
+          example: ["Investidor Imobiliário"]
+        closingLift:
+          type: number
+          minimum: 0
+          example: 3.0
+        insight:
+          type: string
+          nullable: true
+        source:
+          type: string
+          enum: [DataAffinity]
+        updatedAt:
+          type: string
+          format: date-time
+
+    RegistryValidation:
+      type: object
+      nullable: true
+      required:
+        - cpfStatus
+        - motherNameMatch
+        - addressMatch
+        - deathRecord
+        - lastCheckedAt
+        - source
+        - updatedAt
+      properties:
+        cpfStatus:
+          type: string
+          enum: [REGULAR, IRREGULAR, NOT_FOUND, SUSPENDED, CANCELED]
+          example: "REGULAR"
+        motherNameMatch:
+          type: string
+          enum: [MATCH, NO_MATCH, NOT_PROVIDED]
+        addressMatch:
+          type: string
+          enum: [MATCH, DIVERGENT, NOT_PROVIDED]
+        deathRecord:
+          type: string
+          enum: [NOT_FOUND, FOUND]
+        deathYear:
+          type: integer
+          nullable: true
+        lastCheckedAt:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [DataBusca]
+        updatedAt:
+          type: string
+          format: date-time
+
+security:
+  - BearerAuth: []
+
+securitySchemes:
+  BearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT

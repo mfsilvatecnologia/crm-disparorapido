@@ -85,14 +85,15 @@ const navigationItems = [
     icon: Map,
     description: 'Jobs de coleta Google Maps',
     requiredFeature: 'enableScraping'
-  },
-  {
-    title: 'Workers',
-    url: '/app/workers',
-    icon: Activity,
-    description: 'Monitorar workers e jobs',
-    requiredFeature: 'enableWorkers'
   }
+  // {
+  //   title: 'Workers',
+  //   url: '/app/workers',
+  //   icon: Activity,
+  //   description: 'Monitorar workers e jobs',
+  //   requiredFeature: 'enableWorkers'
+  // }
+  // Removido - workers agora são automáticos, status visível na tela de Scraping
 ];
 
 const contatoItems = [

@@ -1,0 +1,156 @@
+openapi: 3.0.3
+info:
+  title: Credits API - Sistema de Créditos
+  description: Endpoints para gerenciamento de créditos de enriquecimento
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+  - url: https://api.leadsrapido.com/api
+
+paths:
+  /credits/balance:
+    get:
+      summary: Obter saldo de créditos
+      description: Retorna saldo atual de créditos do usuário/empresa
+      operationId: getCreditBalance
+      tags:
+        - Credits
+      responses:
+        '200':
+          description: Saldo retornado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditBalance'
+        '401':
+          $ref: './api-leads.yaml#/components/responses/Unauthorized'
+        '500':
+          $ref: './api-leads.yaml#/components/responses/InternalServerError'
+
+  /credits/transactions:
+    get:
+      summary: Listar transações de créditos
+      description: Histórico de transações (compras, consumos, reembolsos)
+      operationId: getCreditTransactions
+      tags:
+        - Credits
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 50
+            default: 20
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [purchase, consumption, refund, expiry]
+      responses:
+        '200':
+          description: Transações retornadas com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CreditTransaction'
+                  pagination:
+                    $ref: './api-leads.yaml#/components/schemas/Pagination'
+
+components:
+  schemas:
+    CreditBalance:
+      type: object
+      required:
+        - userId
+        - companyId
+        - balance
+        - reserved
+        - available
+        - currency
+        - lastUpdated
+      properties:
+        userId:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        balance:
+          type: integer
+          minimum: 0
+          description: Créditos totais
+          example: 1500
+        reserved:
+          type: integer
+          minimum: 0
+          description: Créditos reservados (transações pendentes)
+          example: 50
+        available:
+          type: integer
+          minimum: 0
+          description: Créditos disponíveis (balance - reserved)
+          example: 1450
+        currency:
+          type: string
+          enum: [BRL]
+          example: "BRL"
+        lastUpdated:
+          type: string
+          format: date-time
+          example: "2025-12-05T10:30:00Z"
+
+    CreditTransaction:
+      type: object
+      required:
+        - id
+        - type
+        - amount
+        - balanceAfter
+        - description
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [purchase, consumption, refund, expiry]
+        amount:
+          type: integer
+          description: Positivo para purchase/refund, negativo para consumption
+          example: -100
+        balanceAfter:
+          type: integer
+          example: 1450
+        description:
+          type: string
+          example: "Enriquecimento: Saúde Financeira - Lead Roberto Silva"
+        createdAt:
+          type: string
+          format: date-time
+        relatedEnrichmentId:
+          type: string
+          format: uuid
+          nullable: true
+
+security:
+  - BearerAuth: []
+
+securitySchemes:
+  BearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT

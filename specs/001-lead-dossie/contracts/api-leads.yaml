@@ -1,0 +1,292 @@
+openapi: 3.0.3
+info:
+  title: Leads API - Dossiê de Leads
+  description: Endpoints para listagem e busca de leads
+  version: 1.0.0
+  contact:
+    name: LeadsRapido API Team
+
+servers:
+  - url: http://localhost:3000/api
+    description: Desenvolvimento local
+  - url: https://api.leadsrapido.com/api
+    description: Produção
+
+paths:
+  /leads:
+    get:
+      summary: Listar leads com paginação
+      description: Retorna lista paginada de leads com filtros opcionais
+      operationId: getLeads
+      tags:
+        - Leads
+      parameters:
+        - name: page
+          in: query
+          description: Número da página (1-indexed)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Itens por página
+          required: false
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 100
+            default: 20
+        - name: search
+          in: query
+          description: Busca por nome ou documento
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filtrar por status
+          required: false
+          schema:
+            type: string
+            enum: [new, contacted, qualified, lost, won]
+        - name: hasEnrichment
+          in: query
+          description: Filtrar leads com/sem enriquecimento
+          required: false
+          schema:
+            type: boolean
+        - name: tags
+          in: query
+          description: Filtrar por tags (separadas por vírgula)
+          required: false
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          description: Cursor para paginação cursor-based
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de leads retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Lead'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /leads/{leadId}:
+    get:
+      summary: Obter detalhes de um lead
+      description: Retorna informações completas de um lead específico
+      operationId: getLeadById
+      tags:
+        - Leads
+      parameters:
+        - name: leadId
+          in: path
+          description: UUID do lead
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detalhes do lead retornados com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lead'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    Lead:
+      type: object
+      required:
+        - id
+        - documentNumber
+        - documentType
+        - name
+        - status
+        - tags
+        - createdAt
+        - updatedAt
+        - hasEnrichment
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        documentNumber:
+          type: string
+          pattern: '^\d{11}$|^\d{14}$'
+          example: "12345678900"
+        documentType:
+          type: string
+          enum: [CPF, CNPJ]
+          example: "CPF"
+        name:
+          type: string
+          minLength: 3
+          maxLength: 200
+          example: "Roberto Silva"
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: "roberto.silva@empresa.com"
+        phone:
+          type: string
+          nullable: true
+          example: "(11) 98765-4321"
+        status:
+          type: string
+          enum: [new, contacted, qualified, lost, won]
+          example: "qualified"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["vip", "zona-sul"]
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-12-01T14:20:00Z"
+        hasEnrichment:
+          type: boolean
+          example: true
+        enrichmentExpiry:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-03-01T14:20:00Z"
+
+    Pagination:
+      type: object
+      required:
+        - total
+        - page
+        - pageSize
+        - totalPages
+      properties:
+        total:
+          type: integer
+          description: Total de itens
+          example: 145
+        page:
+          type: integer
+          description: Página atual
+          example: 1
+        pageSize:
+          type: integer
+          description: Itens por página
+          example: 20
+        totalPages:
+          type: integer
+          description: Total de páginas
+          example: 8
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor para próxima página (cursor-based pagination)
+          example: "eyJpZCI6MTIzfQ=="
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "BAD_REQUEST"
+        message:
+          type: string
+          example: "Parâmetro 'status' inválido"
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Requisição inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "BAD_REQUEST"
+            message: "Parâmetro 'pageSize' deve estar entre 10 e 100"
+
+    Unauthorized:
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "UNAUTHORIZED"
+            message: "Token de autenticação inválido ou expirado"
+
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "NOT_FOUND"
+            message: "Lead não encontrado"
+
+    InternalServerError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "INTERNAL_SERVER_ERROR"
+            message: "Erro inesperado ao processar requisição"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

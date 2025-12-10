@@ -31,7 +31,11 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- API-First Backend Authority: Frontend only consumes backend contracts (swagger/OpenSpec); new endpoints are specified before UI work.
+- Test-First Delivery: Contract/integration tests are planned before implementation with expected suites/commands noted.
+- Feature-Modular Boundaries: Feature directories and public APIs are respected; no cross-feature internals; shared additions justified.
+- Anti-Entropy Simplicity: Scope is trimmed to MVP, speculative work removed, docs/tasks are executable; highlight any commit-size risks.
+- Spec-Driven Change Control: Change-id + constitution version recorded; OpenSpec proposal approved/validated; exceptions include mitigation, owner, and expiry.
 
 ## Project Structure
 
