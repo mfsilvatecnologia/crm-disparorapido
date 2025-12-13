@@ -20,15 +20,9 @@ export function SubscriptionManagementPage() {
   };
 
   const getPaymentUrl = (subscription: Subscription): string | null => {
-    // Se tiver URL direta da API, usar ela
-    if (subscription.asaasInvoiceUrl) {
+    // Sempre usar asaasInvoiceUrl se disponível
+    if (subscription.asaasInvoiceUrl && subscription.asaasInvoiceUrl.trim()) {
       return subscription.asaasInvoiceUrl;
-    }
-    
-    // Se tiver asaasSubscriptionId, montar URL do Asaas
-    if (subscription.asaasSubscriptionId) {
-      // URL base do Asaas para visualização de assinatura
-      return `https://www.asaas.com/subscription/${subscription.asaasSubscriptionId}`;
     }
     
     return null;

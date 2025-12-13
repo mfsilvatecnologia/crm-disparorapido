@@ -9,6 +9,7 @@ export interface RegisterRequest {
   cnpj: string
   empresa: string
   empresa_id?: string
+  telefone: string
 }
 
 export interface RegisterResponse {

@@ -17,6 +17,7 @@ interface RegisterFormData {
   confirmPassword: string
   cnpj: string
   empresa: string
+  telefone: string
 }
 
 export function RegisterPage() {
@@ -28,7 +29,8 @@ export function RegisterPage() {
     password: '',
     confirmPassword: '',
     cnpj: '',
-    empresa: ''
+    empresa: '',
+    telefone: ''
   })
 
   const [errors, setErrors] = useState<Partial<RegisterFormData>>({})
@@ -90,6 +92,13 @@ export function RegisterPage() {
       newErrors.empresa = 'Nome da empresa deve ter pelo menos 2 caracteres'
     }
 
+    // Phone validation
+    if (!formData.telefone) {
+      newErrors.telefone = 'Telefone é obrigatório'
+    } else if (!/^\d{10,11}$/.test(formData.telefone.replace(/\D/g, ''))) {
+      newErrors.telefone = 'Telefone inválido'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -108,7 +117,8 @@ export function RegisterPage() {
         email: formData.email,
         password: formData.password,
         cnpj: formData.cnpj.replace(/\D/g, ''), // Remove formatting
-        empresa: formData.empresa
+        empresa: formData.empresa,
+        telefone: formData.telefone.replace(/\D/g, '') // Remove formatting
       }
 
       const result = await registerUser(registerData)
@@ -266,6 +276,25 @@ export function RegisterPage() {
                   />
                   {errors.email && (
                     <p className="text-sm text-destructive">{errors.email}</p>
+                  )}
+                </div>
+
+                {/* Telefone */}
+                <div className="space-y-2">
+                  <Label htmlFor="telefone">Telefone</Label>
+                  <Input
+                    id="telefone"
+                    name="telefone"
+                    type="tel"
+                    required
+                    value={formData.telefone}
+                    onChange={handleChange}
+                    maxLength={15}
+                    className={errors.telefone ? 'border-destructive' : ''}
+                    placeholder="(00) 00000-0000"
+                  />
+                  {errors.telefone && (
+                    <p className="text-sm text-destructive">{errors.telefone}</p>
                   )}
                 </div>
 
