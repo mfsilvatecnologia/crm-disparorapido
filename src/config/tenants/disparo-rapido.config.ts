@@ -16,8 +16,8 @@ export const disparorapidoConfig: TenantConfig = {
   branding: {
     companyName: 'Disparo Rápido',
     companyTagline: 'Faça Envios em Massa no WhatsApp com apenas 3 cliques',
-    logo: '/logos/disparo-rapido/logo.svg',
-    logoLight: '/logos/disparo-rapido/logo-light.svg',
+    logo: '/logos/disparo-rapido/logohorizontal.png',
+    logoLight: '/logos/disparo-rapido/logohorizontal.png',
     favicon: '/logos/disparo-rapido/favicon.ico',
 
     supportEmail: 'contato@disparorapido.com.br',
@@ -25,7 +25,7 @@ export const disparorapidoConfig: TenantConfig = {
 
   theme: {
     // Primary brand colors - Green theme
-    primary: '#25D366', // WhatsApp Green
+    primary: '#ffffffff', // WhatsApp Green
     primaryForeground: '#ffffff',
 
     secondary: '#64748b', // Slate 500
@@ -35,9 +35,9 @@ export const disparorapidoConfig: TenantConfig = {
     accentForeground: '#ffffff',
 
     // Gradient for hero sections
-    gradientFrom: '#128C7E', // Teal Green
-    gradientVia: '#25D366',  // WhatsApp Green
-    gradientTo: '#DCF8C6',   // Light Green
+      gradientFrom: '#FFFFFF', // White
+      gradientVia: '#FFFFFF',  // White
+      gradientTo: '#FFFFFF',   // White
   },
 
   features: {

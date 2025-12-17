@@ -194,70 +194,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{position: 'relative'}}>
-      {/* Left side - Hero */}
-      <div className="hidden lg:flex flex-1 items-center justify-center p-12 text-white"
-           style={{
-             background: `linear-gradient(135deg, ${tenant.theme.gradientFrom} 0%, ${tenant.theme.gradientVia || tenant.theme.gradientFrom} 50%, ${tenant.theme.gradientTo} 100%)`
-           }}>
-        <div className="max-w-md text-center">
-          <div className="mb-8">
-            <div className="h-24 w-24 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-6 p-4">
-              <img
-                src={tenant.branding.logoLight || tenant.branding.logo}
-                alt={tenant.branding.companyName}
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  // Fallback to icon if logo doesn't exist
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    const icon = document.createElement('div');
-                    icon.innerHTML = '<svg class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>';
-                    parent.appendChild(icon);
-                  }
-                }}
-              />
-            </div>
-            <h1 className="text-4xl font-bold mb-4">{tenant.branding.companyName}</h1>
-            <p className="text-xl text-white/90">{tenant.branding.companyTagline}</p>
-          </div>
-          
-          <div className="glass rounded-2xl p-6 text-left">
-            <h3 className="font-semibold mb-3">Recursos Principais:</h3>
-            <ul className="space-y-2 text-sm text-white/90">
-              <li>• Gestão completa de leads</li>
-              <li>• Pipeline de vendas visual</li>
-              <li>• Múltiplas organizações</li>
-              <li>• Analytics em tempo real</li>
-              <li>• Integração com ferramentas</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center" style={{position: 'relative'}}>
+      {/* Removido hero/branding no login para centralizar tudo */}
 
-      {/* Right side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
+      {/* Login Form centralizado e sem logo */}
+      <div className="flex items-center justify-center p-8 bg-background w-full">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8 lg:hidden">
-            <div className="h-16 w-16 rounded-xl flex items-center justify-center mx-auto mb-4 p-3"
-                 style={{ backgroundColor: tenant.theme.primary }}>
+          <div className="text-center mb-6">
+            <div className="w-full max-w-[300px] mx-auto">
               <img
-                src={tenant.branding.logoLight || tenant.branding.logo}
+                src={tenant.branding.logo}
                 alt={tenant.branding.companyName}
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    const icon = document.createElement('div');
-                    icon.innerHTML = '<svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>';
-                    parent.appendChild(icon);
-                  }
-                }}
+                className="w-full h-auto object-contain"
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
               />
             </div>
-            <h1 className="text-2xl font-bold">{tenant.branding.companyName}</h1>
           </div>
 
           <Card className="bg-gradient-card border-0 shadow-xl">
@@ -370,7 +321,10 @@ export default function LoginPage() {
                 </div>
 
                 <Link to="/register">
-                  <Button variant="outline" className="w-full">
+                  <Button
+                    variant="outline"
+                    className="w-full border-border text-[#22c55e] hover:bg-[#22c55e] hover:text-white"
+                  >
                     Criar Nova Conta
                   </Button>
                 </Link>
