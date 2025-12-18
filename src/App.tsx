@@ -2,6 +2,7 @@ import { Toaster } from "@/shared/components/ui/toaster";
 import { Toaster as Sonner } from "@/shared/components/ui/sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./shared/contexts/AuthContext";
 import { OrganizationProvider } from "./shared/contexts/OrganizationContext";
@@ -155,6 +156,7 @@ const App = () => (
           <Sonner />
           <AppRoutes />
         </TooltipProvider>
+        {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} /> : null}
       </AuthProvider>
     </QueryClientProvider>
   </TenantProvider>
