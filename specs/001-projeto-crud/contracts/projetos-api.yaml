@@ -1,0 +1,704 @@
+openapi: 3.0.3
+info:
+  title: Projetos de Resolução de Problemas API
+  description: API contract for CRUD operations on problem-resolution projects
+  version: 1.0.0
+  contact:
+    name: LeadsRapido Backend Team
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://api.leadsrapido.com/api/v1
+    description: Production
+
+tags:
+  - name: Projetos
+    description: Project CRUD operations
+  - name: Metodologia
+    description: Methodology definition operations
+
+paths:
+  /resolucao-problemas/projetos:
+    get:
+      tags:
+        - Projetos
+      summary: List projects with filtering and pagination
+      description: |
+        Returns a paginated list of projects. Supports filtering by status, methodology,
+        customer, responsible, and date range. Full-text search across title and description.
+
+        Source: FR-044 to FR-059 (list, filter, paginate)
+      operationId: listProjetos
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProjetoStatus'
+        - name: metodologia
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Metodologia'
+        - name: cliente_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: responsavel_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: busca
+          in: query
+          description: Full-text search in titulo and descricao
+          schema:
+            type: string
+        - name: data_inicio_de
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: data_inicio_ate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: incluir_arquivados
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: ordenar_por
+          in: query
+          schema:
+            type: string
+            enum: [data_inicio, titulo, updated_at]
+            default: updated_at
+        - name: ordem
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Paginated list of projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjetosResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - bearerAuth: []
+
+    post:
+      tags:
+        - Projetos
+      summary: Create a new project (without methodology)
+      description: |
+        Creates a new project with basic information. Methodology is initially NULL
+        and must be defined separately after creation.
+
+        Source: FR-001 to FR-009 (create project)
+      operationId: createProjeto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjetoRequest'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjetoDetalhado'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Cliente or Responsavel not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /resolucao-problemas/projetos/{id}:
+    get:
+      tags:
+        - Projetos
+      summary: Get project details
+      description: |
+        Returns detailed project information with all relationships populated
+        (cliente, responsavel, participantes, etapas).
+
+        Source: FR-023 to FR-028 (view details)
+      operationId: getProjeto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjetoDetalhado'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+    put:
+      tags:
+        - Projetos
+      summary: Update project basic data
+      description: |
+        Updates project basic information (titulo, descricao, data_prevista_conclusao, status).
+        IMPORTANT: Methodology cannot be changed via this endpoint (FR-043 - immutability).
+
+        Source: FR-038 to FR-042 (edit project)
+      operationId: updateProjeto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjetoRequest'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjetoDetalhado'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+  /resolucao-problemas/projetos/{id}/metodologia:
+    post:
+      tags:
+        - Metodologia
+      summary: Define project methodology (one-time operation)
+      description: |
+        Defines the methodology for a project that doesn't have one yet.
+        This is a one-time operation - once methodology is defined, it becomes IMMUTABLE.
+
+        Source: FR-010 to FR-020 (define methodology), FR-043 (immutability)
+      operationId: definirMetodologia
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DefinirMetodologiaRequest'
+      responses:
+        '200':
+          description: Methodology defined successfully and workflow stages initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjetoDetalhado'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Methodology already defined (cannot be changed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: METODOLOGIA_JA_DEFINIDA
+                  message: Metodologia já foi definida para este projeto e não pode ser alterada
+      security:
+        - bearerAuth: []
+
+  /resolucao-problemas/projetos/{id}/arquivar:
+    put:
+      tags:
+        - Projetos
+      summary: Archive project (soft delete)
+      description: |
+        Archives a project (soft delete). Archived projects are excluded from
+        default listings unless incluir_arquivados=true is specified.
+
+        Source: FR-060 to FR-063 (archive project)
+      operationId: arquivarProjeto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArquivarProjetoRequest'
+      responses:
+        '200':
+          description: Project archived successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Enums
+    Metodologia:
+      type: string
+      enum:
+        - MASP
+        - 8D
+        - A3
+      description: Problem-resolution methodology
+
+    ProjetoStatus:
+      type: string
+      enum:
+        - PLANEJAMENTO
+        - EM_ANDAMENTO
+        - AGUARDANDO
+        - CONCLUIDO
+        - CANCELADO
+        - ARQUIVADO
+
+    EtapaStatus:
+      type: string
+      enum:
+        - PENDENTE
+        - EM_ANDAMENTO
+        - CONCLUIDA
+        - BLOQUEADA
+
+    # Request Bodies
+    CreateProjetoRequest:
+      type: object
+      required:
+        - titulo
+        - descricao
+        - cliente_id
+        - responsavel_id
+        - data_inicio
+      properties:
+        titulo:
+          type: string
+          minLength: 3
+          maxLength: 200
+          example: Investigar defeitos na linha de produção
+        descricao:
+          type: string
+          minLength: 10
+          example: Análise de defeitos recorrentes identificados no setor de montagem
+        cliente_id:
+          type: string
+          format: uuid
+        responsavel_id:
+          type: string
+          format: uuid
+        data_inicio:
+          type: string
+          format: date
+          example: '2025-12-18'
+        data_prevista_conclusao:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-01-31'
+        status:
+          $ref: '#/components/schemas/ProjetoStatus'
+          default: PLANEJAMENTO
+
+    UpdateProjetoRequest:
+      type: object
+      minProperties: 1
+      properties:
+        titulo:
+          type: string
+          minLength: 3
+          maxLength: 200
+        descricao:
+          type: string
+          minLength: 10
+        data_prevista_conclusao:
+          type: string
+          format: date
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ProjetoStatus'
+      # metodologia is intentionally excluded (immutable)
+
+    DefinirMetodologiaRequest:
+      type: object
+      required:
+        - metodologia
+      properties:
+        metodologia:
+          $ref: '#/components/schemas/Metodologia'
+
+    ArquivarProjetoRequest:
+      type: object
+      properties:
+        motivo:
+          type: string
+          description: Optional reason for archiving
+
+    # Response Bodies
+    Projeto:
+      type: object
+      required:
+        - id
+        - titulo
+        - descricao
+        - cliente_id
+        - responsavel_id
+        - data_inicio
+        - status
+        - metodologia
+        - pode_definir_metodologia
+        - progresso_percentual
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        titulo:
+          type: string
+        descricao:
+          type: string
+        cliente_id:
+          type: string
+          format: uuid
+        responsavel_id:
+          type: string
+          format: uuid
+        data_inicio:
+          type: string
+          format: date
+        data_prevista_conclusao:
+          type: string
+          format: date
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ProjetoStatus'
+        metodologia:
+          allOf:
+            - $ref: '#/components/schemas/Metodologia'
+          nullable: true
+        pode_definir_metodologia:
+          type: boolean
+          description: True if methodology can be defined (null → MASP/8D/A3)
+        progresso_percentual:
+          type: number
+          minimum: 0
+          maximum: 100
+        metodologia_definida_em:
+          type: string
+          format: date-time
+          nullable: true
+        metodologia_definida_por_id:
+          type: string
+          format: uuid
+          nullable: true
+        arquivado_em:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProjetoDetalhado:
+      allOf:
+        - $ref: '#/components/schemas/Projeto'
+        - type: object
+          properties:
+            cliente:
+              $ref: '#/components/schemas/Cliente'
+            responsavel:
+              $ref: '#/components/schemas/Responsavel'
+            participantes:
+              type: array
+              items:
+                $ref: '#/components/schemas/Participante'
+            etapas:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkflowEtapa'
+
+    Cliente:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        razao_social:
+          type: string
+          nullable: true
+        cnpj:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+        telefone:
+          type: string
+          nullable: true
+        ativo:
+          type: boolean
+
+    Responsavel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        email:
+          type: string
+          format: email
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+        cargo:
+          type: string
+          nullable: true
+        departamento:
+          type: string
+          nullable: true
+        ativo:
+          type: boolean
+
+    Participante:
+      allOf:
+        - $ref: '#/components/schemas/Responsavel'
+        - type: object
+          properties:
+            papel:
+              type: string
+              enum: [MEMBRO, OBSERVADOR, APROVADOR]
+            adicionado_em:
+              type: string
+              format: date-time
+
+    WorkflowEtapa:
+      type: object
+      required:
+        - id
+        - projeto_id
+        - tipo
+        - ordem
+        - titulo
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        projeto_id:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+          enum: [MASP, 8D, A3]
+        ordem:
+          type: integer
+          minimum: 1
+        titulo:
+          type: string
+        descricao:
+          type: string
+        status:
+          $ref: '#/components/schemas/EtapaStatus'
+        data_inicio:
+          type: string
+          format: date
+          nullable: true
+        data_conclusao:
+          type: string
+          format: date
+          nullable: true
+        responsavel_id:
+          type: string
+          format: uuid
+          nullable: true
+        responsavel:
+          allOf:
+            - $ref: '#/components/schemas/Responsavel'
+          nullable: true
+        observacoes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PaginatedProjetosResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Projeto'
+        total:
+          type: integer
+          description: Total number of projects matching filters
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Items per page
+        total_pages:
+          type: integer
+          description: Total number of pages
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operação realizada com sucesso
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Dados inválidos
+            details:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+              example:
+                titulo: ['Título deve ter no mínimo 3 caracteres']
+
+  responses:
+    BadRequest:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

@@ -56,14 +56,14 @@ net::ERR_FAILED
 
 ### 1. Scripts de Desenvolvimento
 ```bash
-# Rodar apenas Vendas.IA (porta 8080)
-npm run dev:vendas
+# Rodar apenas Vendas.IA (porta 3000)
+npm run dev:vendas-ia
 
-# Rodar apenas Publix.IA (porta 8081)
+# Rodar apenas Publix.IA (porta 3001)
 npm run dev:publix
 
-# Rodar ambos simultaneamente
-npm run dev:both
+# Rodar todos simultaneamente
+npm run dev:all
 ```
 
 ### 2. Verificar Status da API
@@ -75,7 +75,7 @@ npm run dev:both
 ### 3. Configurar Backend
 No arquivo `.env` do backend, adicione:
 ```bash
-CORS_ORIGIN="http://localhost:8080,http://localhost:8081,http://localhost:5173"
+CORS_ORIGIN="http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:5173"
 ```
 
 **IMPORTANTE**: Se você estiver vendo erros de CORS mesmo depois de configurar o `.env`, verifique:
@@ -87,8 +87,11 @@ import cors from '@fastify/cors';
 
 await fastify.register(cors, {
   origin: [
-    'http://localhost:8080',
-    'http://localhost:8081',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:3004',
     'http://localhost:5173'
   ],
   credentials: true
@@ -104,12 +107,12 @@ curl http://localhost:3000/health
 ## Configurações por Tenant
 
 ### Vendas.IA
-- **Frontend**: http://localhost:8080
+- **Frontend**: http://localhost:3000
 - **API**: http://localhost:3000
-- **Configuração**: `src/config/tenants/vendas.config.ts`
+- **Configuração**: `src/config/tenants/vendas-ia.config.ts`
 
 ### Publix.IA  
-- **Frontend**: http://localhost:8081
+- **Frontend**: http://localhost:3001
 - **API**: http://localhost:3001 (ou fallback para 3000)
 - **Configuração**: `src/config/tenants/publix.config.ts`
 
@@ -133,8 +136,8 @@ curl http://localhost:3000/health
 3. Verificar `public/mockServiceWorker.js`
 
 ### 4. Múltiplas Portas Conflitando
-1. Use scripts específicos: `npm run dev:vendas` ou `npm run dev:publix`
-2. Confirme portas disponíveis: `netstat -an | grep 808`
+1. Use scripts específicos: `npm run dev:vendas-ia` ou `npm run dev:publix`
+2. Confirme portas disponíveis: `netstat -an | grep 300`
 3. Mate processos conflitantes se necessário
 
 ## Monitoramento
@@ -184,7 +187,7 @@ VITE_API_BASE_URL=https://api.publix.ia.br npm run build
 Procure por essas mensagens nos logs:
 
 ```
-[ApiClient] Initializing for tenant: vendas
+[ApiClient] Initializing for tenant: vendas-ia
 [ApiClient] Using API endpoint: http://localhost:3000
 [ApiClient] Making request to: http://localhost:3000/api/v1/health
 Sending Request to the Target: GET /api/v1/health
