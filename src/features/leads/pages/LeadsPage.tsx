@@ -561,6 +561,13 @@ export default function LeadsPage() {
               <FileDown className="mr-2 h-4 w-4" />
               Exportar {selectedLeads.length > 0 ? `(${selectedLeads.length})` : `(${sortedLeads.length})`}
             </Button>
+            <Button
+              className="bg-primary-600 hover:bg-primary-700"
+              onClick={() => navigate('/app/leads/novo')}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Novo lead
+            </Button>
             {/* <Button variant="outline" className="border-gray-300">
               <RefreshCw className="mr-2 h-4 w-4" />
               Sincronizar CRM

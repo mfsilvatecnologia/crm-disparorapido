@@ -50,3 +50,9 @@ export interface ProjetoComMetodologia extends ProjetoBase {
 }
 
 export type Projeto = ProjetoSemMetodologia | ProjetoComMetodologia;
+
+export function isProjetoComMetodologia(
+  projeto: Projeto
+): projeto is ProjetoComMetodologia {
+  return projeto.metodologia !== null;
+}

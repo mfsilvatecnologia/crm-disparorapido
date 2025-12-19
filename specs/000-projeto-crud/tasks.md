@@ -100,38 +100,38 @@ Project structure: `src/features/resolucao-problemas/` (feature-modular architec
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T028 [P] [US1] Contract test for POST /resolucao-problemas/projetos in tests/contract/resolucao-problemas/projetoService.contract.test.ts (verify request/response matches OpenAPI spec)
-- [ ] T029 [P] [US1] Integration test for create project flow in tests/integration/resolucao-problemas/criar-projeto.spec.ts (E2E: open form → fill → submit → verify success)
+- [X] T028 [P] [US1] Contract test for POST /resolucao-problemas/projetos in tests/contract/resolucao-problemas/projetoService.contract.test.ts (verify request/response matches OpenAPI spec)
+- [X] T029 [P] [US1] Integration test for create project flow in tests/integration/resolucao-problemas/criar-projeto.spec.ts (E2E: open form → fill → submit → verify success)
 
 ### Implementation for User Story 1
 
 #### Service Layer
 
-- [ ] T030 [US1] Implement projetoService.criar() function in src/features/resolucao-problemas/services/projetoService.ts (POST /api/v1/resolucao-problemas/projetos)
+- [X] T030 [US1] Implement projetoService.criar() function in src/features/resolucao-problemas/services/projetoService.ts (POST /api/v1/resolucao-problemas/projetos)
 
 #### Hooks
 
-- [ ] T031 [US1] Implement useCreateProjeto mutation hook in src/features/resolucao-problemas/hooks/useProjeto.ts (TanStack Query mutation with cache invalidation)
+- [X] T031 [US1] Implement useCreateProjeto mutation hook in src/features/resolucao-problemas/hooks/useProjeto.ts (TanStack Query mutation with cache invalidation)
 
 #### Components
 
-- [ ] T032 [P] [US1] Create ProjetoForm component in src/features/resolucao-problemas/components/projeto/ProjetoForm.tsx (React Hook Form + Zod validation)
-- [ ] T033 [P] [US1] Create ClienteAutocomplete component in src/features/resolucao-problemas/components/shared/ClienteAutocomplete.tsx
-- [ ] T034 [P] [US1] Create UserSelector component in src/features/resolucao-problemas/components/shared/UserSelector.tsx
-- [ ] T035 [US1] Create ProjetoCreateModal component in src/features/resolucao-problemas/components/projeto/ProjetoCreateModal.tsx (modal wrapper for ProjetoForm)
+- [X] T032 [P] [US1] Create ProjetoForm component in src/features/resolucao-problemas/components/projeto/ProjetoForm.tsx (React Hook Form + Zod validation)
+- [X] T033 [P] [US1] Create ClienteAutocomplete component in src/features/resolucao-problemas/components/shared/ClienteAutocomplete.tsx
+- [X] T034 [P] [US1] Create UserSelector component in src/features/resolucao-problemas/components/shared/UserSelector.tsx
+- [X] T035 [US1] Create ProjetoCreateModal component in src/features/resolucao-problemas/components/projeto/ProjetoCreateModal.tsx (modal wrapper for ProjetoForm)
 
 #### Pages
 
-- [ ] T036 [US1] Create ProjetoNovoPage component in src/features/resolucao-problemas/pages/ProjetoNovoPage.tsx (route /projetos/novo)
+- [X] T036 [US1] Create ProjetoNovoPage component in src/features/resolucao-problemas/pages/ProjetoNovoPage.tsx (route /projetos/novo)
 
 #### Routing
 
-- [ ] T037 [US1] Add /projetos/novo route to React Router configuration
+- [X] T037 [US1] Add /projetos/novo route to React Router configuration
 
 #### Unit Tests
 
-- [ ] T038 [P] [US1] Unit test for ProjetoForm validation in tests/unit/resolucao-problemas/ProjetoForm.test.tsx
-- [ ] T039 [P] [US1] Unit test for projetoCreateSchema validator in tests/unit/resolucao-problemas/projetoValidator.test.ts
+- [X] T038 [P] [US1] Unit test for ProjetoForm validation in tests/unit/resolucao-problemas/ProjetoForm.test.tsx
+- [X] T039 [P] [US1] Unit test for projetoCreateSchema validator in tests/unit/resolucao-problemas/projetoValidator.test.ts
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can create projects without methodology
 
@@ -145,33 +145,33 @@ Project structure: `src/features/resolucao-problemas/` (feature-modular architec
 
 ### Tests for User Story 2 (write before implementation) ⚠️
 
-- [ ] T040 [P] [US2] Contract test for POST /resolucao-problemas/projetos/:id/metodologia in tests/contract/resolucao-problemas/metodologia.contract.test.ts
-- [ ] T041 [P] [US2] Integration test for define methodology flow in tests/integration/resolucao-problemas/definir-metodologia.spec.ts (E2E: open project → click define → select MASP → verify stages created)
+- [X] T040 [P] [US2] Contract test for POST /resolucao-problemas/projetos/:id/metodologia in tests/contract/resolucao-problemas/metodologia.contract.test.ts
+- [X] T041 [P] [US2] Integration test for define methodology flow in tests/integration/resolucao-problemas/definir-metodologia.spec.ts (E2E: open project → click define → select MASP → verify stages created)
 
 ### Implementation for User Story 2
 
 #### Service Layer
 
-- [ ] T042 [US2] Implement projetoService.definirMetodologia() function in src/features/resolucao-problemas/services/projetoService.ts (POST /api/v1/resolucao-problemas/projetos/:id/metodologia)
+- [X] T042 [US2] Implement projetoService.definirMetodologia() function in src/features/resolucao-problemas/services/projetoService.ts (POST /api/v1/resolucao-problemas/projetos/:id/metodologia)
 
 #### Hooks
 
-- [ ] T043 [US2] Implement useDefinirMetodologia mutation hook in src/features/resolucao-problemas/hooks/useDefinirMetodologia.ts (TanStack Query mutation with optimistic update)
+- [X] T043 [US2] Implement useDefinirMetodologia mutation hook in src/features/resolucao-problemas/hooks/useDefinirMetodologia.ts (TanStack Query mutation with optimistic update)
 
 #### Components
 
-- [ ] T044 [P] [US2] Create MetodologiaSelector component in src/features/resolucao-problemas/components/metodologia/MetodologiaSelector.tsx (radio group with MASP/8D/A3 options)
-- [ ] T045 [P] [US2] Create MetodologiaBadge component in src/features/resolucao-problemas/components/metodologia/MetodologiaBadge.tsx (badge showing MASP/8D/A3 or "Pendente")
-- [ ] T046 [US2] Create DefinirMetodologiaModal component in src/features/resolucao-problemas/components/metodologia/DefinirMetodologiaModal.tsx (modal with MetodologiaSelector)
+- [X] T044 [P] [US2] Create MetodologiaSelector component in src/features/resolucao-problemas/components/metodologia/MetodologiaSelector.tsx (radio group with MASP/8D/A3 options)
+- [X] T045 [P] [US2] Create MetodologiaBadge component in src/features/resolucao-problemas/components/metodologia/MetodologiaBadge.tsx (badge showing MASP/8D/A3 or "Pendente")
+- [X] T046 [US2] Create DefinirMetodologiaModal component in src/features/resolucao-problemas/components/metodologia/DefinirMetodologiaModal.tsx (modal with MetodologiaSelector)
 
 #### Type Guards
 
-- [ ] T047 [US2] Add isProjetoComMetodologia type guard in src/features/resolucao-problemas/types/projeto.types.ts
+- [X] T047 [US2] Add isProjetoComMetodologia type guard in src/features/resolucao-problemas/types/projeto.types.ts
 
 #### Unit Tests
 
-- [ ] T048 [P] [US2] Unit test for MetodologiaSelector component in tests/unit/resolucao-problemas/MetodologiaSelector.test.tsx
-- [ ] T049 [P] [US2] Unit test for definirMetodologiaSchema validator in tests/unit/resolucao-problemas/metodologiaValidator.test.ts
+- [X] T048 [P] [US2] Unit test for MetodologiaSelector component in tests/unit/resolucao-problemas/MetodologiaSelector.test.tsx
+- [X] T049 [P] [US2] Unit test for definirMetodologiaSchema validator in tests/unit/resolucao-problemas/metodologiaValidator.test.ts
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work - users can create projects and define methodology
 
@@ -185,38 +185,38 @@ Project structure: `src/features/resolucao-problemas/` (feature-modular architec
 
 ### Tests for User Story 3 (write before implementation) ⚠️
 
-- [ ] T050 [P] [US3] Contract test for GET /resolucao-problemas/projetos in tests/contract/resolucao-problemas/projetoService.contract.test.ts (verify pagination, filters)
-- [ ] T051 [P] [US3] Integration test for list/filter/pagination in tests/integration/resolucao-problemas/listar-projetos.spec.ts (E2E: open list → apply filters → paginate → search)
+- [X] T050 [P] [US3] Contract test for GET /resolucao-problemas/projetos in tests/contract/resolucao-problemas/projetoService.contract.test.ts (verify pagination, filters)
+- [X] T051 [P] [US3] Integration test for list/filter/pagination in tests/integration/resolucao-problemas/listar-projetos.spec.ts (E2E: open list → apply filters → paginate → search)
 
 ### Implementation for User Story 3
 
 #### Service Layer
 
-- [ ] T052 [US3] Implement projetoService.listar() function in src/features/resolucao-problemas/services/projetoService.ts (GET /api/v1/resolucao-problemas/projetos with query params)
+- [X] T052 [US3] Implement projetoService.listar() function in src/features/resolucao-problemas/services/projetoService.ts (GET /api/v1/resolucao-problemas/projetos with query params)
 
 #### Hooks
 
-- [ ] T053 [US3] Implement useProjetos query hook in src/features/resolucao-problemas/hooks/useProjetos.ts (TanStack Query with keepPreviousData for smooth pagination)
+- [X] T053 [US3] Implement useProjetos query hook in src/features/resolucao-problemas/hooks/useProjetos.ts (TanStack Query with keepPreviousData for smooth pagination)
 
 #### Components
 
-- [ ] T054 [P] [US3] Create ProjetoCard component in src/features/resolucao-problemas/components/projeto/ProjetoCard.tsx (card showing projeto summary)
-- [ ] T055 [P] [US3] Create ProjetoStatusBadge component in src/features/resolucao-problemas/components/projeto/ProjetoStatusBadge.tsx (badge for status)
-- [ ] T056 [P] [US3] Create EmptyState component in src/features/resolucao-problemas/components/shared/EmptyState.tsx (message when no projects)
-- [ ] T057 [US3] Create ProjetoList component in src/features/resolucao-problemas/components/projeto/ProjetoList.tsx (list with filters, pagination, search)
+- [X] T054 [P] [US3] Create ProjetoCard component in src/features/resolucao-problemas/components/projeto/ProjetoCard.tsx (card showing projeto summary)
+- [X] T055 [P] [US3] Create ProjetoStatusBadge component in src/features/resolucao-problemas/components/projeto/ProjetoStatusBadge.tsx (badge for status)
+- [X] T056 [P] [US3] Create EmptyState component in src/features/resolucao-problemas/components/shared/EmptyState.tsx (message when no projects)
+- [X] T057 [US3] Create ProjetoList component in src/features/resolucao-problemas/components/projeto/ProjetoList.tsx (list with filters, pagination, search)
 
 #### Pages
 
-- [ ] T058 [US3] Create ProjetosIndexPage component in src/features/resolucao-problemas/pages/ProjetosIndexPage.tsx (route /projetos)
+- [X] T058 [US3] Create ProjetosIndexPage component in src/features/resolucao-problemas/pages/ProjetosIndexPage.tsx (route /projetos)
 
 #### Routing
 
-- [ ] T059 [US3] Add /projetos route to React Router configuration
+- [X] T059 [US3] Add /projetos route to React Router configuration
 
 #### Unit Tests
 
-- [ ] T060 [P] [US3] Unit test for ProjetoCard component in tests/unit/resolucao-problemas/ProjetoCard.test.tsx
-- [ ] T061 [P] [US3] Unit test for ProjetoList filtering logic in tests/unit/resolucao-problemas/ProjetoList.test.tsx
+- [X] T060 [P] [US3] Unit test for ProjetoCard component in tests/unit/resolucao-problemas/ProjetoCard.test.tsx
+- [X] T061 [P] [US3] Unit test for ProjetoList filtering logic in tests/unit/resolucao-problemas/ProjetoList.test.tsx
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 form the complete MVP - create, define methodology, and list projects
 
@@ -237,30 +237,30 @@ Project structure: `src/features/resolucao-problemas/` (feature-modular architec
 
 #### Service Layer
 
-- [ ] T064 [US4] Implement projetoService.buscarPorId() function in src/features/resolucao-problemas/services/projetoService.ts (GET /api/v1/resolucao-problemas/projetos/:id)
+- [X] T064 [US4] Implement projetoService.buscarPorId() function in src/features/resolucao-problemas/services/projetoService.ts (GET /api/v1/resolucao-problemas/projetos/:id)
 
 #### Hooks
 
-- [ ] T065 [US4] Implement useProjeto query hook in src/features/resolucao-problemas/hooks/useProjeto.ts (TanStack Query for single project)
-- [ ] T066 [US4] Implement useProjetoProgress hook in src/features/resolucao-problemas/hooks/useProjetoProgress.ts (calculate progress percentage)
+- [X] T065 [US4] Implement useProjeto query hook in src/features/resolucao-problemas/hooks/useProjeto.ts (TanStack Query for single project)
+- [X] T066 [US4] Implement useProjetoProgress hook in src/features/resolucao-problemas/hooks/useProjetoProgress.ts (calculate progress percentage)
 
 #### Components
 
-- [ ] T067 [P] [US4] Create ProjetoDetalhes component in src/features/resolucao-problemas/components/projeto/ProjetoDetalhes.tsx (main details view)
-- [ ] T068 [P] [US4] Create ProjetoProgress component in src/features/resolucao-problemas/components/projeto/ProjetoProgress.tsx (progress indicator)
-- [ ] T069 [P] [US4] Create EtapasList component in src/features/resolucao-problemas/components/etapa/EtapasList.tsx (list of workflow stages)
-- [ ] T070 [P] [US4] Create EtapaCard component in src/features/resolucao-problemas/components/etapa/EtapaCard.tsx (individual stage card)
-- [ ] T071 [P] [US4] Create EtapaTimeline component in src/features/resolucao-problemas/components/etapa/EtapaTimeline.tsx (timeline visual)
-- [ ] T072 [P] [US4] Create EtapaStepper component in src/features/resolucao-problemas/components/etapa/EtapaStepper.tsx (stepper progress)
-- [ ] T073 [P] [US4] Create ProgressBar component in src/features/resolucao-problemas/components/shared/ProgressBar.tsx (progress bar UI)
+- [X] T067 [P] [US4] Create ProjetoDetalhes component in src/features/resolucao-problemas/components/projeto/ProjetoDetalhes.tsx (main details view)
+- [X] T068 [P] [US4] Create ProjetoProgress component in src/features/resolucao-problemas/components/projeto/ProjetoProgress.tsx (progress indicator)
+- [X] T069 [P] [US4] Create EtapasList component in src/features/resolucao-problemas/components/etapa/EtapasList.tsx (list of workflow stages)
+- [X] T070 [P] [US4] Create EtapaCard component in src/features/resolucao-problemas/components/etapa/EtapaCard.tsx (individual stage card)
+- [X] T071 [P] [US4] Create EtapaTimeline component in src/features/resolucao-problemas/components/etapa/EtapaTimeline.tsx (timeline visual)
+- [X] T072 [P] [US4] Create EtapaStepper component in src/features/resolucao-problemas/components/etapa/EtapaStepper.tsx (stepper progress)
+- [X] T073 [P] [US4] Create ProgressBar component in src/features/resolucao-problemas/components/shared/ProgressBar.tsx (progress bar UI)
 
 #### Pages
 
-- [ ] T074 [US4] Create ProjetoDetalhesPage component in src/features/resolucao-problemas/pages/ProjetoDetalhesPage.tsx (route /projetos/:id)
+- [X] T074 [US4] Create ProjetoDetalhesPage component in src/features/resolucao-problemas/pages/ProjetoDetalhesPage.tsx (route /projetos/:id)
 
 #### Routing
 
-- [ ] T075 [US4] Add /projetos/:id route to React Router configuration
+- [X] T075 [US4] Add /projetos/:id route to React Router configuration
 
 #### Unit Tests
 
