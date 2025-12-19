@@ -23,7 +23,11 @@ import {
   DollarSign,
   MessageCircle,
   Link2,
-  Handshake
+  Handshake,
+  Sparkles,
+  SearchCheck,
+  AlertTriangle,
+  BarChart4
 } from 'lucide-react';
 import {
   Sidebar,
@@ -235,6 +239,37 @@ const adminItems = [
   },
 ];
 
+const enrichmentItems = [
+  {
+    title: 'Enriquecer Lead',
+    url: '/app/enrichment/lead/:leadId',
+    icon: Sparkles,
+    description: 'Enriquecer com dados externos',
+    requiredFeature: 'enableBasicFeatures'
+  },
+  {
+    title: 'Investigação',
+    url: '/app/enrichment/investigation/:dossierId',
+    icon: AlertTriangle,
+    description: 'Investigar mídia negativa',
+    requiredFeature: 'enableBasicFeatures'
+  },
+  {
+    title: 'Admin Providers',
+    url: '/app/enrichment/admin/providers',
+    icon: SearchCheck,
+    description: 'Gerenciar data providers',
+    requiredFeature: 'enableBasicFeatures'
+  },
+  {
+    title: 'Estatísticas',
+    url: '/app/enrichment/stats',
+    icon: BarChart4,
+    description: 'Dashboard de enriquecimentos',
+    requiredFeature: 'enableBasicFeatures'
+  },
+];
+
 export function AppSidebar() {
   const { open } = useSidebar();
   const { tenant } = useTenant();
@@ -349,6 +384,18 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {financialItems.map(renderMenuItem)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </FeatureGuard>
+
+        {/* Enriquecimento */}
+        <FeatureGuard feature="enableBasicFeatures">
+          <SidebarGroup>
+            <SidebarGroupLabel>Enriquecimento</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {enrichmentItems.map(renderMenuItem)}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
