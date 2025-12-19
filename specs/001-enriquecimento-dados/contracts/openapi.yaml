@@ -1,0 +1,341 @@
+openapi: 3.0.3
+info:
+  title: LeadsRapido Enriquecimento e Investigação API
+  version: "0.1.0"
+servers:
+  - url: https://api.leadsrapido.local
+paths:
+  /enrichments:
+    post:
+      summary: Inicia enriquecimento de um lead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [leadId, providers]
+              properties:
+                leadId:
+                  type: string
+                providers:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "202":
+          description: Enriquecimento iniciado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichmentJob'
+  /enrichments/{jobId}:
+    get:
+      summary: Consulta status e resultados do enriquecimento
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichmentJob'
+
+  /investigations:
+    post:
+      summary: Inicia investigação de mídia negativa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dossierId]
+              properties:
+                dossierId:
+                  type: string
+      responses:
+        "202":
+          description: Investigação iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Investigation'
+
+  /investigations/{investigationId}:
+    get:
+      summary: Consulta status e resultados da investigação
+      parameters:
+        - in: path
+          name: investigationId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Investigation'
+
+  /providers:
+    get:
+      summary: Lista providers com status e custos
+      responses:
+        "200":
+          description: Lista de providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Provider'
+
+  /providers/{providerId}:
+    patch:
+      summary: Atualiza status/configuração de provider
+      parameters:
+        - in: path
+          name: providerId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                priority:
+                  type: integer
+                  minimum: 1
+                rateLimitPerMin:
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          description: Provider atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provider'
+
+  /stats/enrichment:
+    get:
+      summary: Estatísticas de enriquecimento
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: providerId
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Estatísticas agregadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsOverview'
+
+components:
+  schemas:
+    EnrichmentJob:
+      type: object
+      properties:
+        id:
+          type: string
+        leadId:
+          type: string
+        status:
+          type: string
+          enum: [queued, processing, completed, error]
+        providersSelected:
+          type: array
+          items:
+            type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnrichmentResult'
+        totalEstimatedCost:
+          type: number
+        totalConsumedCredits:
+          type: number
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        traceId:
+          type: string
+        executionIds:
+          type: array
+          items:
+            type: string
+    EnrichmentResult:
+      type: object
+      properties:
+        provider:
+          type: string
+        status:
+          type: string
+          enum: [success, error]
+        output:
+          type: object
+        creditsConsumed:
+          type: number
+        confidenceScore:
+          type: number
+        receivedAt:
+          type: string
+          format: date-time
+        errorMessage:
+          type: string
+          nullable: true
+    Investigation:
+      type: object
+      properties:
+        id:
+          type: string
+        dossierId:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        estimatedDurationSec:
+          type: number
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        riskScore:
+          type: number
+          nullable: true
+        counts:
+          type: object
+          properties:
+            positive:
+              type: integer
+            neutral:
+              type: integer
+            suspect:
+              type: integer
+            negative:
+              type: integer
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvestigationSource'
+        cost:
+          type: number
+    InvestigationSource:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        title:
+          type: string
+        assessment:
+          type: string
+          enum: [positive, neutral, suspect, negative]
+        confidence:
+          type: string
+          enum: [low, medium, high]
+        impact:
+          type: string
+          enum: [low, medium, high]
+        categories:
+          type: array
+          items:
+            type: string
+        justification:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+    Provider:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [web_search, location, company_data]
+        enabled:
+          type: boolean
+        priority:
+          type: integer
+          minimum: 1
+        rateLimitPerMin:
+          type: integer
+          minimum: 1
+        costPerRequest:
+          type: number
+        healthStatus:
+          type: string
+          enum: [active, degraded, inactive]
+    StatsOverview:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+            end:
+              type: string
+              format: date
+        providerStats:
+          type: array
+          items:
+            type: object
+            properties:
+              providerId:
+                type: string
+              executions:
+                type: integer
+              successRatePct:
+                type: number
+              totalCost:
+                type: number
+              avgDurationSec:
+                type: number
+        totals:
+          type: object
+          properties:
+            totalExecutions:
+              type: integer
+            overallSuccessRatePct:
+              type: number
+            overallCost:
+              type: number
+            activeProviders:
+              type: integer
