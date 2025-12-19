@@ -5,6 +5,8 @@ export { useLeads } from './hooks/useLeads'
 
 // Pages
 export { default as LeadsPage } from './pages/LeadsPage'
+export { default as LeadCreatePage } from './pages/LeadCreatePage'
+export { default as LeadEditPage } from './pages/LeadEditPage'
 
 // Components
 export * from './components'

@@ -14,9 +14,14 @@ import { LoginPage, RegisterPage, ResetPasswordPage, NewPasswordPage, UserProfil
 import SessionManagementPage from "./features/authentication/pages/SessionManagementPage";
 import { Dashboard } from "./features/dashboard";
 import { LeadsPage } from "./features/leads";
+import LeadCreatePage from "./features/leads/pages/LeadCreatePage";
+import LeadEditPage from "./features/leads/pages/LeadEditPage";
 import { LeadAgentPage } from "./features/lead-agent";
 import { AdminPage } from "./features/admin";
 import { SearchTermsPage, ScrapingPage } from "./features/scraping";
+import { ProjetoNovoPage } from "./features/resolucao-problemas/pages/ProjetoNovoPage";
+import { ProjetosIndexPage } from "./features/resolucao-problemas/pages/ProjetosIndexPage";
+import { ProjetoDetalhesPage } from "./features/resolucao-problemas/pages/ProjetoDetalhesPage";
 // import { WorkerMonitorPage } from "./features/scraping"; // Removido - workers agora são automáticos
 import { MessagesPage, VinculacoesPendentesPage } from "./features/disparorapido/pages";
 import { UsersPage } from "./features/user-management";
@@ -97,7 +102,8 @@ function AppRoutes() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="leads" element={<LeadsPage />} />
-          <Route path="leads/:id/edit" element={<LeadAgentPage />} />
+          <Route path="leads/novo" element={<LeadCreatePage />} />
+          <Route path="leads/:id/edit" element={<LeadEditPage />} />
           <Route path="lead-agent" element={<LeadAgentPage />} />
           {/* <Route path="workers" element={<WorkerMonitorPage />} /> */}
           {/* Rota comentada - workers agora são automáticos, gerenciados pela tela de Scraping */}
@@ -107,6 +113,9 @@ function AppRoutes() {
           <Route path="campanhas" element={<CampanhasPage />} />
           <Route path="segments" element={<SegmentosPage />} />
           <Route path="pipeline" element={<PipelinePage />} />
+          <Route path="projetos" element={<ProjetosIndexPage />} />
+          <Route path="projetos/novo" element={<ProjetoNovoPage />} />
+          <Route path="projetos/:id" element={<ProjetoDetalhesPage />} />
           <Route path="campaigns/:id/funnel" element={<CampaignFunnelPage />} />
           <Route path="campaigns/:id/metrics" element={<CampaignDashboard />} />
           <Route path="campaigns/:id/stages" element={<StageConfigPage />} />

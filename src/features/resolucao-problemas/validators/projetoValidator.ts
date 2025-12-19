@@ -11,7 +11,7 @@ export const projetoCreateSchema = z.object({
     .min(10, 'Descricao deve ter no minimo 10 caracteres'),
   cliente_id: z
     .string()
-    .uuid('ID do cliente invalido'),
+    .uuid('ID do lead invalido'),
   responsavel_id: z
     .string()
     .uuid('ID do responsavel invalido'),

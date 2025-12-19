@@ -479,17 +479,42 @@ class ApiClient {
 
     const query = searchParams.toString() ? `?${searchParams}` : '';
     
-    const response = await this.request(`/api/v1/users${query}`, {}, PaginatedApiResponseSchema(UserSchema));
-    
-    const data = response.data;
+    const response = await this.request(`/api/v1/users${query}`, {});
+
+    const responseData = response && typeof response === 'object' && 'data' in response ? response.data : response;
+    const pagination = responseData?.pagination || response?.pagination || responseData;
+    const itemsSource =
+      responseData?.items ||
+      responseData?.users ||
+      responseData?.data ||
+      (Array.isArray(responseData) ? responseData : undefined) ||
+      (Array.isArray(response) ? response : undefined);
+
+    const items = Array.isArray(itemsSource)
+      ? itemsSource.map((item) => {
+          try {
+            return UserSchema.parse(item);
+          } catch {
+            return item as User;
+          }
+        })
+      : [];
+
+    const total = pagination?.total ?? responseData?.total ?? items.length ?? 0;
+    const page = pagination?.page ?? responseData?.page ?? params?.page ?? 1;
+    const limit = pagination?.limit ?? responseData?.limit ?? params?.limit ?? 20;
+    const totalPages = pagination?.totalPages ?? responseData?.totalPages ?? Math.max(1, Math.ceil(total / limit));
+    const hasNext = pagination?.hasNext ?? page < totalPages;
+    const hasPrev = pagination?.hasPrev ?? page > 1;
+
     return {
-      items: data.items || [],
-      total: data.total || 0,
-      page: data.page || 1,
-      limit: data.limit || 20,
-      totalPages: data.totalPages || 0,
-      hasNext: data.hasNext || false,
-      hasPrev: data.hasPrev || false,
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNext,
+      hasPrev,
     };
   }
 
