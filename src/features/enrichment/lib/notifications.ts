@@ -1,5 +1,10 @@
 import { toast } from 'sonner';
 
+export const notifySuccess = (message: string) => toast.success(message);
+export const notifyPartial = (message: string) => toast.warning(message);
+export const notifyError = (message: string) => toast.error(message);
+
+// Legacy object-style export kept for compatibility with older imports
 export const notify = {
   enrichmentSuccess: (leadName?: string) =>
     toast.success(leadName ? `Enriquecimento concluído para ${leadName}.` : 'Enriquecimento concluído.'),
