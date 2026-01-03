@@ -50,6 +50,7 @@ export const publixConfig: TenantConfig = {
   features: {
     // Publix inicia apenas com Dashboard - todas features bloqueadas
     enableBasicFeatures: true,
+    enableCRM: true,
     enableCampaigns: true,
     enablePipeline: false,
     enableScraping: true,

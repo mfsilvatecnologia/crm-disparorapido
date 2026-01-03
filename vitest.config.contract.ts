@@ -9,7 +9,10 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./src/test/setup-node.ts'],
-    include: ['src/test/contract/**/*.test.ts'],
+    include: [
+      'src/test/contract/**/*.test.ts',
+      'src/features/**/__tests__/**/*.contract.ts',
+    ],
     testTimeout: 10000, // 10 seconds timeout
     hookTimeout: 10000,
     teardownTimeout: 10000,

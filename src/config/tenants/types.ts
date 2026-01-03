@@ -27,6 +27,7 @@ export interface TenantTheme {
 export interface TenantFeatures {
   // Enable/disable features per tenant
   enableBasicFeatures: boolean;  // Leads, Empresas, Ferramentas, Configurações
+  enableCRM: boolean;
   enableCampaigns: boolean;
   enablePipeline: boolean;
   enableScraping: boolean;

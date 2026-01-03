@@ -48,6 +48,7 @@ export const vendasIaConfig: TenantConfig = {
 
   features: {
     enableBasicFeatures: true,
+    enableCRM: true,
     enableCampaigns: true,
     enablePipeline: true,
     enableScraping: true,

@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/shared/components/ui/sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "./shared/contexts/AuthContext";
 import { OrganizationProvider } from "./shared/contexts/OrganizationContext";
 import { TenantProvider } from "./shared/contexts/TenantContext";
@@ -27,7 +27,6 @@ import { MessagesPage, VinculacoesPendentesPage } from "./features/disparorapido
 import { UsersPage } from "./features/user-management";
 import { EmpresasPage, CadastroEmpresaPage } from "./features/companies";
 import { SegmentosPage } from "./features/segments";
-import { PipelinePage } from "./features/pipeline";
 import { CampanhasPage } from "./features/campaigns";
 import { StageConfigPage } from "./features/campaign-stages/pages/StageConfigPage";
 import { CampaignFunnelPage } from "./features/campaign-stages/pages/CampaignFunnelPage";
@@ -47,16 +46,40 @@ import { AffiliateCommissionsPage, AffiliateDashboardPage } from "./features/aff
 import { NotFound } from "./shared/pages";
 import { BillingConfigPage } from "./features/campaign-stages/pages/BillingConfigPage";
 import { FeatureDemoPage } from "./shared/components/features/FeatureDemoPage";
+import { LeadEnrichmentPage } from "./features/enrichment/pages/LeadEnrichmentPage";
+import { InvestigationPage } from "./features/enrichment/pages/InvestigationPage";
+import { ProviderAdminPage } from "./features/enrichment/pages/ProviderAdminPage";
+import { EnrichmentStatsPage } from "./features/enrichment/pages/EnrichmentStatsPage";
+import { OpportunitiesPage, OpportunityDetailPage } from "./features/opportunities";
+import { CustomersPage, CustomerDetailPage } from "./features/customers";
+import { RenewalsPage, ContractsPage } from "./features/contracts";
+import { ErrorBoundary } from "./shared/components/common/ErrorBoundary";
+
+const shouldRetry = (failureCount: number, error: unknown) => {
+  const status = (error as { status?: number; response?: { status?: number } })?.status
+    ?? (error as { response?: { status?: number } })?.response?.status;
+
+  if (status && status >= 400 && status < 500) {
+    return false;
+  }
+
+  return failureCount < 2;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: shouldRetry,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchIntervalInBackground: false,
       staleTime: 5 * 60 * 1000, // 5 minutos
       gcTime: 10 * 60 * 1000, // 10 minutos (era cacheTime)
+    },
+    mutations: {
+      retry: shouldRetry,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     },
   },
 });
@@ -75,7 +98,25 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
+const LeadEnrichmentRoute = () => {
+  const { leadId = "" } = useParams();
+  return <LeadEnrichmentPage leadId={leadId} providers={[]} />;
+};
+
+const InvestigationRoute = () => {
+  const { dossierId = "" } = useParams();
+  return <InvestigationPage dossierId={dossierId} />;
+};
+
+const ProviderAdminRoute = () => <ProviderAdminPage />;
+
+const EnrichmentStatsRoute = () => <EnrichmentStatsPage />;
+
 function AppRoutes() {
+  const withErrorBoundary = (element: React.ReactNode) => (
+    <ErrorBoundary>{element}</ErrorBoundary>
+  );
+
   return (
     <BrowserRouter>
       <Routes>
@@ -112,7 +153,7 @@ function AppRoutes() {
           <Route path="empresas" element={<EmpresasPage />} />
           <Route path="campanhas" element={<CampanhasPage />} />
           <Route path="segments" element={<SegmentosPage />} />
-          <Route path="pipeline" element={<PipelinePage />} />
+          <Route path="pipeline" element={<Navigate to="/crm/opportunities" replace />} />
           <Route path="projetos" element={<ProjetosIndexPage />} />
           <Route path="projetos/novo" element={<ProjetoNovoPage />} />
           <Route path="projetos/:id" element={<ProjetoDetalhesPage />} />
@@ -135,6 +176,20 @@ function AppRoutes() {
           <Route path="payments/:id" element={<PaymentDetailsPage />} />
           <Route path="credits/transactions" element={<CreditTransactionsPage />} />
           <Route path="financial" element={<FinancialDashboardPage />} />
+
+          {/* Enrichment */}
+          <Route path="enrichment/lead/:leadId" element={<LeadEnrichmentRoute />} />
+          <Route path="enrichment/investigation/:dossierId" element={<InvestigationRoute />} />
+          <Route path="enrichment/admin/providers" element={<ProviderAdminRoute />} />
+          <Route path="enrichment/stats" element={<EnrichmentStatsRoute />} />
+
+          {/* CRM */}
+          <Route path="crm/opportunities" element={withErrorBoundary(<OpportunitiesPage />)} />
+          <Route path="crm/opportunities/:id" element={withErrorBoundary(<OpportunityDetailPage />)} />
+          <Route path="crm/customers" element={withErrorBoundary(<CustomersPage />)} />
+          <Route path="crm/customers/:id" element={withErrorBoundary(<CustomerDetailPage />)} />
+          <Route path="crm/contracts" element={withErrorBoundary(<ContractsPage />)} />
+          <Route path="crm/renewals" element={withErrorBoundary(<RenewalsPage />)} />
           
           {/* DisparoRapido Routes */}
           <Route path="disparorapido/messages" element={<MessagesPage />} />

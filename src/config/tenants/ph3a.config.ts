@@ -42,6 +42,7 @@ export const ph3aConfig: TenantConfig = {
 
   features: {
     enableBasicFeatures: true,
+    enableCRM: true,
     enableCampaigns: false,
     enablePipeline: false,
     enableScraping: true,

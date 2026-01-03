@@ -98,6 +98,7 @@ export function useFeatures() {
     getFeatureStatus,
     
     // Convenience getters for common features
+    canUseCRM: hasFeature('enableCRM'),
     canUseCampaigns: hasFeature('enableCampaigns'),
     canUsePipeline: hasFeature('enablePipeline'),
     canUseScraping: hasFeature('enableScraping'),

@@ -652,9 +652,6 @@ class ApiClient {
       
       const response = await this.request(url, {});
 
-      // Log da resposta bruta para debug
-      console.log('🔍 Raw API Response:', JSON.stringify(response, null, 2));
-
       // Validar a resposta com o schema
       try {
         const validatedData = LeadsResponseSchema.parse(response);
