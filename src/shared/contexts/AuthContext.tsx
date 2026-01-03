@@ -50,12 +50,31 @@ const USER_KEY = 'user';
 const EMPRESA_KEY = 'empresa';
 
 // Create query client with permissions-optimized settings
+const shouldRetry = (failureCount: number, error: unknown) => {
+  const status = (error as { status?: number; response?: { status?: number } })?.status
+    ?? (error as { response?: { status?: number } })?.response?.status;
+
+  if (status && status >= 400 && status < 500) {
+    return false;
+  }
+
+  return failureCount < 2;
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: shouldRetry,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchIntervalInBackground: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000,
+    },
+    mutations: {
+      retry: shouldRetry,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     },
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -110,9 +110,24 @@ export default function LeadsPage() {
   const [hoveredLead, setHoveredLead] = useState<Lead | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
 
+  // Ref para manter foco no campo de busca
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para debounce da busca
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce do termo de busca para evitar muitas requisições
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 400); // 400ms de delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Use real leads hook with pagination
   const { data: leadsData, isLoading, error } = useLeads({
-    search: searchTerm,
+    search: debouncedSearchTerm,
     page: currentPage,
     limit: itemsPerPage,
     status: filterStatus !== 'all' ? filterStatus : undefined,
@@ -123,6 +138,18 @@ export default function LeadsPage() {
   });
 
   const realLeads = leadsData?.items || [];
+
+  // Manter foco no campo de busca após a busca ser executada
+  useEffect(() => {
+    // Se o campo de busca tem texto e está ativo, manter o foco
+    if (searchTerm && document.activeElement !== searchInputRef.current) {
+      // Pequeno delay para garantir que o DOM foi atualizado
+      const focusTimer = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(focusTimer);
+    }
+  }, [debouncedSearchTerm, isLoading, searchTerm]);
 
   // Use dados reais da API diretamente
   const allLeads: LeadData[] = realLeads;
@@ -231,10 +258,10 @@ export default function LeadsPage() {
     ? allLeads // API já retorna dados paginados
     : sortedLeads.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Reset página quando filtros mudam
+  // Reset página quando filtros mudam (usando termo debounced para não interferir na digitação)
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, searchTerm, selectedSegments, selectedSources, qualityRange]);
+  }, [filterStatus, debouncedSearchTerm, selectedSegments, selectedSources, qualityRange]);
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -544,11 +571,6 @@ export default function LeadsPage() {
               <Badge variant="secondary" className="text-xs">
                 Qualidade média: {stats.avgQuality}%
               </Badge>
-              {/* {realLeads.length === 0 && (
-                <Badge className="text-xs bg-amber-100 text-amber-800 border-amber-200">
-                  Modo Demonstração
-                </Badge>
-              )} */}
               {realLeads.length > 0 && (
                 <Badge className="text-xs bg-green-100 text-green-800 border-green-200">
                   Dados Reais ({realLeads.length} da API)
@@ -648,11 +670,17 @@ export default function LeadsPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <Input
+                ref={searchInputRef}
                 placeholder="🔍 Buscar por nome, empresa, email, cargo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 border-gray-300 focus:border-primary-500"
               />
+              {searchTerm && debouncedSearchTerm !== searchTerm && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full" />
+                </div>
+              )}
             </div>
           </div>
 

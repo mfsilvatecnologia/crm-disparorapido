@@ -46,6 +46,7 @@ export const leanQualityConfig: TenantConfig = {
 
   features: {
     enableBasicFeatures: true,
+    enableCRM: true,
     enableCampaigns: false,
     enablePipeline: true,
     enableScraping: false,

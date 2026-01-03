@@ -25,12 +25,12 @@
 
 **Purpose**: Project initialization and shared infrastructure for all CRM features
 
-- [ ] T001 Review existing project structure and identify shared components in src/shared/
-- [ ] T002 [P] Create shared CRM formatters in src/shared/lib/crm/formatters.ts
-- [ ] T003 [P] Create shared Timeline component in src/shared/components/Timeline.tsx
-- [ ] T004 [P] Create shared DataTable component in src/shared/components/DataTable.tsx
-- [ ] T005 [P] Create shared EmptyState component in src/shared/components/EmptyState.tsx
-- [ ] T006 [P] Create shared ConfirmDialog component in src/shared/components/ConfirmDialog.tsx
+- [X] T001 Review existing project structure and identify shared components in src/shared/
+- [X] T002 [P] Create shared CRM formatters in src/shared/lib/crm/formatters.ts
+- [X] T003 [P] Create shared Timeline component in src/shared/components/Timeline.tsx
+- [X] T004 [P] Create shared DataTable component in src/shared/components/DataTable.tsx
+- [X] T005 [P] Create shared EmptyState component in src/shared/components/EmptyState.tsx
+- [X] T006 [P] Create shared ConfirmDialog component in src/shared/components/ConfirmDialog.tsx
 
 ---
 
@@ -40,10 +40,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Verify API client configuration in src/lib/api-client.ts supports all CRM endpoints
-- [ ] T008 [P] Configure TanStack Query defaults for CRM features in query client setup
-- [ ] T009 [P] Verify routing structure supports /crm/* paths in app router configuration
-- [ ] T010 [P] Setup test environment configuration for contract tests in vitest.config.ts
+- [X] T007 Verify API client configuration in src/lib/api-client.ts supports all CRM endpoints
+- [X] T008 [P] Configure TanStack Query defaults for CRM features in query client setup
+- [X] T009 [P] Verify routing structure supports /crm/* paths in app router configuration
+- [X] T010 [P] Setup test environment configuration for contract tests in vitest.config.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -59,31 +59,31 @@
 
 > **NOTE: Teste de contrato já existe em contracts/opportunities.contract.ts - executar para verificar conformidade**
 
-- [ ] T011 [P] [US1] Execute contract test for Opportunities API in specs/001-crm-management/contracts/opportunities.contract.ts
-- [ ] T012 [P] [US1] Create integration test for opportunity-to-customer conversion in tests/integration/crm/opportunity-to-customer.test.tsx
+-- [ ] T011 [P] [US1] Execute contract test for Opportunities API in specs/001-crm-management/contracts/opportunities.contract.ts
+- [X] T012 [P] [US1] Create integration test for opportunity-to-customer conversion in tests/integration/crm/opportunity-to-customer.test.tsx
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] Create Opportunity types in src/features/opportunities/types/opportunity.ts
-- [ ] T014 [P] [US1] Create opportunity validation schemas in src/features/opportunities/lib/validations.ts
-- [ ] T015 [P] [US1] Create opportunity constants in src/features/opportunities/lib/constants.ts
-- [ ] T016 [US1] Implement useOpportunities hook with infinite query in src/features/opportunities/api/opportunities.ts
-- [ ] T017 [US1] Implement useCreateOpportunity mutation in src/features/opportunities/api/opportunities.ts
-- [ ] T018 [US1] Implement useUpdateOpportunity mutation in src/features/opportunities/api/opportunities.ts
-- [ ] T019 [US1] Implement useWinOpportunity mutation in src/features/opportunities/api/opportunities.ts
-- [ ] T020 [US1] Implement useLoseOpportunity mutation in src/features/opportunities/api/opportunities.ts
-- [ ] T021 [US1] Implement useOpportunity query for single opportunity in src/features/opportunities/api/opportunities.ts
-- [ ] T022 [P] [US1] Create OpportunityForm component in src/features/opportunities/components/OpportunityForm.tsx
-- [ ] T023 [P] [US1] Create OpportunityList component with infinite scroll in src/features/opportunities/components/OpportunityList.tsx
-- [ ] T024 [P] [US1] Create OpportunityDetail component in src/features/opportunities/components/OpportunityDetail.tsx
-- [ ] T025 [P] [US1] Create OpportunityPipeline visual component in src/features/opportunities/components/OpportunityPipeline.tsx
-- [ ] T026 [P] [US1] Create WinOpportunityDialog component in src/features/opportunities/components/WinOpportunityDialog.tsx
-- [ ] T027 [P] [US1] Create LoseOpportunityDialog component in src/features/opportunities/components/LoseOpportunityDialog.tsx
-- [ ] T028 [P] [US1] Create useOpportunityFilters hook in src/features/opportunities/hooks/useOpportunityFilters.ts
-- [ ] T029 [US1] Implement OpportunitiesPage with filters and list in src/features/opportunities/pages/OpportunitiesPage.tsx
-- [ ] T030 [US1] Implement OpportunityDetailPage with full details in src/features/opportunities/pages/OpportunityDetailPage.tsx
-- [ ] T031 [US1] Create public API exports in src/features/opportunities/index.ts
-- [ ] T032 [US1] Add opportunities routes to app router (/crm/opportunities, /crm/opportunities/:id)
+- [X] T013 [P] [US1] Create Opportunity types in src/features/opportunities/types/opportunity.ts
+- [X] T014 [P] [US1] Create opportunity validation schemas in src/features/opportunities/lib/validations.ts
+- [X] T015 [P] [US1] Create opportunity constants in src/features/opportunities/lib/constants.ts
+- [X] T016 [US1] Implement useOpportunities hook with infinite query in src/features/opportunities/api/opportunities.ts
+- [X] T017 [US1] Implement useCreateOpportunity mutation in src/features/opportunities/api/opportunities.ts
+- [X] T018 [US1] Implement useUpdateOpportunity mutation in src/features/opportunities/api/opportunities.ts
+- [X] T019 [US1] Implement useWinOpportunity mutation in src/features/opportunities/api/opportunities.ts
+- [X] T020 [US1] Implement useLoseOpportunity mutation in src/features/opportunities/api/opportunities.ts
+- [X] T021 [US1] Implement useOpportunity query for single opportunity in src/features/opportunities/api/opportunities.ts
+- [X] T022 [P] [US1] Create OpportunityForm component in src/features/opportunities/components/OpportunityForm.tsx
+- [X] T023 [P] [US1] Create OpportunityList component with infinite scroll in src/features/opportunities/components/OpportunityList.tsx
+- [X] T024 [P] [US1] Create OpportunityDetail component in src/features/opportunities/components/OpportunityDetail.tsx
+- [X] T025 [P] [US1] Create OpportunityPipeline visual component in src/features/opportunities/components/OpportunityPipeline.tsx
+- [X] T026 [P] [US1] Create WinOpportunityDialog component in src/features/opportunities/components/WinOpportunityDialog.tsx
+- [X] T027 [P] [US1] Create LoseOpportunityDialog component in src/features/opportunities/components/LoseOpportunityDialog.tsx
+- [X] T028 [P] [US1] Create useOpportunityFilters hook in src/features/opportunities/hooks/useOpportunityFilters.ts
+- [X] T029 [US1] Implement OpportunitiesPage with filters and list in src/features/opportunities/pages/OpportunitiesPage.tsx
+- [X] T030 [US1] Implement OpportunityDetailPage with full details in src/features/opportunities/pages/OpportunityDetailPage.tsx
+- [X] T031 [US1] Create public API exports in src/features/opportunities/index.ts
+- [X] T032 [US1] Add opportunities routes to app router (/crm/opportunities, /crm/opportunities/:id)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can create, update, filter opportunities and convert to customers
 
@@ -97,32 +97,32 @@
 
 ### Tests for User Story 2 (write before implementation) ⚠️
 
-- [ ] T033 [P] [US2] Create contract test for Customers API in specs/001-crm-management/contracts/customers.contract.ts
-- [ ] T034 [P] [US2] Create integration test for customer management flow in tests/integration/crm/customer-management.test.tsx
+- [X] T033 [P] [US2] Create contract test for Customers API in specs/001-crm-management/contracts/customers.contract.ts
+- [X] T034 [P] [US2] Create integration test for customer management flow in tests/integration/crm/customer-management.test.tsx
 
 ### Implementation for User Story 2
 
-- [ ] T035 [P] [US2] Create Customer types in src/features/customers/types/customer.ts
-- [ ] T036 [P] [US2] Create Timeline event types in src/features/customers/types/timeline.ts
-- [ ] T037 [P] [US2] Create customer validation schemas in src/features/customers/lib/validations.ts
-- [ ] T038 [P] [US2] Create customer constants in src/features/customers/lib/constants.ts
-- [ ] T039 [US2] Implement useCustomers hook with infinite query in src/features/customers/api/customers.ts
-- [ ] T040 [US2] Implement useCustomer query for single customer in src/features/customers/api/customers.ts
-- [ ] T041 [US2] Implement useUpdateCustomer mutation in src/features/customers/api/customers.ts
-- [ ] T042 [US2] Implement useUpdateCustomerStatus mutation in src/features/customers/api/customers.ts
-- [ ] T043 [US2] Implement useCustomerTimeline query in src/features/customers/api/customers.ts
-- [ ] T044 [US2] Implement useHealthScore query in src/features/customers/api/customers.ts
-- [ ] T045 [P] [US2] Create CustomerForm component in src/features/customers/components/CustomerForm.tsx
-- [ ] T046 [P] [US2] Create CustomerList component with filters in src/features/customers/components/CustomerList.tsx
-- [ ] T047 [P] [US2] Create CustomerDetail component in src/features/customers/components/CustomerDetail.tsx
-- [ ] T048 [P] [US2] Create CustomerTimeline component using shared Timeline in src/features/customers/components/CustomerTimeline.tsx
-- [ ] T049 [P] [US2] Create HealthScoreBadge component in src/features/customers/components/HealthScoreBadge.tsx
-- [ ] T050 [P] [US2] Create StatusChangeDialog component in src/features/customers/components/StatusChangeDialog.tsx
-- [ ] T051 [P] [US2] Create useCustomerFilters hook in src/features/customers/hooks/useCustomerFilters.ts
-- [ ] T052 [US2] Implement CustomersPage with filters and list in src/features/customers/pages/CustomersPage.tsx
-- [ ] T053 [US2] Implement CustomerDetailPage with tabs (overview, timeline, contacts, activities, contracts) in src/features/customers/pages/CustomerDetailPage.tsx
-- [ ] T054 [US2] Create public API exports in src/features/customers/index.ts
-- [ ] T055 [US2] Add customers routes to app router (/crm/customers, /crm/customers/:id)
+- [X] T035 [P] [US2] Create Customer types in src/features/customers/types/customer.ts
+- [X] T036 [P] [US2] Create Timeline event types in src/features/customers/types/timeline.ts
+- [X] T037 [P] [US2] Create customer validation schemas in src/features/customers/lib/validations.ts
+- [X] T038 [P] [US2] Create customer constants in src/features/customers/lib/constants.ts
+- [X] T039 [US2] Implement useCustomers hook with infinite query in src/features/customers/api/customers.ts
+- [X] T040 [US2] Implement useCustomer query for single customer in src/features/customers/api/customers.ts
+- [X] T041 [US2] Implement useUpdateCustomer mutation in src/features/customers/api/customers.ts
+- [X] T042 [US2] Implement useUpdateCustomerStatus mutation in src/features/customers/api/customers.ts
+- [X] T043 [US2] Implement useCustomerTimeline query in src/features/customers/api/customers.ts
+- [X] T044 [US2] Implement useHealthScore query in src/features/customers/api/customers.ts
+- [X] T045 [P] [US2] Create CustomerForm component in src/features/customers/components/CustomerForm.tsx
+- [X] T046 [P] [US2] Create CustomerList component with filters in src/features/customers/components/CustomerList.tsx
+- [X] T047 [P] [US2] Create CustomerDetail component in src/features/customers/components/CustomerDetail.tsx
+- [X] T048 [P] [US2] Create CustomerTimeline component using shared Timeline in src/features/customers/components/CustomerTimeline.tsx
+- [X] T049 [P] [US2] Create HealthScoreBadge component in src/features/customers/components/HealthScoreBadge.tsx
+- [X] T050 [P] [US2] Create StatusChangeDialog component in src/features/customers/components/StatusChangeDialog.tsx
+- [X] T051 [P] [US2] Create useCustomerFilters hook in src/features/customers/hooks/useCustomerFilters.ts
+- [X] T052 [US2] Implement CustomersPage with filters and list in src/features/customers/pages/CustomersPage.tsx
+- [X] T053 [US2] Implement CustomerDetailPage with tabs (overview, timeline, contacts, activities, contracts) in src/features/customers/pages/CustomerDetailPage.tsx
+- [X] T054 [US2] Create public API exports in src/features/customers/index.ts
+- [X] T055 [US2] Add customers routes to app router (/crm/customers, /crm/customers/:id)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - customers created from opportunities appear in customer list with full management capabilities
 
@@ -136,23 +136,23 @@
 
 ### Tests for User Story 3 (write before implementation) ⚠️
 
-- [ ] T056 [P] [US3] Create contract test for Contacts API in specs/001-crm-management/contracts/contacts.contract.ts
-- [ ] T057 [P] [US3] Create integration test for contact management in tests/integration/crm/contact-management.test.tsx
+- [X] T056 [P] [US3] Create contract test for Contacts API in specs/001-crm-management/contracts/contacts.contract.ts
+- [X] T057 [P] [US3] Create integration test for contact management in tests/integration/crm/contact-management.test.tsx
 
 ### Implementation for User Story 3
 
-- [ ] T058 [P] [US3] Create Contact types in src/features/contacts/types/contact.ts
-- [ ] T059 [P] [US3] Create contact validation schemas in src/features/contacts/lib/validations.ts
-- [ ] T060 [US3] Implement useContacts query in src/features/contacts/api/contacts.ts
-- [ ] T061 [US3] Implement useCreateContact mutation in src/features/contacts/api/contacts.ts
-- [ ] T062 [US3] Implement useUpdateContact mutation in src/features/contacts/api/contacts.ts
-- [ ] T063 [US3] Implement useDeleteContact mutation in src/features/contacts/api/contacts.ts
-- [ ] T064 [US3] Implement useSetPrimaryContact mutation in src/features/contacts/api/contacts.ts
-- [ ] T065 [P] [US3] Create ContactForm component in src/features/contacts/components/ContactForm.tsx
-- [ ] T066 [P] [US3] Create ContactList component in src/features/contacts/components/ContactList.tsx
-- [ ] T067 [P] [US3] Create ContactCard component with primary badge in src/features/contacts/components/ContactCard.tsx
-- [ ] T068 [US3] Create public API exports in src/features/contacts/index.ts
-- [ ] T069 [US3] Integrate ContactList into CustomerDetailPage tabs
+- [X] T058 [P] [US3] Create Contact types in src/features/contacts/types/contact.ts
+- [X] T059 [P] [US3] Create contact validation schemas in src/features/contacts/lib/validations.ts
+- [X] T060 [US3] Implement useContacts query in src/features/contacts/api/contacts.ts
+- [X] T061 [US3] Implement useCreateContact mutation in src/features/contacts/api/contacts.ts
+- [X] T062 [US3] Implement useUpdateContact mutation in src/features/contacts/api/contacts.ts
+- [X] T063 [US3] Implement useDeleteContact mutation in src/features/contacts/api/contacts.ts
+- [X] T064 [US3] Implement useSetPrimaryContact mutation in src/features/contacts/api/contacts.ts
+- [X] T065 [P] [US3] Create ContactForm component in src/features/contacts/components/ContactForm.tsx
+- [X] T066 [P] [US3] Create ContactList component in src/features/contacts/components/ContactList.tsx
+- [X] T067 [P] [US3] Create ContactCard component with primary badge in src/features/contacts/components/ContactCard.tsx
+- [X] T068 [US3] Create public API exports in src/features/contacts/index.ts
+- [X] T069 [US3] Integrate ContactList into CustomerDetailPage tabs
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work independently - customer profiles show contact management with primary contact designation
 
@@ -166,24 +166,25 @@
 
 ### Tests for User Story 4 (write before implementation) ⚠️
 
-- [ ] T070 [P] [US4] Create contract test for Activities API in specs/001-crm-management/contracts/activities.contract.ts
-- [ ] T071 [P] [US4] Create integration test for activity tracking in tests/integration/crm/activity-tracking.test.tsx
+- [X] T070 [P] [US4] Create contract test for Activities API in specs/001-crm-management/contracts/activities.contract.ts
+- [X] T071 [P] [US4] Create integration test for activity tracking in tests/integration/crm/activity-tracking.test.tsx
 
 ### Implementation for User Story 4
 
-- [ ] T072 [P] [US4] Create Activity types in src/features/activities/types/activity.ts
-- [ ] T073 [P] [US4] Create activity validation schemas in src/features/activities/lib/validations.ts
-- [ ] T074 [P] [US4] Create activity constants (types, icons) in src/features/activities/lib/constants.ts
-- [ ] T075 [US4] Implement useActivities query in src/features/activities/api/activities.ts
-- [ ] T076 [US4] Implement useCreateActivity mutation in src/features/activities/api/activities.ts
-- [ ] T077 [US4] Implement useUpdateActivity mutation in src/features/activities/api/activities.ts
-- [ ] T078 [US4] Implement useDeleteActivity mutation in src/features/activities/api/activities.ts
-- [ ] T079 [P] [US4] Create ActivityForm component with type selector in src/features/activities/components/ActivityForm.tsx
-- [ ] T080 [P] [US4] Create ActivityList component in src/features/activities/components/ActivityList.tsx
-- [ ] T081 [P] [US4] Create ActivityCard component with type icons in src/features/activities/components/ActivityCard.tsx
-- [ ] T082 [US4] Create public API exports in src/features/activities/index.ts
-- [ ] T083 [US4] Integrate ActivityList into CustomerDetailPage tabs
-- [ ] T084 [US4] Integrate activities into CustomerTimeline component
+- [X] T072 [P] [US4] Create Activity types in src/features/activities/types/activity.ts
+- [X] T073 [P] [US4] Create activity validation schemas in src/features/activities/lib/validations.ts
+- [X] T074 [P] [US4] Create activity constants (types, icons) in src/features/activities/lib/constants.ts
+- [X] T075 [US4] Implement useActivities query in src/features/activities/api/activities.ts
+- [X] T076 [US4] Implement useCreateActivity mutation in src/features/activities/api/activities.ts
+- [X] T077 [US4] Implement useUpdateActivity mutation in src/features/activities/api/activities.ts
+- [X] T078 [US4] Implement useDeleteActivity mutation in src/features/activities/api/activities.ts
+- [X] T079 [P] [US4] Create ActivityForm component with type selector in src/features/activities/components/ActivityForm.tsx
+- [X] T079a [US4] Implement auto-save debouncing (300ms) in ActivityForm to prevent data loss
+- [X] T080 [P] [US4] Create ActivityList component in src/features/activities/components/ActivityList.tsx
+- [X] T081 [P] [US4] Create ActivityCard component with type icons in src/features/activities/components/ActivityCard.tsx
+- [X] T082 [US4] Create public API exports in src/features/activities/index.ts
+- [X] T083 [US4] Integrate ActivityList into CustomerDetailPage tabs
+- [X] T084 [US4] Integrate activities into CustomerTimeline component
 
 **Checkpoint**: At this point, User Stories 1-4 all work independently - customer profiles show complete activity history with timeline integration
 
@@ -197,29 +198,29 @@
 
 ### Tests for User Story 5 (write before implementation) ⚠️
 
-- [ ] T085 [P] [US5] Create contract test for Contracts API in specs/001-crm-management/contracts/contracts.contract.ts
-- [ ] T086 [P] [US5] Create integration test for contract renewal flow in tests/integration/crm/contract-renewal.test.tsx
+- [X] T085 [P] [US5] Create contract test for Contracts API in specs/001-crm-management/contracts/contracts.contract.ts
+- [X] T086 [P] [US5] Create integration test for contract renewal flow in tests/integration/crm/contract-renewal.test.tsx
 
 ### Implementation for User Story 5
 
-- [ ] T087 [P] [US5] Create Contract types in src/features/contracts/types/contract.ts
-- [ ] T088 [P] [US5] Create contract validation schemas in src/features/contracts/lib/validations.ts
-- [ ] T089 [P] [US5] Create contract constants (billing cycles, statuses) in src/features/contracts/lib/constants.ts
-- [ ] T090 [US5] Implement useContracts query in src/features/contracts/api/contracts.ts
-- [ ] T091 [US5] Implement useCreateContract mutation in src/features/contracts/api/contracts.ts
-- [ ] T092 [US5] Implement useUpdateContract mutation in src/features/contracts/api/contracts.ts
-- [ ] T093 [US5] Implement useNearRenewal query in src/features/contracts/api/contracts.ts
-- [ ] T094 [US5] Implement useRenewContract mutation in src/features/contracts/api/contracts.ts
-- [ ] T095 [P] [US5] Create ContractForm component in src/features/contracts/components/ContractForm.tsx
-- [ ] T096 [P] [US5] Create ContractList component in src/features/contracts/components/ContractList.tsx
-- [ ] T097 [P] [US5] Create ContractCard component with status badges in src/features/contracts/components/ContractCard.tsx
-- [ ] T098 [P] [US5] Create RenewalDashboard component in src/features/contracts/components/RenewalDashboard.tsx
-- [ ] T099 [P] [US5] Create RenewContractDialog component in src/features/contracts/components/RenewContractDialog.tsx
-- [ ] T100 [US5] Implement RenewalsPage with filters in src/features/contracts/pages/RenewalsPage.tsx
-- [ ] T101 [US5] Create public API exports in src/features/contracts/index.ts
-- [ ] T102 [US5] Integrate ContractList into CustomerDetailPage tabs
-- [ ] T103 [US5] Integrate contract events into CustomerTimeline component
-- [ ] T104 [US5] Add renewals route to app router (/crm/renewals)
+- [X] T087 [P] [US5] Create Contract types in src/features/contracts/types/contract.ts
+- [X] T088 [P] [US5] Create contract validation schemas in src/features/contracts/lib/validations.ts
+- [X] T089 [P] [US5] Create contract constants (billing cycles, statuses) in src/features/contracts/lib/constants.ts
+- [X] T090 [US5] Implement useContracts query in src/features/contracts/api/contracts.ts
+- [X] T091 [US5] Implement useCreateContract mutation in src/features/contracts/api/contracts.ts
+- [X] T092 [US5] Implement useUpdateContract mutation in src/features/contracts/api/contracts.ts
+- [X] T093 [US5] Implement useNearRenewal query in src/features/contracts/api/contracts.ts
+- [X] T094 [US5] Implement useRenewContract mutation in src/features/contracts/api/contracts.ts
+- [X] T095 [P] [US5] Create ContractForm component in src/features/contracts/components/ContractForm.tsx
+- [X] T096 [P] [US5] Create ContractList component in src/features/contracts/components/ContractList.tsx
+- [X] T097 [P] [US5] Create ContractCard component with status badges in src/features/contracts/components/ContractCard.tsx
+- [X] T098 [P] [US5] Create RenewalDashboard component in src/features/contracts/components/RenewalDashboard.tsx
+- [X] T099 [P] [US5] Create RenewContractDialog component in src/features/contracts/components/RenewContractDialog.tsx
+- [X] T100 [US5] Implement RenewalsPage with filters in src/features/contracts/pages/RenewalsPage.tsx
+- [X] T101 [US5] Create public API exports in src/features/contracts/index.ts
+- [X] T102 [US5] Integrate ContractList into CustomerDetailPage tabs
+- [X] T103 [US5] Integrate contract events into CustomerTimeline component
+- [X] T104 [US5] Add renewals route to app router (/crm/renewals)
 
 **Checkpoint**: All 5 user stories are now complete and independently functional - full CRM system operational
 
@@ -229,14 +230,29 @@
 
 **Purpose**: Improvements that affect multiple user stories and final validation
 
-- [ ] T105 [P] Update quickstart.md with implementation examples in specs/001-crm-management/quickstart.md
-- [ ] T106 [P] Add loading states and error boundaries across all CRM pages
+- [X] T105 [P] Update quickstart.md with implementation examples in specs/001-crm-management/quickstart.md
+- [X] T105a [P] Update AppSidebar navigation menu in src/shared/components/layout/AppSidebar.tsx:
+  - Add new "CRM" section group after "Principal"
+  - Add Oportunidades menu item (/crm/opportunities) with Target icon
+  - Add Clientes menu item (/crm/customers) with Users icon
+  - Add Contratos menu item (/crm/contracts) with FileText icon (when US5 complete)
+  - Add Renovações menu item (/crm/renewals) with CalendarClock icon (when US5 complete)
+  - Configure requiredFeature: 'enableCRM' for all CRM items
+  - Wrap section with FeatureGuard for 'enableCRM'
+  - Ensure tenant feature flags include enableCRM for visibility
+- [X] T106 [P] Implement error handling patterns across all CRM features:
+  - Error toast notifications for API mutations (create, update, delete)
+  - Network timeout handling with retry options (via TanStack Query)
+  - Optimistic update rollback on failure
+  - Error boundaries for page-level crashes
+  - Loading skeletons for all list and detail views
 - [ ] T107 [P] Verify responsive design (375px+) for all CRM components
-- [ ] T108 [P] Add accessibility attributes (ARIA labels, keyboard navigation) across CRM features
+- [X] T108 [P] Add accessibility attributes (ARIA labels, keyboard navigation) across CRM features
+- [X] T108a [P] Reorganize test files to colocate with features (move from specs/contracts, tests/ to src/features/**/__tests__/)
 - [ ] T109 Run all contract tests and verify 100% pass rate
 - [ ] T110 Run all integration tests and verify complete user journeys
 - [ ] T111 [P] Performance optimization: verify infinite scroll handles 10,000+ records
-- [ ] T112 [P] Verify filter persistence using URL query params across all features
+- [X] T112 [P] Verify filter persistence using URL query params across all features
 - [ ] T113 Code review and refactoring for consistency across 5 features
 - [ ] T114 Run build and verify no TypeScript errors
 - [ ] T115 Run linter and fix all violations
@@ -364,18 +380,21 @@ With multiple developers (recommended after Foundational phase):
 
 ## Task Summary
 
-**Total Tasks**: 115 tasks across 8 phases
+**Total Tasks**: 117 tasks across 8 phases
 
 **Tasks per User Story**:
+
 - US1 (Opportunities): 22 tasks (T011-T032)
 - US2 (Customers): 23 tasks (T033-T055)
 - US3 (Contacts): 14 tasks (T056-T069)
-- US4 (Activities): 15 tasks (T070-T084)
+- US4 (Activities): 16 tasks (T070-T084)
 - US5 (Contracts): 20 tasks (T085-T104)
+- Cross-Cutting (Phase 8): 12 tasks (T105-T115, T105a)
 
-**Parallel Opportunities Identified**: 47 tasks marked [P] can run in parallel within their phases
+**Parallel Opportunities Identified**: 48 tasks marked [P] can run in parallel within their phases
 
 **Independent Test Criteria**:
+
 - US1: Create/update/convert opportunities independently
 - US2: Manage customers with timeline and health scores independently
 - US3: Add/update/remove contacts with primary designation independently

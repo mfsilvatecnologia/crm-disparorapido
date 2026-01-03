@@ -24,7 +24,7 @@ npm install react-intersection-observer
 Crie `.env.local` na raiz do projeto:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:3000/api
+VITE_API_BASE_URL=http://localhost:3000
 ```
 
 ### 3. Backend em Execução
@@ -144,102 +144,48 @@ npm run build
 ### 1. Hook Básico de Listagem
 
 ```typescript
-// src/features/crm/pages/OpportunitiesPage.tsx
-import { useOpportunities } from '../api/opportunities';
-import { OpportunityList } from '../components/opportunities/OpportunityList';
+// src/features/opportunities/pages/OpportunitiesPage.tsx
+import { OpportunityList } from '../components/OpportunityList';
+import { useOpportunityFilters } from '../hooks/useOpportunityFilters';
 
 export function OpportunitiesPage() {
-  const { data, isLoading, error } = useOpportunities({ stage: 'Qualificado' });
-
-  if (isLoading) return <div>Carregando...</div>;
-  if (error) return <div>Erro: {error.message}</div>;
-
-  return <OpportunityList data={data} />;
+  const { filters } = useOpportunityFilters({ stage: 'Qualificado' });
+  return <OpportunityList filters={filters} showPipeline />;
 }
 ```
 
 ### 2. Hook de Mutação (Create)
 
 ```typescript
-// src/features/crm/components/opportunities/CreateOpportunityForm.tsx
-import { useCreateOpportunity } from '../../api/opportunities';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { createOpportunitySchema } from '../../lib/validations';
+// src/features/opportunities/pages/OpportunitiesPage.tsx (trecho)
+import { OpportunityForm } from '../components/OpportunityForm';
+import { useCreateOpportunity } from '../api/opportunities';
 
-export function CreateOpportunityForm() {
-  const createMutation = useCreateOpportunity();
+const createMutation = useCreateOpportunity();
 
-  const form = useForm({
-    resolver: zodResolver(createOpportunitySchema),
-    defaultValues: {
-      nome: '',
-      valorEstimado: 0,
-      probabilidade: 50,
-      estagio: 'Lead',
-      expectedCloseDate: '',
-    },
-  });
-
-  const onSubmit = async (data) => {
-    try {
-      await createMutation.mutateAsync(data);
-      toast.success('Oportunidade criada!');
-    } catch (error) {
-      toast.error('Erro ao criar oportunidade');
-    }
-  };
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      {/* Form fields... */}
-      <Button type="submit" disabled={createMutation.isPending}>
-        {createMutation.isPending ? 'Criando...' : 'Criar'}
-      </Button>
-    </form>
-  );
-}
+<OpportunityForm
+  onSubmit={(data) => createMutation.mutateAsync(data)}
+  isSubmitting={createMutation.isPending}
+  submitLabel="Criar oportunidade"
+/>;
 ```
 
 ### 3. Infinite Scroll (Paginação Cursor-based)
 
 ```typescript
-// src/features/crm/components/opportunities/OpportunityList.tsx
-import { useOpportunities } from '../../api/opportunities';
-import { useInView } from 'react-intersection-observer';
-import { useEffect } from 'react';
+// src/features/opportunities/components/OpportunityList.tsx (trecho)
+const loaderRef = useRef<HTMLDivElement | null>(null);
 
-export function OpportunityList({ filters }) {
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useOpportunities(filters);
-
-  const { ref, inView } = useInView();
-
-  useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
+useEffect(() => {
+  if (!loaderRef.current || !hasNextPage) return;
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  const opportunities = data?.pages.flatMap(page => page.data) ?? [];
-
-  return (
-    <div>
-      {opportunities.map(opp => (
-        <OpportunityCard key={opp.id} opportunity={opp} />
-      ))}
-
-      <div ref={ref} className="h-10">
-        {isFetchingNextPage && <Spinner />}
-      </div>
-    </div>
-  );
-}
+  });
+  observer.observe(loaderRef.current);
+  return () => observer.disconnect();
+}, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 ```
 
 ## Padrões de Código
@@ -359,6 +305,65 @@ export function formatCurrency(value: number): string {
 
 export function formatDate(dateString: string): string {
   return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
+}
+```
+
+### 6. Padrões de Erro e UX
+
+**Mensagens de Erro (RF-042)**
+
+Todas as mensagens de erro devem seguir estas diretrizes:
+
+1. **Idioma**: Sempre em português brasileiro
+2. **Tom**: Amigável, sem jargão técnico
+3. **Ação**: Indicar próximo passo claro para o usuário
+4. **Formato**: Usar toast notifications (via shadcn/ui Sonner)
+
+**Exemplos**:
+
+- ✅ BOM: "Não foi possível salvar a oportunidade. Verifique sua conexão e tente novamente."
+- ❌ RUIM: "Error 500: Internal Server Error"
+
+- ✅ BOM: "Este contato não pode ser removido pois é o contato principal. Defina outro contato como principal primeiro."
+- ❌ RUIM: "Validation failed: isPrimary constraint violation"
+
+**Implementação**:
+
+```typescript
+// Usar toast do shadcn/ui
+import { toast } from '@/components/ui/use-toast';
+
+// Ao capturar erro de API mutation
+catch (error) {
+  toast({
+    variant: "destructive",
+    title: "Erro ao salvar",
+    description: "Não foi possível salvar as alterações. Tente novamente.",
+  });
+}
+
+// Para sucesso
+toast({
+  title: "Oportunidade criada",
+  description: "A oportunidade foi salva com sucesso.",
+});
+```
+
+**Estados de Carregamento (RF-043)**:
+
+- Usar skeletons para listas e cards
+- Usar spinners para ações de formulário
+- Mostrar indicador de loading durante paginação infinita
+
+**Retry de Rede (RF-046)**:
+
+TanStack Query já implementa retry automático:
+
+```typescript
+// Configuração padrão (já aplicada no query client):
+{
+  retry: 3,
+  retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 }
 ```
 

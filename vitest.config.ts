@@ -9,7 +9,10 @@ export default defineConfig({
     globals: true,
     environmentMatchGlobs: [
       ['src/test/contract/**', 'node'],
+      ['specs/**/contracts/**', 'node'],
+      ['src/features/**/__tests__/**/*.contract.ts', 'node'],
       ['src/test/integration/**', 'jsdom'],
+      ['src/features/**/__tests__/**/*.test.tsx', 'jsdom'],
       ['src/App.test.tsx', 'jsdom'],
     ],
     setupFiles: ['./src/test/setup.ts', './src/test/setup-node.ts'],

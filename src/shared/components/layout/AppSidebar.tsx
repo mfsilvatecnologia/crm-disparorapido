@@ -27,7 +27,9 @@ import {
   Sparkles,
   SearchCheck,
   AlertTriangle,
-  BarChart4
+  BarChart4,
+  FileText,
+  CalendarClock
 } from 'lucide-react';
 import {
   Sidebar,
@@ -69,13 +71,6 @@ const navigationItems = [
     description: 'Marketing automation e campanhas',
     requiredFeature: 'enableCampaigns'
   },
-  {
-    title: 'Pipeline',
-    url: '/app/pipeline',
-    icon: Kanban,
-    description: 'Funil de vendas',
-    requiredFeature: 'enablePipeline'
-  },
   // {
   //   title: 'Segmentos',
   //   url: '/app/segments',
@@ -114,6 +109,37 @@ const contatoItems = [
     icon: Link2,
     description: 'Vincular contatos a leads',
     requiredFeature: 'enableBasicFeatures'
+  },
+];
+
+const crmItems = [
+  {
+    title: 'Oportunidades',
+    url: '/app/crm/opportunities',
+    icon: Target,
+    description: 'Pipeline de oportunidades',
+    requiredFeature: 'enableCRM'
+  },
+  {
+    title: 'Clientes',
+    url: '/app/crm/customers',
+    icon: Users,
+    description: 'Perfis e historico de clientes',
+    requiredFeature: 'enableCRM'
+  },
+  {
+    title: 'Contratos',
+    url: '/app/crm/contracts',
+    icon: FileText,
+    description: 'Contratos ativos e historico',
+    requiredFeature: 'enableCRM'
+  },
+  {
+    title: 'Renovacoes',
+    url: '/app/crm/renewals',
+    icon: CalendarClock,
+    description: 'Renovacoes proximas',
+    requiredFeature: 'enableCRM'
   },
 ];
 
@@ -354,6 +380,17 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <FeatureGuard feature="enableCRM">
+          <SidebarGroup>
+            <SidebarGroupLabel>CRM</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {crmItems.map(renderMenuItem)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </FeatureGuard>
 
         {/* Contato / DisparoRapido */}
         <SidebarGroup>

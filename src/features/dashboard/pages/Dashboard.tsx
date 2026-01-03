@@ -1,10 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp,
   BarChart3,
   Settings,
   Bell,
   Calendar,
+  Users,
+  Target,
+  Activity,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -18,7 +22,6 @@ import {
   GrowthMetricCard,
   QuickActions,
   useQuickActions,
-  CampaignsWidget
 } from '@/features/dashboard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { DashboardSkeleton } from '../components/DashboardSkeleton';
@@ -26,13 +29,16 @@ import { DashboardError } from '../components/DashboardError';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { actions } = useQuickActions();
 
-  // Fetch real dashboard data
+  // Fetch real dashboard data from APIs
   const {
     stats,
-    recentLeads: apiRecentLeads,
+    campaigns,
+    recentLeads,
     usage,
+    insights,
     isLoading,
     error,
   } = useDashboardData();
@@ -47,87 +53,29 @@ const Dashboard: React.FC = () => {
     return <DashboardError error={error} onRetry={() => window.location.reload()} />;
   }
 
-  // Enhanced mock data for campaigns (until API is ready)
-  const mockCampaigns = [
-    {
-      id: '1',
-      name: 'B2B Software - São Paulo',
-      status: 'active' as const,
-      leadsGenerated: 1247,
-      targetLeads: 1500,
-      qualityScore: 87,
-      invested: 3118,
-      budget: 4000,
-      progress: 78,
-      remainingDays: 2,
-      totalDays: 30,
-      createdAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000),
-      lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      segment: 'Software',
-      source: 'LinkedIn + Google Maps',
-      conversionRate: 12.3
-    },
-    {
-      id: '2', 
-      name: 'Agências Marketing - RJ',
-      status: 'active' as const,
-      leadsGenerated: 892,
-      targetLeads: 1000,
-      qualityScore: 91,
-      invested: 2230,
-      budget: 2500,
-      progress: 65,
-      remainingDays: 5,
-      totalDays: 20,
-      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-      lastActivity: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      segment: 'Marketing',
-      source: 'Google Maps',
-      conversionRate: 15.7
-    },
-    {
-      id: '3',
-      name: 'Consultoria Financeira - SP',
-      status: 'paused' as const,
-      leadsGenerated: 543,
-      targetLeads: 800,
-      qualityScore: 84,
-      invested: 1360,
-      budget: 2000,
-      progress: 45,
-      remainingDays: 10,
-      totalDays: 25,
-      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      lastActivity: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      segment: 'Finanças',
-      source: 'LinkedIn',
-      conversionRate: 8.9
-    }
-  ];
-
-  // Extended usage data with additional metrics
+  // Extended usage data for monitor widget
   const extendedUsage = {
     ...usage,
-    plan: 'Professional',
-    activeCampaigns: mockCampaigns.filter((c) => c.status === 'active').length,
+    plan: 'Professional', // TODO: Get from user subscription
+    activeCampaigns: campaigns.filter((c) => c.status === 'active').length,
     maxCampaigns: 10,
-    integrations: 2,
+    integrations: 0, // TODO: Get from real data
     maxIntegrations: 5,
-    exports: 18,
+    exports: 0, // TODO: Get from real data
     maxExports: 50,
-    apiCalls: 1247,
+    apiCalls: 0, // TODO: Get from real data
     maxApiCalls: 5000,
-    estimatedDaysUntilLimit: 8,
+    estimatedDaysUntilLimit: usage.daysRemaining,
   };
 
-  // Transform API recent leads to match component format
-  const mockRecentLeads = apiRecentLeads.map((lead) => ({
+  // Transform leads for widget format
+  const formattedLeads = recentLeads.map((lead) => ({
     id: lead.id,
-    companyName: lead.empresa || 'N/A',
-    contactName: lead.nome || 'Sem nome',
+    companyName: lead.empresa,
+    contactName: lead.nome,
     contactRole: 'Contato',
-    email: lead.email || 'N/A',
-    phone: lead.telefone || 'N/A',
+    email: lead.email,
+    phone: lead.telefone,
     sector: 'N/A',
     location: 'N/A',
     employees: 0,
@@ -152,58 +100,21 @@ const Dashboard: React.FC = () => {
     return 'noite';
   };
 
-  // Handler functions
-  const handleViewAllLeads = () => {
-    window.location.href = '/app/leads';
-  };
-
-  const handleFilterLeads = () => {
-    console.log('Filtrar leads');
-  };
-
-  const handleExportLeads = () => {
-    console.log('Exportar leads');
-  };
-
-  const handleOptimizeQuality = () => {
-    console.log('Otimizar qualidade');
-  };
-
-  const handleViewReport = () => {
-    console.log('Ver relatório');
-  };
-
-  const handleAnalyzeGrowth = () => {
-    console.log('Analisar crescimento');
-  };
-
-  const handleViewCampaign = (campaignId: string) => {
-    console.log('Ver campanha:', campaignId);
-  };
-
-  const handlePauseCampaign = (campaignId: string) => {
-    console.log('Pausar campanha:', campaignId);
-  };
-
-  const handleResumeCampaign = (campaignId: string) => {
-    console.log('Retomar campanha:', campaignId);
-  };
-
-  const handleEditCampaign = (campaignId: string) => {
-    console.log('Editar campanha:', campaignId);
-  };
-
-  const handleCreateNewCampaign = () => {
-    console.log('Nova campanha');
-  };
-
   const getUserFirstName = () => {
     return user?.email?.split('@')[0] || 'Usuário';
   };
 
+  // Navigation handlers
+  const handleViewAllLeads = () => navigate('/app/leads');
+  const handleFilterLeads = () => navigate('/app/leads?filter=true');
+  const handleExportLeads = () => navigate('/app/leads?export=true');
+  const handleOptimizeQuality = () => navigate('/app/leads?sort=scoreQualificacao');
+  const handleViewReport = () => navigate('/app/campanhas');
+  const handleAnalyzeGrowth = () => navigate('/app/campanhas');
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Enhanced Hero Section */}
+      {/* Hero Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-6 py-8">
           <div className="flex items-center justify-between mb-6">
@@ -217,8 +128,10 @@ const Dashboard: React.FC = () => {
                 </Badge>
               </div>
               <p className="text-gray-600">
-                Sua operação está {getTimeOfDay() === 'manhã' ? 'iniciando bem' : 'performando excelente'} esta {getTimeOfDay()}.
-                {extendedUsage.daysRemaining} dias restantes no seu plano.
+                {stats.totalLeads > 0 
+                  ? `Você tem ${stats.totalLeads} leads este mês. `
+                  : 'Comece a capturar leads para sua operação. '}
+                {extendedUsage.daysRemaining} dias restantes no ciclo.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -228,16 +141,16 @@ const Dashboard: React.FC = () => {
               </Button>
               <Button variant="outline" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                Agendar Reunião
+                Agendar
               </Button>
             </div>
           </div>
 
-          {/* Main Metrics Grid */}
+          {/* Main Metrics Grid - Real Data */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <LeadsMetricCard
               total={stats.totalLeads}
-              change={15.3}
+              change={stats.monthGrowth}
               breakdown={stats.leadsBreakdown}
               onViewAll={handleViewAllLeads}
               onFilter={handleFilterLeads}
@@ -247,20 +160,20 @@ const Dashboard: React.FC = () => {
             <QualityMetricCard
               average={stats.qualityAverage}
               distribution={stats.qualityDistribution}
-              trend="up"
+              trend={stats.qualityAverage >= 70 ? 'up' : stats.qualityAverage >= 50 ? 'stable' : 'down'}
               onOptimize={handleOptimizeQuality}
             />
 
             <GrowthMetricCard
               percentage={stats.monthGrowth}
-              trend="up"
+              trend={stats.monthGrowth > 0 ? 'up' : stats.monthGrowth < 0 ? 'down' : 'stable'}
               onAnalyze={handleAnalyzeGrowth}
             />
 
             <ROIMetricCard
               value={stats.estimatedROI}
               period="Este mês"
-              projection={stats.estimatedROI * 1.2}
+              projection={stats.estimatedROI * 1.1}
               onViewReport={handleViewReport}
             />
           </div>
@@ -276,40 +189,111 @@ const Dashboard: React.FC = () => {
       {/* Main Content */}
       <div className="px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Campaigns */}
-          <div className="lg:col-span-2">
-            <CampaignsWidget
-              campaigns={mockCampaigns}
-              onViewCampaign={handleViewCampaign}
-              onPauseCampaign={handlePauseCampaign}
-              onResumeCampaign={handleResumeCampaign}
-              onEditCampaign={handleEditCampaign}
-              onCreateNew={handleCreateNewCampaign}
-              className="mb-6"
-            />
+          {/* Left Column - Campaigns & Leads */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Active Campaigns - Real Data */}
+            {campaigns.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <Target className="h-5 w-5 text-primary-600" />
+                      Campanhas Ativas
+                    </CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => navigate('/app/campanhas')}>
+                      Ver Todas
+                    </Button>
+                  </div>
+                  <CardDescription>
+                    {campaigns.filter(c => c.status === 'active').length} campanhas em execução
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {campaigns.slice(0, 3).map((campaign) => (
+                      <div
+                        key={campaign.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                        onClick={() => navigate(`/app/campanhas/${campaign.id}`)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-2 w-2 rounded-full ${
+                            campaign.status === 'active' ? 'bg-green-500' :
+                            campaign.status === 'paused' ? 'bg-yellow-500' : 'bg-gray-500'
+                          }`} />
+                          <div>
+                            <p className="font-medium text-gray-900">{campaign.name}</p>
+                            <p className="text-sm text-gray-500">
+                              {campaign.leadsGenerated} leads gerados
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
+                          {campaign.status === 'active' ? 'Ativa' : 
+                           campaign.status === 'paused' ? 'Pausada' : 'Concluída'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Target className="h-5 w-5 text-gray-400" />
+                    Campanhas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-4">Nenhuma campanha ativa</p>
+                    <Button onClick={() => navigate('/app/campanhas/nova')}>
+                      Criar Primeira Campanha
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
-            {/* Recent Leads */}
+            {/* Recent Leads - Real Data */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">Leads Recentes</CardTitle>
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary-600" />
+                    Leads Recentes
+                  </CardTitle>
                   <Button variant="outline" size="sm" onClick={handleViewAllLeads}>
                     Ver Todos
                   </Button>
                 </div>
                 <CardDescription>
-                  Últimos leads capturados com alta qualidade
+                  {recentLeads.length > 0 
+                    ? 'Últimos leads capturados' 
+                    : 'Nenhum lead capturado ainda'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <RecentLeadsWidget leads={mockRecentLeads} />
+                {recentLeads.length > 0 ? (
+                  <RecentLeadsWidget leads={formattedLeads} />
+                ) : (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-4">Comece a capturar leads</p>
+                    <Button onClick={() => navigate('/app/scraping')}>
+                      Iniciar Scraping
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Right Column - Usage & Analytics */}
+          {/* Right Column - Usage & Insights */}
           <div className="space-y-6">
-            {/* Usage Monitor */}
+            {/* Usage Monitor - Real Data */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -317,7 +301,7 @@ const Dashboard: React.FC = () => {
                   Monitor de Uso
                 </CardTitle>
                 <CardDescription>
-                  Acompanhe seu consumo e limites
+                  Acompanhe seu consumo
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -325,71 +309,106 @@ const Dashboard: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Performance Insights */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                  Insights de Performance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 bg-green-600 rounded-full"></div>
-                    <span className="text-sm font-medium">Qualidade em alta</span>
-                  </div>
-                  <Badge variant="outline" className="text-green-700 border-green-300">
-                    +2.3% esta semana
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
-                    <span className="text-sm font-medium">Conversion rate</span>
-                  </div>
-                  <Badge variant="outline" className="text-blue-700 border-blue-300">
-                    12.3% média
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 bg-yellow-600 rounded-full"></div>
-                    <span className="text-sm font-medium">Otimização sugerida</span>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Ver dicas
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Performance Insights - Real Data */}
+            {insights.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    Insights de Performance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {insights.map((insight, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        insight.trend === 'up' ? 'bg-green-50' :
+                        insight.trend === 'down' ? 'bg-red-50' : 'bg-blue-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 rounded-full ${
+                          insight.trend === 'up' ? 'bg-green-600' :
+                          insight.trend === 'down' ? 'bg-red-600' : 'bg-blue-600'
+                        }`} />
+                        <span className="text-sm font-medium">{insight.metric}</span>
+                      </div>
+                      <Badge variant="outline" className={
+                        insight.trend === 'up' ? 'text-green-700 border-green-300' :
+                        insight.trend === 'down' ? 'text-red-700 border-red-300' :
+                        'text-blue-700 border-blue-300'
+                      }>
+                        {insight.value}
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Quick Stats */}
+            {/* Quick Stats - Real Data */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-purple-600" />
-                  Estatísticas Rápidas
+                  Estatísticas
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Leads hoje</span>
-                  <span className="font-semibold">127</span>
+                  <span className="text-sm text-gray-600">Total de Leads</span>
+                  <span className="font-semibold">{stats.totalLeads}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Campanhas ativas</span>
-                  <span className="font-semibold">{mockCampaigns.filter(c => c.status === 'active').length}</span>
+                  <span className="text-sm text-gray-600">Qualidade Média</span>
+                  <span className="font-semibold">{stats.qualityAverage}%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Custo por lead</span>
-                  <span className="font-semibold">R$ 2,50</span>
+                  <span className="text-sm text-gray-600">Campanhas Ativas</span>
+                  <span className="font-semibold">{campaigns.filter(c => c.status === 'active').length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Tempo médio resposta</span>
-                  <span className="font-semibold">4.2h</span>
+                  <span className="text-sm text-gray-600">Leads Alta Qualidade</span>
+                  <span className="font-semibold">{stats.qualityDistribution.alta}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Leads Novos</span>
+                  <span className="font-semibold">{stats.leadsBreakdown.novos}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Leads Qualificados</span>
+                  <span className="font-semibold">{stats.leadsBreakdown.qualificados}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Activity Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-orange-600" />
+                  Resumo do Ciclo
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Uso do Plano</span>
+                    <span className="font-semibold">{usage.percentageUsed}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${
+                        usage.percentageUsed > 90 ? 'bg-red-500' :
+                        usage.percentageUsed > 70 ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.min(usage.percentageUsed, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {usage.leadsUsed} de {usage.leadsLimit} leads utilizados
+                  </p>
                 </div>
               </CardContent>
             </Card>

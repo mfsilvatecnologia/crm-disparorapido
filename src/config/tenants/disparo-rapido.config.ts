@@ -42,6 +42,7 @@ export const disparorapidoConfig: TenantConfig = {
 
   features: {
     enableBasicFeatures: true,
+    enableCRM: true,
     enableCampaigns: false,
     enablePipeline: false,
     enableScraping: false,
