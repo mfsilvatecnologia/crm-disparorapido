@@ -15,6 +15,7 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { ConnectionStatus } from '@/shared/components/common/ConnectionStatus';
 import { useConnectivity } from '@/shared/hooks/useConnectivity';
 import { ActiveSessionsManager } from '../components/ActiveSessionsManager';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -356,6 +357,32 @@ export default function LoginPage() {
                   )}
                 </Button>
               </form>
+
+              {/* Divisor "ou" */}
+              <div className="mt-6 relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    ou
+                  </span>
+                </div>
+              </div>
+
+              {/* Google Login Button */}
+              <div className="mt-6">
+                <GoogleLoginButton 
+                  disabled={!connectivity.isOnline}
+                  onError={(error) => {
+                    toast({
+                      title: "Erro no login com Google",
+                      description: error,
+                      variant: "destructive",
+                    });
+                  }}
+                />
+              </div>
 
               <div className="mt-6 space-y-4">
                 <div className="relative">

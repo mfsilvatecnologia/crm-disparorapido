@@ -1,5 +1,4 @@
 import React from 'react';
-import React from 'react';
 import { Timeline } from '@/shared/components/Timeline';
 import { formatDateTime } from '@/shared/lib/crm/formatters';
 import type { TimelineEvent } from '../types/timeline';

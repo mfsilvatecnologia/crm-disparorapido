@@ -204,4 +204,45 @@ export default {
 		}
 	},
 	plugins: [tailwindcssAnimate],
+	// Safelist for dynamic classes used by design-tokens.ts
+	safelist: [
+		// Status colors - backgrounds
+		'bg-primary-100',
+		'bg-green-100',
+		'bg-amber-100',
+		'bg-emerald-100',
+		'bg-red-100',
+		'bg-gray-100',
+		'bg-blue-100',
+		'bg-purple-100',
+		// Status colors - text
+		'text-primary-700',
+		'text-green-700',
+		'text-amber-700',
+		'text-emerald-700',
+		'text-red-700',
+		'text-gray-700',
+		'text-gray-600',
+		'text-blue-700',
+		'text-purple-700',
+		// Status colors - borders
+		'border-primary-500',
+		'border-green-500',
+		'border-amber-500',
+		'border-emerald-500',
+		'border-red-500',
+		'border-gray-500',
+		'border-gray-400',
+		'border-blue-500',
+		'border-purple-500',
+		// Score colors
+		'text-red-500',
+		'text-amber-500',
+		'text-blue-500',
+		'text-green-500',
+		'bg-red-100',
+		'bg-amber-100',
+		'bg-blue-100',
+		'bg-green-100',
+	],
 } satisfies Config;

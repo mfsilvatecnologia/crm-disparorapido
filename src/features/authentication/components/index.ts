@@ -11,3 +11,6 @@ export { SessionCard } from './SessionCard'
 export { SessionLimitModal } from './SessionLimitModal'
 export { SessionExpirationWarning } from './SessionExpirationWarning'
 export { ActiveSessionsManager } from './ActiveSessionsManager'
+
+// Google OAuth
+export { GoogleLoginButton } from './GoogleLoginButton'

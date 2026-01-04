@@ -11,6 +11,7 @@ import { AppLayout } from "./shared/components/layout/AppLayout";
 // Feature imports
 import { Index } from "./features/landing";
 import { LoginPage, RegisterPage, ResetPasswordPage, NewPasswordPage, UserProfilePage } from "./features/authentication";
+import AuthCallbackPage from "./features/authentication/pages/AuthCallbackPage";
 import SessionManagementPage from "./features/authentication/pages/SessionManagementPage";
 import { Dashboard } from "./features/dashboard";
 import { LeadsPage } from "./features/leads";
@@ -128,6 +129,7 @@ function AppRoutes() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/nova-senha" element={<NewPasswordPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
         {/* Public Sales Routes */}
         <Route path="/pricing" element={<PricingPage />} />
