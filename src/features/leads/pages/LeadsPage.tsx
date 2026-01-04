@@ -600,8 +600,8 @@ export default function LeadsPage() {
         />
       )}
 
-      {/* Header with PageHeader component */}
-      <div className="mb-8">
+      {/* Header with PageHeader component - Estilo Odoo */}
+      <div className="mb-10">
         <PageHeader
           title="Leads"
           subtitle="Gerencie e acesse sua base de leads qualificados"
@@ -614,12 +614,16 @@ export default function LeadsPage() {
           stats={headerStats}
           actions={
             <>
-              <Button variant="outline" className="border-gray-300" onClick={exportLeads}>
+              <Button 
+                variant="outline" 
+                className="border-gray-300 bg-white hover:bg-gray-50 h-10 px-4 shadow-sm" 
+                onClick={exportLeads}
+              >
                 <FileDown className="mr-2 h-4 w-4" />
                 Exportar {selectedLeads.length > 0 ? `(${selectedLeads.length})` : `(${sortedLeads.length})`}
               </Button>
               <Button
-                className="bg-primary-600 hover:bg-primary-700"
+                className="bg-primary-600 hover:bg-primary-700 text-white h-10 px-5 shadow-md hover:shadow-lg transition-shadow"
                 onClick={() => navigate('/app/leads/novo')}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -630,137 +634,147 @@ export default function LeadsPage() {
         />
       </div>
 
-      {/* Toolbar e Filtros - Layout Compacto */}
-      <div className="space-y-4 mb-6">
-        {/* Barra de Busca e Ações Rápidas */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-center gap-4">
-            {/* Busca */}
+      {/* Toolbar e Filtros - Estilo Odoo */}
+      <div className="space-y-6 mb-8">
+        {/* Barra de Busca Principal */}
+        <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-6">
+          <div className="flex items-center gap-6">
+            {/* Busca - Destaque Principal */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <Input
                 ref={searchInputRef}
                 placeholder="Buscar por nome, empresa, email, cargo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 border-gray-300 focus:border-primary-500"
+                className="pl-11 h-11 text-base border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 bg-gray-50/50"
               />
               {searchTerm && debouncedSearchTerm !== searchTerm && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full" />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full" />
                 </div>
               )}
             </div>
 
-            {/* Custo Total - Integrado */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
-              <Target className="h-5 w-5 text-primary-600" />
+            {/* Custo Total - Card Elegante */}
+            <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-br from-primary-50 to-primary-100/50 rounded-xl border border-primary-200/50 shadow-sm">
+              <div className="p-2 bg-primary-100 rounded-lg">
+                <Target className="h-5 w-5 text-primary-600" />
+              </div>
               <div>
-                <p className="text-xs text-gray-500">Custo Total</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-xs font-medium text-primary-700/80 uppercase tracking-wide">Custo Total</p>
+                <p className="text-lg font-bold text-primary-900 mt-0.5">
                   {formatCurrency(sortedLeads.length * 2.50)}
                 </p>
               </div>
             </div>
 
             {/* View Switcher */}
-            <ViewSwitcher
-              views={['list', 'cards', 'kanban']}
-              activeView={viewMode}
-              onViewChange={(view) => setViewMode(view as PageViewMode)}
-            />
+            <div className="flex-shrink-0">
+              <ViewSwitcher
+                views={['list', 'cards', 'kanban']}
+                activeView={viewMode}
+                onViewChange={(view) => setViewMode(view as PageViewMode)}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Filtros e Ordenação */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* QuickFilters para Status */}
-            <div className="flex-1 min-w-[300px]">
-              <QuickFilters
-                options={statusFilterOptions}
-                selected={filterStatus === 'all' ? undefined : filterStatus}
-                onChange={(id) => setFilterStatus((id as FilterStatus) || 'all')}
-                showAll
-                allLabel="Todos"
+        {/* Filtros e Ordenação - Layout Horizontal Elegante */}
+        <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-6">
+          <div className="space-y-4">
+            {/* Linha Principal de Filtros */}
+            <div className="flex flex-wrap items-center gap-4">
+              {/* QuickFilters para Status - Mais Espaçado */}
+              <div className="flex-1 min-w-[400px]">
+                <QuickFilters
+                  options={statusFilterOptions}
+                  selected={filterStatus === 'all' ? undefined : filterStatus}
+                  onChange={(id) => setFilterStatus((id as FilterStatus) || 'all')}
+                  showAll
+                  allLabel="Todos"
+                  size="md"
+                />
+              </div>
+
+              <div className="h-8 w-px bg-gray-200" />
+
+              {/* Ordenação - Mais Elegante */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Ordenar:</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-48 h-10 text-sm border-gray-300 bg-white">
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="createdAt">Data de Criação</SelectItem>
+                    <SelectItem value="scoreQualificacao">Score de Qualidade</SelectItem>
+                    <SelectItem value="nomeContato">Nome</SelectItem>
+                    <SelectItem value="nomeEmpresa">Empresa</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="h-10 px-4 border-gray-300 bg-white hover:bg-gray-50"
+                >
+                  <ArrowUpDown className="h-4 w-4" />
+                  <span className="ml-2 text-sm">{sortOrder === 'asc' ? 'A-Z' : 'Z-A'}</span>
+                </Button>
+              </div>
+
+              <div className="h-8 w-px bg-gray-200" />
+
+              {/* Ações de Filtro */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="h-10 px-4 border-gray-300 bg-white hover:bg-gray-50"
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  Filtros Avançados
+                  {showAdvancedFilters ? <ChevronUp className="h-4 w-4 ml-2" /> : <ChevronDown className="h-4 w-4 ml-2" />}
+                </Button>
+
+                {(filterStatus !== 'all' || selectedSegments.length > 0 || selectedSources.length > 0 || qualityRange.min > 0 || qualityRange.max < 100 || searchTerm || dateRange.from || dateRange.to) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="h-10 px-4 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Limpar
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Saved Filters - Integrado */}
+            <div className="pt-4 border-t border-gray-200">
+              <SavedFilters
+                currentFilters={{
+                  searchTerm: searchTerm,
+                  status: filterStatus,
+                  qualityRange,
+                  segments: selectedSegments,
+                  sources: selectedSources,
+                  dateRange,
+                  sortBy,
+                  sortOrder
+                }}
+                onApplyFilter={handleApplyFilter}
               />
             </div>
 
-            <div className="h-6 w-px bg-gray-300" />
-
-            {/* Ordenação */}
-            <div className="flex items-center gap-2">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-44 h-9 text-sm">
-                  <SelectValue placeholder="Ordenar por" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="createdAt">Data de Criação</SelectItem>
-                  <SelectItem value="scoreQualificacao">Score de Qualidade</SelectItem>
-                  <SelectItem value="nomeContato">Nome</SelectItem>
-                  <SelectItem value="nomeEmpresa">Empresa</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="h-9 px-3"
-              >
-                <ArrowUpDown className="h-4 w-4" />
-                <span className="ml-1 text-xs">{sortOrder === 'asc' ? 'A-Z' : 'Z-A'}</span>
-              </Button>
-            </div>
-
-            <div className="h-6 w-px bg-gray-300" />
-
-            {/* Ações de Filtro */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="h-9"
-              >
-                <SlidersHorizontal className="h-4 w-4 mr-1" />
-                Filtros Avançados
-                {showAdvancedFilters ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
-              </Button>
-
-              {(filterStatus !== 'all' || selectedSegments.length > 0 || selectedSources.length > 0 || qualityRange.min > 0 || qualityRange.max < 100 || searchTerm || dateRange.from || dateRange.to) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllFilters}
-                  className="h-9 text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Limpar Filtros
-                </Button>
-              )}
-            </div>
-          </div>
-
-            <SavedFilters
-              currentFilters={{
-                searchTerm: searchTerm,
-                status: filterStatus,
-                qualityRange,
-                segments: selectedSegments,
-                sources: selectedSources,
-                dateRange,
-                sortBy,
-                sortOrder
-              }}
-              onApplyFilter={handleApplyFilter}
-            />
-          </div>
-
-          {/* Filtros Avançados */}
-          {showAdvancedFilters && (
-            <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Filtros Avançados - Estilo Odoo */}
+            {showAdvancedFilters && (
+            <div className="mt-6 pt-6 border-t border-gray-200 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Filtro de Segmento */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Segmentos</label>
@@ -912,7 +926,9 @@ export default function LeadsPage() {
               )}
             </div>
           )}
+          </div>
         </div>
+      </div>
 
       {/* Ações em Massa */}
       {selectedLeads.length > 0 && (
@@ -950,78 +966,80 @@ export default function LeadsPage() {
         </Card>
       )}
 
-      {/* Conteúdo Principal - Tabela */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      {/* Conteúdo Principal - Tabela Estilo Odoo */}
+      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm overflow-hidden">
         {/* Visualização em Tabela */}
         {viewMode === 'list' && (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-200 bg-gray-50/50">
-                  <TableHead className="w-12">
+                <TableRow className="border-gray-200/60 bg-gradient-to-b from-gray-50/80 to-gray-50/40 hover:bg-gray-50/80">
+                  <TableHead className="w-14 px-6 py-4">
                     <Checkbox
                       checked={selectedLeads.length === paginatedLeads.length && paginatedLeads.length > 0}
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700">Lead</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Empresa</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Segmento</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Qualidade</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Última Atividade</TableHead>
-                  <TableHead className="font-semibold text-gray-700 w-24">Ações</TableHead>
+                  <TableHead className="font-semibold text-gray-700 text-sm px-6 py-4">Lead</TableHead>
+                  <TableHead className="font-semibold text-gray-700 text-sm px-6 py-4">Empresa</TableHead>
+                  <TableHead className="font-semibold text-gray-700 text-sm px-6 py-4">Segmento</TableHead>
+                  <TableHead className="font-semibold text-gray-700 text-sm px-6 py-4">Status</TableHead>
+                  <TableHead className="font-semibold text-gray-700 text-sm px-6 py-4">Qualidade</TableHead>
+                  <TableHead className="font-semibold text-gray-700 text-sm px-6 py-4">Última Atividade</TableHead>
+                  <TableHead className="font-semibold text-gray-700 text-sm w-32 px-6 py-4 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedLeads.map((lead) => (
+                {paginatedLeads.map((lead, index) => (
                   <TableRow
                     key={lead.id}
-                    className="border-gray-100 hover:bg-gray-50/50 cursor-pointer transition-colors"
+                    className={`border-gray-100/60 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50/20'
+                    }`}
                     onClick={() => handleViewLead(lead)}
                   >
-                    <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="px-6 py-5" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedLeads.includes(lead.id)}
                         onCheckedChange={(checked) => handleSelectLead(lead.id, checked as boolean)}
                       />
                     </TableCell>
-                    <TableCell className="py-3">
-                      <div className="flex items-center gap-3 min-w-[200px]">
-                        <Avatar className="h-10 w-10 flex-shrink-0">
-                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=40`} />
-                          <AvatarFallback className="bg-primary-100 text-primary-700 text-sm font-medium">
+                    <TableCell className="px-6 py-5">
+                      <div className="flex items-center gap-4 min-w-[220px]">
+                        <Avatar className="h-12 w-12 flex-shrink-0 ring-2 ring-gray-100">
+                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=48`} />
+                          <AvatarFallback className="bg-gradient-to-br from-primary-100 to-primary-200 text-primary-700 text-sm font-semibold">
                             {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() ||
                              lead.nomeEmpresa?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'NN'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900 truncate">{lead.nomeContato || 'Nome não informado'}</p>
-                          <p className="text-xs text-gray-500 truncate mt-0.5">{lead.email || 'Email não informado'}</p>
+                          <p className="font-semibold text-gray-900 truncate text-sm">{lead.nomeContato || 'Nome não informado'}</p>
+                          <p className="text-xs text-gray-500 truncate mt-1">{lead.email || 'Email não informado'}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-3 min-w-[180px]">
+                    <TableCell className="px-6 py-5 min-w-[200px]">
                       <div>
-                        <p className="font-medium text-gray-900 truncate">{lead.nomeEmpresa || 'Empresa não informada'}</p>
+                        <p className="font-semibold text-gray-900 truncate text-sm">{lead.nomeEmpresa || 'Empresa não informada'}</p>
                         {lead.endereco?.cidade && lead.endereco?.estado && (
-                          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <p className="text-xs text-gray-500 truncate flex items-center gap-1.5 mt-1.5">
+                            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
                             {lead.endereco.cidade}, {lead.endereco.estado}
                           </p>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="py-3">
+                    <TableCell className="px-6 py-5">
                       {lead.segmento ? (
-                        <Badge variant="outline" className="border-gray-300 text-xs font-normal">
+                        <Badge variant="outline" className="border-gray-300 bg-gray-50 text-xs font-medium px-2.5 py-1">
                           {lead.segmento}
                         </Badge>
                       ) : (
                         <span className="text-xs text-gray-400">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="py-3">
+                    <TableCell className="px-6 py-5">
                       <StatusBadge
                         type="lead"
                         status={(lead.status as 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado') || 'novo'}
@@ -1029,7 +1047,7 @@ export default function LeadsPage() {
                         size="sm"
                       />
                     </TableCell>
-                    <TableCell className="py-3">
+                    <TableCell className="px-6 py-5">
                       <ScoreBadge
                         score={lead.scoreQualificacao || 0}
                         showValue
@@ -1037,25 +1055,25 @@ export default function LeadsPage() {
                         size="sm"
                       />
                     </TableCell>
-                    <TableCell className="py-3">
+                    <TableCell className="px-6 py-5">
                       <RelativeTime 
                         date={lead.updatedAt || lead.createdAt || new Date().toISOString()}
                         showTooltip
                       />
                     </TableCell>
-                    <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-1.5">
+                    <TableCell className="px-6 py-5" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-2">
                         <LeadQuickActions 
                           lead={lead}
                           compact={true}
                         />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-gray-100 rounded-lg transition-colors">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
                               <Eye className="mr-2 h-4 w-4" />
                               Ver Detalhes

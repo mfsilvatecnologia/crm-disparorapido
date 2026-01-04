@@ -9,7 +9,7 @@ import { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useGoogleLogin } from '../hooks/useGoogleLogin';
-import { AuthContext } from '../contexts/AuthContext';
+import { AuthContext } from '@/shared/contexts/AuthContext';
 import { useTenant } from '@/shared/contexts/TenantContext';
 
 type CallbackStatus = 'processing' | 'success' | 'error';
