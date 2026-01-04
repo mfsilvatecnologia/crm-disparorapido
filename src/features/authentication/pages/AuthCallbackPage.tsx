@@ -20,7 +20,11 @@ export default function AuthCallbackPage() {
   const authContext = useContext(AuthContext);
   const { processCallback } = useGoogleLogin();
   
+  // Todos os hooks devem ser chamados no topo, antes de qualquer return condicional
   const [isContextReady, setIsContextReady] = useState(false);
+  const [status, setStatus] = useState<CallbackStatus>('processing');
+  const [message, setMessage] = useState('Processando login...');
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   
   // Aguarda o contexto estar disponível
   useEffect(() => {
@@ -37,33 +41,15 @@ export default function AuthCallbackPage() {
     }
   }, [authContext, navigate]);
   
-  // Verifica se o contexto está disponível antes de continuar
-  if (!isContextReady || !authContext) {
-    return (
-      <div 
-        className="min-h-screen flex items-center justify-center"
-        style={{
-          background: `linear-gradient(135deg, ${tenant.theme.gradientFrom} 0%, ${tenant.theme.gradientVia || tenant.theme.gradientFrom} 50%, ${tenant.theme.gradientTo} 100%)`
-        }}
-      >
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 text-center">
-          <Loader2 
-            className="h-12 w-12 animate-spin mx-auto mb-4"
-            style={{ color: tenant.theme.primary }}
-          />
-          <p className="text-gray-600">Inicializando...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  const { loginWithGoogle } = authContext;
-  
-  const [status, setStatus] = useState<CallbackStatus>('processing');
-  const [message, setMessage] = useState('Processando login...');
-  const [errorDetail, setErrorDetail] = useState<string | null>(null);
-
+  // Processa o callback quando o contexto estiver pronto
   useEffect(() => {
+    // Só processa se o contexto estiver pronto
+    if (!isContextReady || !authContext) {
+      return;
+    }
+
+    const { loginWithGoogle } = authContext;
+
     const handleCallback = async () => {
       try {
         setMessage('Verificando autenticação...');
@@ -112,7 +98,27 @@ export default function AuthCallbackPage() {
     };
 
     handleCallback();
-  }, [processCallback, loginWithGoogle, navigate]);
+  }, [isContextReady, authContext, processCallback, navigate]);
+  
+  // Verifica se o contexto está disponível antes de continuar
+  if (!isContextReady || !authContext) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: `linear-gradient(135deg, ${tenant.theme.gradientFrom} 0%, ${tenant.theme.gradientVia || tenant.theme.gradientFrom} 50%, ${tenant.theme.gradientTo} 100%)`
+        }}
+      >
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 text-center">
+          <Loader2 
+            className="h-12 w-12 animate-spin mx-auto mb-4"
+            style={{ color: tenant.theme.primary }}
+          />
+          <p className="text-gray-600">Inicializando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
