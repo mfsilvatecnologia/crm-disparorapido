@@ -128,8 +128,8 @@
 - [x] T046 [US3] Adicionar QuickFilters para status de lead (FR-017)
 - [x] T047 [US3] Integrar ViewSwitcher no Toolbar (list, kanban, cards) (FR-017)
 - [x] T048 [US3] Substituir todos emojis por ícones Lucide React (FR-018)
-- [ ] T049 [US3] Simplificar colunas da tabela para essenciais (FR-019)
-- [ ] T050 [US3] Refatorar LeadDetailsDialog para usar Drawer lateral (FR-020)
+- [x] T049 [US3] Simplificar colunas da tabela para essenciais (FR-019)
+- [x] T050 [US3] Refatorar LeadDetailsDialog para usar Drawer lateral (FR-020)
 - [x] T051 [US3] Integrar StatusBadge na tabela e cards
 - [x] T052 [US3] Integrar ScoreBadge para exibir score de qualificação
 - [x] T053 [US3] Integrar RelativeTime para "Última Atividade"
@@ -152,17 +152,17 @@
 
 ### Implementation for User Story 4
 
-- [ ] T057 [US4] Implementar TourProvider com Context API em `src/shared/components/tour/TourProvider.tsx`
-- [ ] T058 [US4] Implementar useTour hook em `src/shared/components/tour/useTour.ts`
-- [ ] T059 [US4] Implementar TourSpotlight (overlay com hole) em `src/shared/components/tour/TourSpotlight.tsx` (FR-027)
-- [ ] T060 [US4] Implementar TourTooltip (popover posicionado) em `src/shared/components/tour/TourTooltip.tsx` (FR-028)
-- [ ] T061 [US4] Implementar TourProgress (indicador 2/5) em `src/shared/components/tour/TourProgress.tsx` (FR-029)
-- [ ] T062 [US4] Implementar navegação do tour (next, prev, skip) (FR-030)
-- [ ] T063 [US4] Implementar persistência em localStorage (FR-031)
+- [x] T057 [US4] Implementar TourProvider com Context API em `src/shared/components/tour/TourProvider.tsx`
+- [x] T058 [US4] Implementar useTour hook em `src/shared/components/tour/useTour.ts`
+- [x] T059 [US4] Implementar TourSpotlight (overlay com hole) em `src/shared/components/tour/TourSpotlight.tsx` (FR-027)
+- [x] T060 [US4] Implementar TourTooltip (popover posicionado) em `src/shared/components/tour/TourTooltip.tsx` (FR-028)
+- [x] T061 [US4] Implementar TourProgress (indicador 2/5) em `src/shared/components/tour/TourProgress.tsx` (FR-029)
+- [x] T062 [US4] Implementar navegação do tour (next, prev, skip) (FR-030)
+- [x] T063 [US4] Implementar persistência em localStorage (FR-031)
 - [ ] T064 [US4] Adicionar botão de ajuda para reativar tour (FR-032)
-- [ ] T065 [US4] Criar tour de Leads em `src/features/leads/tours/leadsTour.ts`
-- [ ] T066 [US4] Integrar TourProvider no App.tsx
-- [ ] T067 [US4] Atualizar barrel export `src/shared/components/tour/index.ts`
+- [x] T065 [US4] Criar tour de Leads em `src/features/leads/tours/leadsTour.ts`
+- [x] T066 [US4] Integrar TourProvider no App.tsx
+- [x] T067 [US4] Atualizar barrel export `src/shared/components/tour/index.ts`
 
 **Checkpoint**: Sistema de tour funcional. Tour de Leads aparece na primeira visita.
 

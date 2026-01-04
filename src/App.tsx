@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from "./shared/contexts/AuthContext";
 import { OrganizationProvider } from "./shared/contexts/OrganizationContext";
 import { TenantProvider } from "./shared/contexts/TenantContext";
 import { AppLayout } from "./shared/components/layout/AppLayout";
+import { TourProvider, Tour } from "./shared/components/tour";
+import { leadsTour } from "./features/leads/tours/leadsTour";
 // Feature imports
 import { Index } from "./features/landing";
 import { LoginPage, RegisterPage, ResetPasswordPage, NewPasswordPage, UserProfilePage } from "./features/authentication";
@@ -218,9 +220,12 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AppRoutes />
+          <TourProvider tours={[leadsTour]}>
+            <Toaster />
+            <Sonner />
+            <AppRoutes />
+            <Tour />
+          </TourProvider>
         </TooltipProvider>
         {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} /> : null}
       </AuthProvider>

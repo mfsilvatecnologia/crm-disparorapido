@@ -965,15 +965,10 @@ export default function LeadsPage() {
                     />
                   </TableHead>
                   <TableHead className="font-semibold">Lead</TableHead>
-                  <TableHead className="font-semibold">Empresa</TableHead>
-                  <TableHead className="font-semibold">Temperatura</TableHead>
-                  <TableHead className="font-semibold">Segmento</TableHead>
-                  <TableHead className="font-semibold">Qualidade</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Última Ativ.</TableHead>
-                  <TableHead className="font-semibold">Fonte</TableHead>
-                  <TableHead className="font-semibold">Ações</TableHead>
-                  <TableHead className="w-12"></TableHead>
+                  <TableHead className="font-semibold">Qualidade</TableHead>
+                  <TableHead className="font-semibold">Última Atividade</TableHead>
+                  <TableHead className="font-semibold w-20">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -998,40 +993,12 @@ export default function LeadsPage() {
                              lead.nomeEmpresa?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'NN'}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium text-gray-900">{lead.nomeContato || 'Nome não informado'}</p>
-                          <p className="text-sm text-gray-500">{lead.cargoContato || 'Cargo não informado'}</p>
-                          <p className="text-xs text-gray-400">{lead.email || 'Email não informado'}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 truncate">{lead.nomeContato || 'Nome não informado'}</p>
+                          <p className="text-sm text-gray-500 truncate">{lead.nomeEmpresa || 'Empresa não informada'}</p>
+                          <p className="text-xs text-gray-400 truncate">{lead.email || 'Email não informado'}</p>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-gray-900">{lead.nomeEmpresa}</p>
-                        <p className="text-sm text-gray-500 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {lead.endereco?.cidade}, {lead.endereco?.estado}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell
-                      onMouseEnter={(e) => handleLeadHover(lead, e)}
-                      onMouseLeave={() => handleLeadHover(null)}
-                    >
-                      <LeadTemperature score={lead.scoreQualificacao || 0} />
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="border-gray-300">
-                        {lead.segmento || 'Não informado'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ScoreBadge
-                        score={lead.scoreQualificacao || 0}
-                        showValue
-                        showLabel
-                        size="sm"
-                      />
                     </TableCell>
                     <TableCell>
                       <StatusBadge
@@ -1042,67 +1009,69 @@ export default function LeadsPage() {
                       />
                     </TableCell>
                     <TableCell>
+                      <ScoreBadge
+                        score={lead.scoreQualificacao || 0}
+                        showValue
+                        showLabel
+                        size="sm"
+                      />
+                    </TableCell>
+                    <TableCell>
                       <RelativeTime 
                         date={lead.updatedAt || lead.createdAt || new Date().toISOString()}
                         showTooltip
                       />
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        {React.createElement(getSourceIcon(lead.fonte || ''), { className: 'h-4 w-4 text-gray-500' })}
-                        <span className="text-sm text-gray-600 capitalize">{lead.fonte || 'Não informado'}</span>
-                      </div>
-                    </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      <LeadQuickActions 
-                        lead={lead}
-                        compact={true}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver Detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Zap className="mr-2 h-4 w-4" />
-                            Solicitar Acesso
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Phone className="mr-2 h-4 w-4" />
-                            Ligar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Mail className="mr-2 h-4 w-4" />
-                            Enviar Email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <LinkedinIcon className="mr-2 h-4 w-4" />
-                            Ver LinkedIn
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Tags className="mr-2 h-4 w-4" />
-                            Gerenciar Tags
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Star className="mr-2 h-4 w-4" />
-                            Adicionar ao Pipeline
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center gap-2">
+                        <LeadQuickActions 
+                          lead={lead}
+                          compact={true}
+                        />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Ver Detalhes
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Zap className="mr-2 h-4 w-4" />
+                              Solicitar Acesso
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <Phone className="mr-2 h-4 w-4" />
+                              Ligar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Mail className="mr-2 h-4 w-4" />
+                              Enviar Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <LinkedinIcon className="mr-2 h-4 w-4" />
+                              Ver LinkedIn
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <Tags className="mr-2 h-4 w-4" />
+                              Gerenciar Tags
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Star className="mr-2 h-4 w-4" />
+                              Adicionar ao Pipeline
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

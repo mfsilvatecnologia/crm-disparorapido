@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/shared/components/ui/sheet';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Separator } from '@/shared/components/ui/separator';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Label } from '@/shared/components/ui/label';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import {
   MapPin,
   Mail,
@@ -20,7 +20,6 @@ import {
   Calendar,
   Building2,
   User,
-  Star,
   Tag,
   Globe,
   Edit,
@@ -35,6 +34,7 @@ import { ptBR } from 'date-fns/locale';
 import { Lead, UpdateLeadDTO } from '../types/leads';
 import { updateLead, fetchLead } from '../services/leads';
 import { useToast } from '@/shared/hooks/use-toast';
+import { StatusBadge, ScoreBadge, RelativeTime } from '@/shared/components/design-system';
 
 interface LeadDetailsDialogProps {
   lead: Lead | null;
@@ -163,24 +163,7 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
     }
   };
 
-  const getQualityColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
-    if (score >= 80) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (score >= 70) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors = {
-      novo: 'bg-blue-100 text-blue-800 border-blue-200',
-      qualificado: 'bg-green-100 text-green-800 border-green-200',
-      contatado: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      convertido: 'bg-purple-100 text-purple-800 border-purple-200',
-      descartado: 'bg-red-100 text-red-800 border-red-200'
-    } as const;
-
-    return colors[status as keyof typeof colors] || colors.novo;
-  };
+  // Status and score colors are now handled by StatusBadge and ScoreBadge components
 
   const renderEditableField = (
     label: string,
@@ -249,11 +232,12 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+    <Sheet open={open} onOpenChange={onClose}>
+      <SheetContent side="right" className="w-full sm:max-w-xl lg:max-w-2xl p-0">
+        {/* Header fixo */}
+        <SheetHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-3">
+            <SheetTitle className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
                 <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=40`} />
                 <AvatarFallback className="bg-primary-100 text-primary-700">
@@ -262,10 +246,10 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-xl font-semibold">{lead.nomeEmpresa}</h2>
-                <p className="text-sm text-muted-foreground">{lead.nomeContato || 'Contato não informado'}</p>
+                <h2 className="text-lg font-semibold">{lead.nomeEmpresa}</h2>
+                <p className="text-sm text-muted-foreground font-normal">{lead.nomeContato || 'Contato não informado'}</p>
               </div>
-            </DialogTitle>
+            </SheetTitle>
             {isEditing ? (
               <div className="flex gap-2">
                 <Button
@@ -300,11 +284,20 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
               )
             )}
           </div>
-        </DialogHeader>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Coluna Principal */}
-          <div className="lg:col-span-2 space-y-6">
+          
+          {/* Status e Score badges abaixo do header */}
+          <div className="flex items-center gap-3 mt-3">
+            <StatusBadge
+              type="lead"
+              status={(lead.status as 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado') || 'novo'}
+              size="sm"
+            />
+            <ScoreBadge score={lead.scoreQualificacao || 0} showLabel size="sm" />
+          </div>
+        </SheetHeader>
+        
+        <ScrollArea className="h-[calc(100vh-180px)]">
+          <div className="p-6 space-y-6">
             {/* Informações Básicas */}
             <Card>
               <CardHeader>
@@ -455,100 +448,56 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                 </CardContent>
               </Card>
             )}
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Status e Qualificação */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Status & Qualificação</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Status Atual</span>
-                  <div className="mt-1">
-                    <Badge className={`${getStatusColor(lead.status || 'novo')} capitalize`}>
-                      {lead.status || 'novo'}
-                    </Badge>
-                  </div>
+            {/* Detalhes Adicionais */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="p-4">
+                <div className="text-sm text-muted-foreground mb-1">Fonte</div>
+                <div className="font-medium capitalize">{lead.fonte || 'Não informado'}</div>
+              </Card>
+              <Card className="p-4">
+                <div className="text-sm text-muted-foreground mb-1">Custo de Aquisição</div>
+                <div className="font-medium">
+                  {lead.custoAquisicao
+                    ? new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(lead.custoAquisicao)
+                    : 'Não informado'
+                  }
                 </div>
-
-                <Separator />
-
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Score de Qualificação</span>
-                  <div className={`mt-1 p-3 rounded-lg border ${getQualityColor(lead.scoreQualificacao || 0)}`}>
-                    <div className="flex items-center gap-2">
-                      <Star className="h-5 w-5" />
-                      <span className="text-xl font-bold">{lead.scoreQualificacao || 0}%</span>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Fonte</span>
-                  <div className="mt-1">
-                    <Badge variant="outline" className="capitalize">
-                      {lead.fonte || 'Não informado'}
-                    </Badge>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Custo de Aquisição</span>
-                  <div className="mt-1">
-                    <span className="font-medium">
-                      {lead.custoAquisicao
-                        ? new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                          }).format(lead.custoAquisicao)
-                        : 'Não informado'
-                      }
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              </Card>
+            </div>
 
             {/* Informações de Data */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Calendar className="h-4 w-4" />
                   Histórico
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Data de Criação</span>
-                  <p className="text-sm">
+              <CardContent className="space-y-3 pt-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Data de Criação</span>
+                  <span className="text-sm">
                     {lead.dataCriacao
-                      ? format(new Date(lead.dataCriacao), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })
+                      ? format(new Date(lead.dataCriacao), "dd/MM/yyyy HH:mm", { locale: ptBR })
                       : 'Não informado'}
-                  </p>
+                  </span>
                 </div>
 
                 {lead.dataAtualizacao && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Última Atualização</span>
-                    <p className="text-sm">
-                      {format(new Date(lead.dataAtualizacao), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Última Atualização</span>
+                    <RelativeTime date={lead.dataAtualizacao} showTooltip />
                   </div>
                 )}
 
                 {lead.ultimoContato && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Último Contato</span>
-                    <p className="text-sm">
-                      {format(new Date(lead.ultimoContato), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Último Contato</span>
+                    <RelativeTime date={lead.ultimoContato} showTooltip />
                   </div>
                 )}
               </CardContent>
@@ -557,10 +506,10 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
             {/* Observações */}
             {(lead.observacoes || isEditing) && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Observações</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Observações</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   {renderEditableTextarea(
                     'Observações',
                     lead.observacoes || '',
@@ -570,8 +519,8 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
               </Card>
             )}
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 };
