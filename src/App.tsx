@@ -57,6 +57,7 @@ import { OpportunitiesPage, OpportunityDetailPage } from "./features/opportuniti
 import { CustomersPage, CustomerDetailPage } from "./features/customers";
 import { RenewalsPage, ContractsPage } from "./features/contracts";
 import { ErrorBoundary } from "./shared/components/common/ErrorBoundary";
+import { CRMPage } from "./features/crm";
 
 const shouldRetry = (failureCount: number, error: unknown) => {
   const status = (error as { status?: number; response?: { status?: number } })?.status
@@ -146,6 +147,7 @@ function AppRoutes() {
           </PrivateRoute>
         }>
           <Route index element={<Dashboard />} />
+          <Route path="crm" element={withErrorBoundary(<CRMPage />)} />
           <Route path="leads" element={<LeadsPage />} />
           <Route path="leads/novo" element={<LeadCreatePage />} />
           <Route path="leads/:id/edit" element={<LeadEditPage />} />

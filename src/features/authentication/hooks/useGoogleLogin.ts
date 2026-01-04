@@ -35,6 +35,11 @@ export interface GoogleLoginResponse {
       device_id: string;
       expires_at: string;
     };
+    subscription?: {
+      id: string;
+      status: string;
+      isActive: boolean;
+    } | null;
     is_new_user: boolean;
   };
   error?: string;

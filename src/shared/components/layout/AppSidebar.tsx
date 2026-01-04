@@ -29,7 +29,8 @@ import {
   AlertTriangle,
   BarChart4,
   FileText,
-  CalendarClock
+  CalendarClock,
+  LayoutDashboard
 } from 'lucide-react';
 import {
   Sidebar,
@@ -113,6 +114,13 @@ const contatoItems = [
 ];
 
 const crmItems = [
+  {
+    title: 'CRM Unificado',
+    url: '/app/crm',
+    icon: LayoutDashboard,
+    description: 'Visão completa do fluxo de vendas',
+    requiredFeature: 'enableCRM'
+  },
   {
     title: 'Oportunidades',
     url: '/app/crm/opportunities',
