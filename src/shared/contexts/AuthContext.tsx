@@ -7,6 +7,7 @@ import { ClientType } from '@/features/authentication/types/auth';
 import apiClient from '../services/client';
 import { apiClient as libApiClient } from '@/lib/api-client';
 import type { AuthResponse, SessionLimitError } from '../services/schemas';
+import { createTrialSubscription } from '@/features/sales/api/subscriptionsApi';
 
 /**
  * Session Limit Error type for when max sessions is reached
@@ -48,6 +49,11 @@ export interface GoogleLoginData {
     device_id: string;
     expires_at: string;
   };
+  subscription?: {
+    id: string;
+    status: string;
+    isActive: boolean;
+  } | null;
   is_new_user: boolean;
 }
 
@@ -378,12 +384,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Store tokens
       const accessToken = data.token;
       localStorage.setItem(TOKEN_KEY, accessToken);
-      
+
       if (data.refresh_token) {
         localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
         setRefreshToken(data.refresh_token);
       }
-      
+
       if (data.session?.id) {
         localStorage.setItem('session_id', data.session.id);
       }
@@ -398,12 +404,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
       }
 
-      // Update API client and state
+      // Update API client and state - CRITICAL: Must be set before createTrialSubscription
       apiClient.setAccessToken(accessToken);
       libApiClient.setAccessToken(accessToken); // Sync with lib api client
-      
+
       // Convert backend user data to User type
-      setUser({
+      const userData = {
         id: data.user.id,
         email: data.user.email,
         nome: data.user.user_metadata?.full_name,
@@ -412,9 +418,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
         ativo: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      } as User);
-      
+      } as User;
+
+      setUser(userData);
       setToken(accessToken);
+
+      // Check if user has a valid subscription
+      // Note: The backend response should include subscription info
+      // If no subscription or invalid subscription, create a free trial
+      const hasValidSubscription = data.subscription && data.subscription.isActive;
+
+      if (!hasValidSubscription) {
+        console.log('[Auth] No valid subscription found. Creating free trial subscription...');
+
+        try {
+          // Get the default free trial product ID from environment
+          const defaultProductId = import.meta.env.VITE_DEFAULT_FREE_TRIAL_PRODUCT_ID;
+
+          if (!defaultProductId) {
+            console.error('[Auth] VITE_DEFAULT_FREE_TRIAL_PRODUCT_ID not configured');
+            // Continue without subscription - user can activate later
+          } else {
+            // Create trial subscription with the default product
+            const trialSubscription = await createTrialSubscription({
+              productId: defaultProductId,
+            });
+
+            console.log('[Auth] Free trial subscription created successfully:', trialSubscription);
+
+            // Optionally, you can update the user state or show a notification
+            // that the trial was created automatically
+          }
+        } catch (subscriptionError) {
+          // Log error but don't fail the login process
+          console.error('[Auth] Failed to create free trial subscription:', subscriptionError);
+          // User is still logged in, they can activate subscription later
+        }
+      }
 
       // TODO: Implementar sistema de permissões quando backend estiver pronto
       setPermissions({} as ComputedPermissions);
