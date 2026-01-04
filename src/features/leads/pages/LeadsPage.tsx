@@ -510,6 +510,7 @@ export default function LeadsPage() {
     { id: 'contatado', label: 'Contatados', count: stats.statusCounts.contatado },
     { id: 'convertido', label: 'Convertidos', count: stats.statusCounts.convertido },
     { id: 'descartado', label: 'Descartados', count: stats.statusCounts.descartado },
+    { id: 'privado', label: 'Privados', count: stats.statusCounts.privado },
   ], [stats.statusCounts]);
 
   if (error) {
@@ -629,34 +630,68 @@ export default function LeadsPage() {
         />
       </div>
 
-      {/* Toolbar com Busca e Filtros Integrados */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          <Toolbar>
-            {/* Busca integrada no Toolbar */}
-            <Toolbar.Search
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Buscar por nome, empresa, email, cargo..."
+      {/* Toolbar e Filtros - Layout Compacto */}
+      <div className="space-y-4 mb-6">
+        {/* Barra de Busca e Ações Rápidas */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center gap-4">
+            {/* Busca */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Buscar por nome, empresa, email, cargo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 border-gray-300 focus:border-primary-500"
+              />
+              {searchTerm && debouncedSearchTerm !== searchTerm && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full" />
+                </div>
+              )}
+            </div>
+
+            {/* Custo Total - Integrado */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+              <Target className="h-5 w-5 text-primary-600" />
+              <div>
+                <p className="text-xs text-gray-500">Custo Total</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {formatCurrency(sortedLeads.length * 2.50)}
+                </p>
+              </div>
+            </div>
+
+            {/* View Switcher */}
+            <ViewSwitcher
+              views={['list', 'cards', 'kanban']}
+              activeView={viewMode}
+              onViewChange={(view) => setViewMode(view as PageViewMode)}
             />
+          </div>
+        </div>
 
-            <Toolbar.Separator />
-
+        {/* Filtros e Ordenação */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex flex-wrap items-center gap-3">
             {/* QuickFilters para Status */}
-            <Toolbar.Filters>
+            <div className="flex-1 min-w-[300px]">
               <QuickFilters
                 options={statusFilterOptions}
-                selectedId={filterStatus === 'all' ? null : filterStatus}
-                onSelect={(id) => setFilterStatus(id as FilterStatus || 'all')}
-                variant="minimal"
+                selected={filterStatus === 'all' ? undefined : filterStatus}
+                onChange={(id) => setFilterStatus((id as FilterStatus) || 'all')}
+                showAll
+                allLabel="Todos"
               />
-            </Toolbar.Filters>
+            </div>
 
-            <Toolbar.Separator />
+            <div className="h-6 w-px bg-gray-300" />
 
             {/* Ordenação */}
-            <Toolbar.Filters>
+            <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40 h-8 text-sm">
+                <SelectTrigger className="w-44 h-9 text-sm">
                   <SelectValue placeholder="Ordenar por" />
                 </SelectTrigger>
                 <SelectContent>
@@ -668,28 +703,28 @@ export default function LeadsPage() {
               </Select>
 
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="h-8 px-2"
+                className="h-9 px-3"
               >
                 <ArrowUpDown className="h-4 w-4" />
                 <span className="ml-1 text-xs">{sortOrder === 'asc' ? 'A-Z' : 'Z-A'}</span>
               </Button>
-            </Toolbar.Filters>
+            </div>
 
-            <Toolbar.Separator />
+            <div className="h-6 w-px bg-gray-300" />
 
-            {/* Ações */}
-            <Toolbar.Actions>
+            {/* Ações de Filtro */}
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="h-8"
+                className="h-9"
               >
                 <SlidersHorizontal className="h-4 w-4 mr-1" />
-                Filtros
+                Filtros Avançados
                 {showAdvancedFilters ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
               </Button>
 
@@ -698,44 +733,15 @@ export default function LeadsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={clearAllFilters}
-                  className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="h-9 text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <X className="h-4 w-4 mr-1" />
-                  Limpar
+                  Limpar Filtros
                 </Button>
               )}
+            </div>
+          </div>
 
-              {/* View Mode Toggle */}
-              <ViewSwitcher
-                views={['list', 'cards', 'kanban']}
-                activeView={viewMode}
-                onViewChange={(view) => setViewMode(view as PageViewMode)}
-              />
-            </Toolbar.Actions>
-          </Toolbar>
-        </div>
-
-        {/* Custo Total - Card separado */}
-        <div className="mb-6">
-          <Card className="border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Custo Total</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {formatCurrency(sortedLeads.length * 2.50)}
-                  </p>
-                </div>
-                <Target className="h-6 w-6 text-primary-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filtros Avançados e Saved Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          {/* Saved Filters */}
-          <div className="mb-4">
             <SavedFilters
               currentFilters={{
                 searchTerm: searchTerm,
@@ -753,7 +759,7 @@ export default function LeadsPage() {
 
           {/* Filtros Avançados */}
           {showAdvancedFilters && (
-            <div className="border-t border-gray-200 pt-4 space-y-4">
+            <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Filtro de Segmento */}
                 <div>
@@ -944,86 +950,86 @@ export default function LeadsPage() {
         </Card>
       )}
 
-      {/* Conteúdo Principal */}
-      <div className="bg-white rounded-lg border border-gray-200 min-h-96">
+      {/* Conteúdo Principal - Tabela */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         {/* Visualização em Tabela */}
         {viewMode === 'list' && (
-          <div>
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-200">
+                <TableRow className="border-gray-200 bg-gray-50/50">
                   <TableHead className="w-12">
                     <Checkbox
                       checked={selectedLeads.length === paginatedLeads.length && paginatedLeads.length > 0}
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
-                  <TableHead className="font-semibold">Lead</TableHead>
-                  <TableHead className="font-semibold">Empresa</TableHead>
-                  <TableHead className="font-semibold">Segmento</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Qualidade</TableHead>
-                  <TableHead className="font-semibold">Última Atividade</TableHead>
-                  <TableHead className="font-semibold w-20">Ações</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Lead</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Empresa</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Segmento</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Qualidade</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Última Atividade</TableHead>
+                  <TableHead className="font-semibold text-gray-700 w-24">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedLeads.map((lead) => (
                   <TableRow
                     key={lead.id}
-                    className="border-gray-100 hover:bg-gray-50 cursor-pointer"
+                    className="border-gray-100 hover:bg-gray-50/50 cursor-pointer transition-colors"
                     onClick={() => handleViewLead(lead)}
                   >
-                    <TableCell onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedLeads.includes(lead.id)}
                         onCheckedChange={(checked) => handleSelectLead(lead.id, checked as boolean)}
                       />
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=36`} />
-                          <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-3 min-w-[200px]">
+                        <Avatar className="h-10 w-10 flex-shrink-0">
+                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=40`} />
+                          <AvatarFallback className="bg-primary-100 text-primary-700 text-sm font-medium">
                             {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() ||
                              lead.nomeEmpresa?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'NN'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-gray-900 truncate">{lead.nomeContato || 'Nome não informado'}</p>
-                          <p className="text-xs text-gray-400 truncate">{lead.email || 'Email não informado'}</p>
+                          <p className="text-xs text-gray-500 truncate mt-0.5">{lead.email || 'Email não informado'}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3 min-w-[180px]">
                       <div>
                         <p className="font-medium text-gray-900 truncate">{lead.nomeEmpresa || 'Empresa não informada'}</p>
                         {lead.endereco?.cidade && lead.endereco?.estado && (
-                          <p className="text-xs text-gray-500 truncate flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
+                          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
                             {lead.endereco.cidade}, {lead.endereco.estado}
                           </p>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3">
                       {lead.segmento ? (
-                        <Badge variant="outline" className="border-gray-300 text-xs">
+                        <Badge variant="outline" className="border-gray-300 text-xs font-normal">
                           {lead.segmento}
                         </Badge>
                       ) : (
                         <span className="text-xs text-gray-400">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3">
                       <StatusBadge
                         type="lead"
-                        status={(lead.status as 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado') || 'novo'}
+                        status={(lead.status as 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado') || 'novo'}
                         variant="soft"
                         size="sm"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3">
                       <ScoreBadge
                         score={lead.scoreQualificacao || 0}
                         showValue
@@ -1031,21 +1037,21 @@ export default function LeadsPage() {
                         size="sm"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3">
                       <RelativeTime 
                         date={lead.updatedAt || lead.createdAt || new Date().toISOString()}
                         showTooltip
                       />
                     </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-2">
+                    <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5">
                         <LeadQuickActions 
                           lead={lead}
                           compact={true}
                         />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -1304,10 +1310,10 @@ export default function LeadsPage() {
 
       {/* Dialogs */}
       <LeadDetailsDialog
-        lead={selectedLead}
+        lead={selectedLead as any}
         open={showLeadDetails}
         onClose={handleCloseDialogs}
-        onEdit={handleEditLead}
+        onEdit={handleEditLead as any}
       />
 
       {/* Quick View Hover */}

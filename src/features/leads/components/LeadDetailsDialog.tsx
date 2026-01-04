@@ -289,7 +289,7 @@ export const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
           <div className="flex items-center gap-3 mt-3">
             <StatusBadge
               type="lead"
-              status={(lead.status as 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado') || 'novo'}
+              status={(lead.status as 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado') || 'novo'}
               size="sm"
             />
             <ScoreBadge score={lead.scoreQualificacao || 0} showLabel size="sm" />

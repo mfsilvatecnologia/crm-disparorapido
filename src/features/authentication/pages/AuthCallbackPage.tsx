@@ -5,11 +5,11 @@
  * Recebe o token do Supabase, envia para o backend e redireciona o usuário.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useGoogleLogin } from '../hooks/useGoogleLogin';
-import { useAuth } from '../contexts/AuthContext';
+import { AuthContext } from '../contexts/AuthContext';
 import { useTenant } from '@/shared/contexts/TenantContext';
 
 type CallbackStatus = 'processing' | 'success' | 'error';
@@ -17,8 +17,47 @@ type CallbackStatus = 'processing' | 'success' | 'error';
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const { tenant } = useTenant();
-  const { loginWithGoogle } = useAuth();
+  const authContext = useContext(AuthContext);
   const { processCallback } = useGoogleLogin();
+  
+  const [isContextReady, setIsContextReady] = useState(false);
+  
+  // Aguarda o contexto estar disponível
+  useEffect(() => {
+    if (authContext) {
+      setIsContextReady(true);
+    } else {
+      // Se o contexto não estiver disponível após um tempo, mostra erro
+      const timer = setTimeout(() => {
+        console.error('AuthContext não disponível após 2 segundos');
+        navigate('/login?error=auth_context_unavailable', { replace: true });
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [authContext, navigate]);
+  
+  // Verifica se o contexto está disponível antes de continuar
+  if (!isContextReady || !authContext) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: `linear-gradient(135deg, ${tenant.theme.gradientFrom} 0%, ${tenant.theme.gradientVia || tenant.theme.gradientFrom} 50%, ${tenant.theme.gradientTo} 100%)`
+        }}
+      >
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 text-center">
+          <Loader2 
+            className="h-12 w-12 animate-spin mx-auto mb-4"
+            style={{ color: tenant.theme.primary }}
+          />
+          <p className="text-gray-600">Inicializando...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  const { loginWithGoogle } = authContext;
   
   const [status, setStatus] = useState<CallbackStatus>('processing');
   const [message, setMessage] = useState('Processando login...');
