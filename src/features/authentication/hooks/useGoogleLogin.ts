@@ -136,8 +136,9 @@ export function useGoogleLogin() {
         throw new Error(data.error || data.message || `Erro ${response.status}: ${response.statusText}`);
       }
 
-      // 4. Limpa a sessão do Supabase (não precisamos mais dela)
-      await clearSupabaseSession();
+      // 4. NÃO limpa a sessão do Supabase aqui
+      // Ela será limpa APÓS o loginWithGoogle() completar com sucesso
+      // Isso garante que os tokens estejam armazenados antes de limpar
 
       // 5. Tokens serão armazenados pelo AuthContext.loginWithGoogle()
       // Não armazenamos aqui para evitar duplicação
