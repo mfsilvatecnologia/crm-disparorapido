@@ -6000,6 +6000,149 @@
         }
       }
     },
+    "/auth/google/callback": {
+      "post": {
+        "summary": "Login com Google OAuth",
+        "description": "Processa o login via Google OAuth.\nO frontend deve primeiro fazer o OAuth flow com Supabase e enviar o access_token resultante.\n\n**Fluxo no Frontend:**\n1. Chamar `supabase.auth.signInWithOAuth({ provider: 'google' })`\n2. Usuário é redirecionado para o Google\n3. Após autenticação, Supabase redireciona para sua URL de callback\n4. No callback, obter a sessão com `supabase.auth.getSession()`\n5. Enviar o `access_token` da sessão para este endpoint\n",
+        "tags": [
+          "Autenticação"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "access_token"
+                ],
+                "properties": {
+                  "access_token": {
+                    "type": "string",
+                    "description": "Access token recebido do Supabase após OAuth com Google"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "description": "ID único do dispositivo (opcional - habilita gerenciamento de sessões)"
+                  },
+                  "device_fingerprint": {
+                    "type": "string",
+                    "description": "Fingerprint do dispositivo (opcional)"
+                  },
+                  "client_type": {
+                    "type": "string",
+                    "enum": [
+                      "web",
+                      "extension"
+                    ],
+                    "description": "Tipo de cliente (opcional - padrão 'web')"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login via Google realizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "description": "JWT token de autenticação"
+                        },
+                        "refresh_token": {
+                          "type": "string",
+                          "description": "Refresh token (apenas se device_id fornecido)"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "empresa_id": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "roles": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "empresa": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "nome": {
+                              "type": "string"
+                            },
+                            "cnpj": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "session": {
+                          "type": "object",
+                          "description": "Informações da sessão (apenas se device_id fornecido)",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "device_id": {
+                              "type": "string"
+                            },
+                            "expires_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        },
+                        "is_new_user": {
+                          "type": "boolean",
+                          "description": "Indica se é o primeiro login (usuário sem empresa)"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Token OAuth inválido"
+          },
+          "409": {
+            "description": "Limite de sessões atingido"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
     "/auth/reset-password": {
       "post": {
         "summary": "Solicitar redefinição de senha",

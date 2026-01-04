@@ -1,9 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search,
-  Filter,
-  Download,
   Plus,
   MoreVertical,
   Eye,
@@ -11,9 +8,6 @@ import {
   Mail,
   Star,
   Target,
-  Grid3X3,
-  List,
-  Kanban,
   SlidersHorizontal,
   FileDown,
   Building2,
@@ -29,13 +23,40 @@ import {
   ArrowUpDown,
   Users,
   TrendingUp,
-  Clock,
-  Edit
+  CheckCircle2,
+  XCircle,
+  Edit,
+  Database,
+  Search,
+  Globe,
+  Upload,
+  PenLine,
+  Plug,
+  Link2,
+  FileSpreadsheet,
+  Circle,
+  Lock,
+  type LucideIcon
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
+
+// Design System Components
+import {
+  PageHeader,
+  StatsWidget,
+  Toolbar,
+  QuickFilters,
+  ViewSwitcher,
+  StatusBadge,
+  ScoreBadge,
+  RelativeTime,
+  type StatItem,
+  type QuickFilterOption,
+  type ViewMode as DesignViewMode,
+} from '@/shared/components/design-system';
 import {
   Table,
   TableBody,
@@ -78,7 +99,7 @@ import {
 } from '../components';
 import type { Lead } from '@/shared/services/schemas';
 
-type ViewMode = 'table' | 'cards' | 'kanban';
+type PageViewMode = 'list' | 'cards' | 'kanban';
 type FilterStatus = 'all' | 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado';
 
 // Usar o tipo Lead da API diretamente
@@ -90,7 +111,7 @@ export default function LeadsPage() {
   const { isAuthenticated } = useAuth();
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [viewMode, setViewMode] = useState<PageViewMode>('list');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [qualityRange, setQualityRange] = useState({ min: 0, max: 100 });
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
@@ -445,19 +466,21 @@ export default function LeadsPage() {
     return labels[status as keyof typeof labels] || 'Desconhecido';
   };
 
-  const getSourceIcon = (source: string) => {
-    const icons = {
-      scraping: '🕷️',
-      imported: '📥',
-      manual: '✏️',
-      api: '🔌',
-      webhook: '🔗'
-    };
-    return icons[source as keyof typeof icons] || '📋';
+  // Ícones para fontes de dados
+  const sourceIcons: Record<string, LucideIcon> = {
+    scraping: Globe,
+    imported: Upload,
+    manual: PenLine,
+    api: Plug,
+    webhook: Link2,
+  };
+
+  const getSourceIcon = (source: string): LucideIcon => {
+    return sourceIcons[source] || FileSpreadsheet;
   };
 
   // Estatísticas
-  const stats = {
+  const stats = useMemo(() => ({
     total: allLeads.length,
     filtered: sortedLeads.length,
     avgQuality: sortedLeads.length > 0 ? Math.round(sortedLeads.reduce((sum, lead) => sum + (lead.scoreQualificacao || 0), 0) / sortedLeads.length) : 0,
@@ -469,7 +492,25 @@ export default function LeadsPage() {
       descartado: allLeads.filter(l => l.status === 'descartado').length,
       privado: allLeads.filter(l => l.status === 'privado').length,
     }
-  };
+  }), [allLeads, sortedLeads]);
+
+  // Stats para o PageHeader
+  const headerStats: StatItem[] = useMemo(() => [
+    { id: 'total', label: 'Total', value: stats.total, icon: Users, color: 'neutral' },
+    { id: 'novos', label: 'Novos', value: stats.statusCounts.novo, icon: Users, color: 'primary' },
+    { id: 'qualificados', label: 'Qualificados', value: stats.statusCounts.qualificado, icon: CheckCircle2, color: 'success' },
+    { id: 'convertidos', label: 'Convertidos', value: stats.statusCounts.convertido, icon: TrendingUp, color: 'success' },
+    { id: 'descartados', label: 'Descartados', value: stats.statusCounts.descartado, icon: XCircle, color: 'danger' },
+  ], [stats]);
+
+  // Opções de filtro rápido para status
+  const statusFilterOptions: QuickFilterOption[] = useMemo(() => [
+    { id: 'novo', label: 'Novos', count: stats.statusCounts.novo },
+    { id: 'qualificado', label: 'Qualificados', count: stats.statusCounts.qualificado },
+    { id: 'contatado', label: 'Contatados', count: stats.statusCounts.contatado },
+    { id: 'convertido', label: 'Convertidos', count: stats.statusCounts.convertido },
+    { id: 'descartado', label: 'Descartados', count: stats.statusCounts.descartado },
+  ], [stats.statusCounts]);
 
   if (error) {
     return (
@@ -477,7 +518,8 @@ export default function LeadsPage() {
         <Card className="max-w-2xl mx-auto mt-8 border-red-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">
-              ❌ Erro ao Carregar Leads
+              <XCircle className="h-5 w-5" />
+              Erro ao Carregar Leads
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -520,7 +562,8 @@ export default function LeadsPage() {
                 }}
                 variant="outline"
               >
-                🔍 Debug API
+                <Search className="mr-2 h-4 w-4" />
+                Debug API
               </Button>
             </div>
           </CardContent>
@@ -556,113 +599,34 @@ export default function LeadsPage() {
         />
       )}
 
-      {/* Header */}
+      {/* Header with PageHeader component */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">📇 Leads Database</h1>
-            <p className="text-gray-600 mt-1">
-              Gerencie e acesse sua base de leads qualificados
-            </p>
-            <div className="flex items-center gap-4 mt-2">
-              <Badge variant="outline" className="text-xs">
-                {stats.filtered} de {stats.total} leads
-              </Badge>
-              <Badge variant="secondary" className="text-xs">
-                Qualidade média: {stats.avgQuality}%
-              </Badge>
-              {realLeads.length > 0 && (
-                <Badge className="text-xs bg-green-100 text-green-800 border-green-200">
-                  Dados Reais ({realLeads.length} da API)
-                </Badge>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" className="border-gray-300" onClick={exportLeads}>
-              <FileDown className="mr-2 h-4 w-4" />
-              Exportar {selectedLeads.length > 0 ? `(${selectedLeads.length})` : `(${sortedLeads.length})`}
-            </Button>
-            <Button
-              className="bg-primary-600 hover:bg-primary-700"
-              onClick={() => navigate('/app/leads/novo')}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Novo lead
-            </Button>
-            {/* <Button variant="outline" className="border-gray-300">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Sincronizar CRM
-            </Button> */}
-            {/* <Button className="bg-primary-600 hover:bg-primary-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Importar Leads
-            </Button> */}
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-          <Card className="border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Novos</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.statusCounts.novo}</p>
-                </div>
-                <Users className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Qualificados</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.statusCounts.qualificado}</p>
-                </div>
-                <Star className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Contatados</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.statusCounts.contatado}</p>
-                </div>
-                <Phone className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Convertidos</p>
-                  <p className="text-2xl font-bold text-purple-600">{stats.statusCounts.convertido}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Descartados</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.statusCounts.descartado}</p>
-                </div>
-                <X className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <PageHeader
+          title="Leads"
+          subtitle="Gerencie e acesse sua base de leads qualificados"
+          icon={Database}
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/app/dashboard' },
+            { label: 'CRM', href: '/app/crm' },
+            { label: 'Leads' },
+          ]}
+          stats={headerStats}
+          actions={
+            <>
+              <Button variant="outline" className="border-gray-300" onClick={exportLeads}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Exportar {selectedLeads.length > 0 ? `(${selectedLeads.length})` : `(${sortedLeads.length})`}
+              </Button>
+              <Button
+                className="bg-primary-600 hover:bg-primary-700"
+                onClick={() => navigate('/app/leads/novo')}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Novo lead
+              </Button>
+            </>
+          }
+        />
 
         {/* Search */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -671,7 +635,7 @@ export default function LeadsPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <Input
                 ref={searchInputRef}
-                placeholder="🔍 Buscar por nome, empresa, email, cargo..."
+                placeholder="Buscar por nome, empresa, email, cargo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 border-gray-300 focus:border-primary-500"
@@ -699,102 +663,81 @@ export default function LeadsPage() {
           </Card>
         </div>
 
-        {/* Filtros Principais */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <FilterIcon className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filtros:</span>
-            </div>
+        {/* Toolbar com Filtros Principais */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+          <Toolbar className="mb-3">
+            {/* QuickFilters para Status */}
+            <Toolbar.Filters>
+              <QuickFilters
+                options={statusFilterOptions}
+                selectedId={filterStatus === 'all' ? null : filterStatus}
+                onSelect={(id) => setFilterStatus(id as FilterStatus || 'all')}
+                variant="minimal"
+              />
+            </Toolbar.Filters>
 
-            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as FilterStatus)}>
-              <SelectTrigger className="w-44">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos ({stats.filtered})</SelectItem>
-                <SelectItem value="novo">🆕 Novos ({stats.statusCounts.novo || 0})</SelectItem>
-                <SelectItem value="qualificado">⭐ Qualificados ({stats.statusCounts.qualificado || 0})</SelectItem>
-                <SelectItem value="contatado">📞 Contatados ({stats.statusCounts.contatado || 0})</SelectItem>
-                <SelectItem value="convertido">🎯 Convertidos ({stats.statusCounts.convertido || 0})</SelectItem>
-                <SelectItem value="descartado">❌ Descartados ({stats.statusCounts.descartado || 0})</SelectItem>
-                <SelectItem value="privado">🔒 Privados ({stats.statusCounts.privado || 0})</SelectItem>
-              </SelectContent>
-            </Select>
+            <Toolbar.Separator />
 
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-44">
-                <SelectValue placeholder="Ordenar por" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="createdAt">📅 Data de Criação</SelectItem>
-                <SelectItem value="scoreQualificacao">⭐ Score de Qualidade</SelectItem>
-                <SelectItem value="nomeContato">👤 Nome</SelectItem>
-                <SelectItem value="nomeEmpresa">🏢 Empresa</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Ordenação */}
+            <Toolbar.Filters>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-40 h-8 text-sm">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="createdAt">Data de Criação</SelectItem>
+                  <SelectItem value="scoreQualificacao">Score de Qualidade</SelectItem>
+                  <SelectItem value="nomeContato">Nome</SelectItem>
+                  <SelectItem value="nomeEmpresa">Empresa</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="px-3"
-            >
-              <ArrowUpDown className="h-4 w-4 mr-1" />
-              {sortOrder === 'asc' ? '↑ Crescente' : '↓ Decrescente'}
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="px-3"
-            >
-              <SlidersHorizontal className="h-4 w-4 mr-1" />
-              Filtros Avançados
-              {showAdvancedFilters ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
-            </Button>
-
-            {(filterStatus !== 'all' || selectedSegments.length > 0 || selectedSources.length > 0 || qualityRange.min > 0 || qualityRange.max < 100 || searchTerm || dateRange.from || dateRange.to) && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={clearAllFilters}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="h-8 px-2"
               >
-                <X className="h-4 w-4 mr-1" />
-                Limpar Todos os Filtros
+                <ArrowUpDown className="h-4 w-4" />
+                <span className="ml-1 text-xs">{sortOrder === 'asc' ? 'A-Z' : 'Z-A'}</span>
               </Button>
-            )}
+            </Toolbar.Filters>
 
-            {/* View Mode Toggle */}
-            <div className="ml-auto flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <Toolbar.Separator />
+
+            {/* Ações */}
+            <Toolbar.Actions>
               <Button
+                variant="outline"
                 size="sm"
-                variant={viewMode === 'table' ? 'default' : 'ghost'}
-                onClick={() => setViewMode('table')}
-                className="h-8 px-3"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="h-8"
               >
-                <List className="h-4 w-4" />
+                <SlidersHorizontal className="h-4 w-4 mr-1" />
+                Filtros
+                {showAdvancedFilters ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
               </Button>
-              <Button
-                size="sm"
-                variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                onClick={() => setViewMode('cards')}
-                className="h-8 px-3"
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant={viewMode === 'kanban' ? 'default' : 'ghost'}
-                onClick={() => setViewMode('kanban')}
-                className="h-8 px-3"
-              >
-                <Kanban className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+
+              {(filterStatus !== 'all' || selectedSegments.length > 0 || selectedSources.length > 0 || qualityRange.min > 0 || qualityRange.max < 100 || searchTerm || dateRange.from || dateRange.to) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+
+              {/* View Mode Toggle */}
+              <ViewSwitcher
+                views={['list', 'cards', 'kanban']}
+                activeView={viewMode}
+                onViewChange={(view) => setViewMode(view as PageViewMode)}
+              />
+            </Toolbar.Actions>
+          </Toolbar>
 
           {/* Saved Filters */}
           <div className="border-t border-gray-200 pt-4 mt-4">
@@ -859,8 +802,9 @@ export default function LeadsPage() {
                             }
                           }}
                         />
-                        <label htmlFor={`source-${source}`} className="ml-2 text-sm text-gray-600">
-                          {getSourceIcon(source || '')} {source} ({allLeads.filter(l => l.fonte === source).length})
+                        <label htmlFor={`source-${source}`} className="ml-2 text-sm text-gray-600 flex items-center gap-1">
+                          {React.createElement(getSourceIcon(source || ''), { className: 'h-4 w-4' })}
+                          {source} ({allLeads.filter(l => l.fonte === source).length})
                         </label>
                       </div>
                     ))}
@@ -936,8 +880,9 @@ export default function LeadsPage() {
                     </Badge>
                   ))}
                   {selectedSources.map(source => (
-                    <Badge key={source} variant="secondary" className="text-xs">
-                      {getSourceIcon(source)} {source}
+                    <Badge key={source} variant="secondary" className="text-xs flex items-center gap-1">
+                      {React.createElement(getSourceIcon(source), { className: 'h-3 w-3' })}
+                      {source}
                       <X 
                         className="h-3 w-3 ml-1 cursor-pointer" 
                         onClick={() => setSelectedSources(selectedSources.filter(s => s !== source))}
@@ -1008,7 +953,7 @@ export default function LeadsPage() {
       {/* Conteúdo Principal */}
       <div className="bg-white rounded-lg border border-gray-200 min-h-96">
         {/* Visualização em Tabela */}
-        {viewMode === 'table' && (
+        {viewMode === 'list' && (
           <div>
             <Table>
               <TableHeader>
@@ -1063,8 +1008,9 @@ export default function LeadsPage() {
                     <TableCell>
                       <div>
                         <p className="font-medium text-gray-900">{lead.nomeEmpresa}</p>
-                        <p className="text-sm text-gray-500">
-                          📍 {lead.endereco?.cidade}, {lead.endereco?.estado}
+                        <p className="text-sm text-gray-500 flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {lead.endereco?.cidade}, {lead.endereco?.estado}
                         </p>
                       </div>
                     </TableCell>
@@ -1080,29 +1026,30 @@ export default function LeadsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-medium ${getQualityColor(lead.scoreQualificacao || 0)}`}>
-                            {lead.scoreQualificacao}%
-                          </span>
-                          <Badge variant={getQualityBadgeVariant(lead.scoreQualificacao || 0)} className="text-xs">
-                            {(lead.scoreQualificacao || 0) >= 90 ? 'Excelente' : (lead.scoreQualificacao || 0) >= 80 ? 'Alta' : (lead.scoreQualificacao || 0) >= 70 ? 'Média' : 'Baixa'}
-                          </Badge>
-                        </div>
-                        <Progress value={lead.scoreQualificacao || 0} className="h-1.5" />
-                      </div>
+                      <ScoreBadge
+                        score={lead.scoreQualificacao || 0}
+                        showValue
+                        showLabel
+                        size="sm"
+                      />
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(lead.status || '')}>
-                        {getStatusLabel(lead.status || '')}
-                      </Badge>
+                      <StatusBadge
+                        type="lead"
+                        status={(lead.status as 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado') || 'novo'}
+                        variant="soft"
+                        size="sm"
+                      />
                     </TableCell>
                     <TableCell>
-                      <LastActivityIndicator lastActivityDate={lead.updatedAt || lead.createdAt || new Date().toISOString()} />
+                      <RelativeTime 
+                        date={lead.updatedAt || lead.createdAt || new Date().toISOString()}
+                        showTooltip
+                      />
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <span className="text-lg">{getSourceIcon(lead.fonte || '')}</span>
+                      <div className="flex items-center gap-1.5">
+                        {React.createElement(getSourceIcon(lead.fonte || ''), { className: 'h-4 w-4 text-gray-500' })}
                         <span className="text-sm text-gray-600 capitalize">{lead.fonte || 'Não informado'}</span>
                       </div>
                     </TableCell>
@@ -1191,12 +1138,12 @@ export default function LeadsPage() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          ⭐ {lead.scoreQualificacao}%
-                        </Badge>
-                        <Badge className={getStatusColor(lead.status || '')}>
-                          {getStatusLabel(lead.status || '')}
-                        </Badge>
+                        <ScoreBadge score={lead.scoreQualificacao || 0} size="sm" />
+                        <StatusBadge
+                          type="lead"
+                          status={(lead.status as 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado') || 'novo'}
+                          size="sm"
+                        />
                       </div>
                     </div>
 
@@ -1218,7 +1165,7 @@ export default function LeadsPage() {
                         <span>{lead.segmento}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <span className="text-lg">{getSourceIcon(lead.fonte)}</span>
+                        {React.createElement(getSourceIcon(lead.fonte || ''), { className: 'h-4 w-4 flex-shrink-0' })}
                         <span className="capitalize">{lead.fonte}</span>
                       </div>
                       {lead.tags && lead.tags.length > 0 && (
@@ -1299,9 +1246,7 @@ export default function LeadsPage() {
                             </div>
                             <p className="text-xs text-gray-600 mb-2 truncate">{lead.nomeContato || 'Nome não informado'}</p>
                             <div className="flex items-center justify-between">
-                              <Badge variant="outline" className="text-xs">
-                                ⭐ {lead.scoreQualificacao}%
-                              </Badge>
+                              <ScoreBadge score={lead.scoreQualificacao || 0} size="sm" />
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -1315,7 +1260,7 @@ export default function LeadsPage() {
                               </Button>
                             </div>
                             <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-                              <span>{getSourceIcon(lead.fonte)}</span>
+                              {React.createElement(getSourceIcon(lead.fonte || ''), { className: 'h-3 w-3' })}
                               <span className="capitalize">{lead.fonte}</span>
                             </div>
                           </CardContent>
@@ -1332,7 +1277,7 @@ export default function LeadsPage() {
 
                       {columnLeads.length === 0 && (
                         <div className="text-center py-8 text-gray-400">
-                          <div className="text-4xl mb-2">📭</div>
+                          <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
                           <p className="text-sm">Nenhum lead</p>
                         </div>
                       )}
@@ -1347,7 +1292,7 @@ export default function LeadsPage() {
         {/* Estado vazio */}
         {paginatedLeads.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
+            <Search className="h-16 w-16 mx-auto mb-4 text-gray-300" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum lead encontrado</h3>
             <p className="text-gray-500 mb-4">
               Tente ajustar os filtros ou limpar a busca para ver mais resultados.

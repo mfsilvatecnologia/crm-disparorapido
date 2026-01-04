@@ -1,0 +1,29 @@
+# leadsrapido_frontend Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-01-03
+
+## Active Technologies
+
+- TypeScript 5.8+, React 18.3+ + Vite 5.4+, Tailwind CSS 3.4+, shadcn/ui (Radix), TanStack Query 5.89, React Hook Form 7.62, Zod 3.25, Lucide React 0.462, cmdk 1.1 (command palette) (002-crm-ui-modernization)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+TypeScript 5.8+, React 18.3+: Follow standard conventions
+
+## Recent Changes
+
+- 002-crm-ui-modernization: Added TypeScript 5.8+, React 18.3+ + Vite 5.4+, Tailwind CSS 3.4+, shadcn/ui (Radix), TanStack Query 5.89, React Hook Form 7.62, Zod 3.25, Lucide React 0.462, cmdk 1.1 (command palette)
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
