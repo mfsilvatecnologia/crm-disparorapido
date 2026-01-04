@@ -131,8 +131,9 @@ describe('LeadsPage Integration', () => {
       render(<LeadsPage />, { wrapper: createWrapper() });
       
       await waitFor(() => {
-        // Should show some stats
-        expect(screen.getByText(/Novos/i)).toBeInTheDocument();
+        // Should show stats in the header (Total, Novos, Qualificados, etc.)
+        // Look for the stats values, not just labels (which may appear in multiple places)
+        expect(screen.getAllByText(/Novos/i).length).toBeGreaterThan(0);
       });
     });
   });

@@ -118,7 +118,7 @@ export function useGoogleLogin() {
       const deviceFingerprint = await generateDeviceFingerprint('web');
 
       // 3. Envia o token para o backend
-      const response = await fetch(`${API_BASE_URL}/auth/google/callback`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/google/callback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
