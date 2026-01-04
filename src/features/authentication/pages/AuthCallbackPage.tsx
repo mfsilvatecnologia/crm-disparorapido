@@ -11,6 +11,7 @@ import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useGoogleLogin } from '../hooks/useGoogleLogin';
 import { AuthContext } from '@/shared/contexts/AuthContext';
 import { useTenant } from '@/shared/contexts/TenantContext';
+import { clearSupabaseSession } from '@/lib/supabase-auth';
 
 type CallbackStatus = 'processing' | 'success' | 'error';
 
@@ -65,6 +66,10 @@ export default function AuthCallbackPage() {
         // Atualiza o AuthContext com os dados do login
         await loginWithGoogle(result.data);
 
+        // Limpa a sessão do Supabase APÓS os tokens serem armazenados com sucesso
+        // Isso garante que não haja interferência com as requisições autenticadas
+        await clearSupabaseSession();
+
         setStatus('success');
         
         // Verifica se é um novo usuário (sem empresa associada)
@@ -89,6 +94,13 @@ export default function AuthCallbackPage() {
         setStatus('error');
         setMessage('Erro ao processar login');
         setErrorDetail(err instanceof Error ? err.message : 'Erro desconhecido');
+
+        // Limpa a sessão do Supabase em caso de erro
+        try {
+          await clearSupabaseSession();
+        } catch (clearError) {
+          console.warn('Erro ao limpar sessão do Supabase:', clearError);
+        }
 
         // Redireciona para login após delay
         setTimeout(() => {
