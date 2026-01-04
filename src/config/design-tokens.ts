@@ -27,6 +27,7 @@ import {
   CheckSquare,
   Building2,
   UserX,
+  Lock,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -35,7 +36,7 @@ import {
 // =============================================================================
 
 /** Lead status values */
-export type LeadStatus = 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado';
+export type LeadStatus = 'novo' | 'qualificado' | 'contatado' | 'convertido' | 'descartado' | 'privado';
 
 /** Opportunity status values */
 export type OpportunityStatus = 
@@ -126,6 +127,15 @@ export const leadStatusConfig: Record<LeadStatus, StatusConfig> = {
       bg: 'bg-red-100',
       text: 'text-red-700',
       border: 'border-red-500',
+    },
+  },
+  privado: {
+    label: 'Privado',
+    icon: Lock,
+    colors: {
+      bg: 'bg-gray-100',
+      text: 'text-gray-700',
+      border: 'border-gray-500',
     },
   },
 } as const;
