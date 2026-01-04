@@ -627,45 +627,20 @@ export default function LeadsPage() {
             </>
           }
         />
+      </div>
 
-        {/* Search */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <Input
-                ref={searchInputRef}
-                placeholder="Buscar por nome, empresa, email, cargo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 border-gray-300 focus:border-primary-500"
-              />
-              {searchTerm && debouncedSearchTerm !== searchTerm && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full" />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Card className="border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Custo Total</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {formatCurrency(sortedLeads.length * 2.50)}
-                  </p>
-                </div>
-                <Target className="h-6 w-6 text-primary-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Toolbar com Filtros Principais */}
+      {/* Toolbar com Busca e Filtros Integrados */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          <Toolbar className="mb-3">
+          <Toolbar>
+            {/* Busca integrada no Toolbar */}
+            <Toolbar.Search
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Buscar por nome, empresa, email, cargo..."
+            />
+
+            <Toolbar.Separator />
+
             {/* QuickFilters para Status */}
             <Toolbar.Filters>
               <QuickFilters
@@ -738,9 +713,29 @@ export default function LeadsPage() {
               />
             </Toolbar.Actions>
           </Toolbar>
+        </div>
 
+        {/* Custo Total - Card separado */}
+        <div className="mb-6">
+          <Card className="border-gray-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Custo Total</p>
+                  <p className="text-xl font-bold text-gray-900">
+                    {formatCurrency(sortedLeads.length * 2.50)}
+                  </p>
+                </div>
+                <Target className="h-6 w-6 text-primary-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filtros Avançados e Saved Filters */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
           {/* Saved Filters */}
-          <div className="border-t border-gray-200 pt-4 mt-4">
+          <div className="mb-4">
             <SavedFilters
               currentFilters={{
                 searchTerm: searchTerm,
@@ -913,42 +908,41 @@ export default function LeadsPage() {
           )}
         </div>
 
-        {/* Ações em Massa */}
-        {selectedLeads.length > 0 && (
-          <Card className="bg-primary-50 border-primary-200 mb-6">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-primary-800">
-                    {selectedLeads.length} lead(s) selecionado(s)
-                  </span>
-                  <Badge variant="outline" className="border-primary-300 text-primary-700">
-                    Custo total: {formatCurrency(selectedLeads.length * 2.50)}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="border-primary-300 text-primary-700">
-                    <Phone className="mr-2 h-4 w-4" />
-                    Ligar em Massa
-                  </Button>
-                  <Button variant="outline" size="sm" className="border-primary-300 text-primary-700">
-                    <Mail className="mr-2 h-4 w-4" />
-                    Email em Massa
-                  </Button>
-                  <Button variant="outline" size="sm" className="border-primary-300 text-primary-700">
-                    <Tags className="mr-2 h-4 w-4" />
-                    Adicionar Tags
-                  </Button>
-                  <Button size="sm" className="bg-primary-600 hover:bg-primary-700">
-                    <Zap className="mr-2 h-4 w-4" />
-                    Solicitar Acesso
-                  </Button>
-                </div>
+      {/* Ações em Massa */}
+      {selectedLeads.length > 0 && (
+        <Card className="bg-primary-50 border-primary-200 mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-primary-800">
+                  {selectedLeads.length} lead(s) selecionado(s)
+                </span>
+                <Badge variant="outline" className="border-primary-300 text-primary-700">
+                  Custo total: {formatCurrency(selectedLeads.length * 2.50)}
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="border-primary-300 text-primary-700">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Ligar em Massa
+                </Button>
+                <Button variant="outline" size="sm" className="border-primary-300 text-primary-700">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Email em Massa
+                </Button>
+                <Button variant="outline" size="sm" className="border-primary-300 text-primary-700">
+                  <Tags className="mr-2 h-4 w-4" />
+                  Adicionar Tags
+                </Button>
+                <Button size="sm" className="bg-primary-600 hover:bg-primary-700">
+                  <Zap className="mr-2 h-4 w-4" />
+                  Solicitar Acesso
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Conteúdo Principal */}
       <div className="bg-white rounded-lg border border-gray-200 min-h-96">
@@ -965,6 +959,8 @@ export default function LeadsPage() {
                     />
                   </TableHead>
                   <TableHead className="font-semibold">Lead</TableHead>
+                  <TableHead className="font-semibold">Empresa</TableHead>
+                  <TableHead className="font-semibold">Segmento</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Qualidade</TableHead>
                   <TableHead className="font-semibold">Última Atividade</TableHead>
@@ -986,8 +982,8 @@ export default function LeadsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=32`} />
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={`https://avatar.vercel.sh/${lead.nomeContato || lead.nomeEmpresa}?size=36`} />
                           <AvatarFallback className="bg-primary-100 text-primary-700 text-xs">
                             {lead.nomeContato?.split(' ').map((n: string) => n[0]).join('').toUpperCase() ||
                              lead.nomeEmpresa?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'NN'}
@@ -995,10 +991,29 @@ export default function LeadsPage() {
                         </Avatar>
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-gray-900 truncate">{lead.nomeContato || 'Nome não informado'}</p>
-                          <p className="text-sm text-gray-500 truncate">{lead.nomeEmpresa || 'Empresa não informada'}</p>
                           <p className="text-xs text-gray-400 truncate">{lead.email || 'Email não informado'}</p>
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-gray-900 truncate">{lead.nomeEmpresa || 'Empresa não informada'}</p>
+                        {lead.endereco?.cidade && lead.endereco?.estado && (
+                          <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {lead.endereco.cidade}, {lead.endereco.estado}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {lead.segmento ? (
+                        <Badge variant="outline" className="border-gray-300 text-xs">
+                          {lead.segmento}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <StatusBadge

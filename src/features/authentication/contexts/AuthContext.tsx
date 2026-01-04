@@ -26,11 +26,39 @@ export class SessionLimitExceededError extends Error {
 /**
  * Auth Context Value Interface
  */
+export interface GoogleLoginData {
+  token: string;
+  refresh_token?: string;
+  user: {
+    id: string;
+    email: string;
+    empresa_id: string | null;
+    roles: string[];
+    user_metadata?: {
+      full_name?: string;
+      role?: string;
+      oauth_provider?: string;
+    };
+  };
+  empresa: {
+    id: string;
+    nome: string;
+    cnpj: string;
+  } | null;
+  session?: {
+    id: string;
+    device_id: string;
+    expires_at: string;
+  };
+  is_new_user: boolean;
+}
+
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (data: GoogleLoginData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   sessionLimitError: SessionLimitError['data'] | null;
@@ -270,6 +298,58 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [refreshUser, logout]);
 
   /**
+   * Login with Google OAuth
+   * Processes Google OAuth response and updates auth state
+   */
+  const loginWithGoogle = useCallback(async (data: GoogleLoginData) => {
+    setIsLoading(true);
+
+    try {
+      // Store tokens
+      authStorage.setAccessToken(data.token);
+      if (data.refresh_token) {
+        authStorage.setRefreshToken(data.refresh_token);
+      }
+      if (data.session?.id) {
+        authStorage.setSessionId(data.session.id);
+      }
+      authStorage.updateLastActivity();
+
+      // Convert backend user data to User type
+      const userData: User = {
+        id: data.user.id,
+        email: data.user.email,
+        nome: data.user.user_metadata?.full_name,
+        role: data.user.roles[0] || data.user.user_metadata?.role || 'usuario',
+        empresa_id: data.user.empresa_id || '',
+        ativo: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Set user state
+      setUser(userData);
+
+      // Start token refresh manager
+      tokenRefreshManager.start(
+        (newToken) => {
+          console.log('[Auth] Token refreshed automaticamente');
+          refreshUser();
+        },
+        (error) => {
+          console.error('[Auth] Erro no refresh automático:', error);
+          logout();
+        }
+      );
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshUser, logout]);
+
+  /**
    * Clear session limit error
    */
   const clearSessionLimitError = useCallback(() => {
@@ -284,6 +364,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated: !!user,
     isLoading,
     login,
+    loginWithGoogle,
     logout,
     refreshUser,
     sessionLimitError,
