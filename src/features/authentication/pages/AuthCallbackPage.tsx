@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useGoogleLogin } from '../hooks/useGoogleLogin';
+import { useAuth } from '../contexts/AuthContext';
 import { useTenant } from '@/shared/contexts/TenantContext';
 
 type CallbackStatus = 'processing' | 'success' | 'error';
@@ -16,6 +17,7 @@ type CallbackStatus = 'processing' | 'success' | 'error';
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const { tenant } = useTenant();
+  const { loginWithGoogle } = useAuth();
   const { processCallback } = useGoogleLogin();
   
   const [status, setStatus] = useState<CallbackStatus>('processing');
@@ -32,6 +34,11 @@ export default function AuthCallbackPage() {
         if (!result || !result.success) {
           throw new Error(result?.error || 'Falha ao processar autenticação');
         }
+
+        setMessage('Atualizando sessão...');
+
+        // Atualiza o AuthContext com os dados do login
+        await loginWithGoogle(result.data);
 
         setStatus('success');
         
@@ -66,7 +73,7 @@ export default function AuthCallbackPage() {
     };
 
     handleCallback();
-  }, [processCallback, navigate]);
+  }, [processCallback, loginWithGoogle, navigate]);
 
   return (
     <div 

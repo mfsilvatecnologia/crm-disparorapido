@@ -8,7 +8,6 @@
 import { useState, useCallback } from 'react';
 import { signInWithGoogle, getSupabaseSession, clearSupabaseSession } from '@/lib/supabase-auth';
 import { getOrCreateDeviceId, generateDeviceFingerprint } from '@/shared/utils/device';
-import { authStorage } from '@/shared/utils/storage';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -140,17 +139,8 @@ export function useGoogleLogin() {
       // 4. Limpa a sessão do Supabase (não precisamos mais dela)
       await clearSupabaseSession();
 
-      // 5. Armazena os tokens do backend
-      if (data.data?.token) {
-        authStorage.setAccessToken(data.data.token);
-      }
-      if (data.data?.refresh_token) {
-        authStorage.setRefreshToken(data.data.refresh_token);
-      }
-      if (data.data?.session?.id) {
-        authStorage.setSessionId(data.data.session.id);
-      }
-      authStorage.updateLastActivity();
+      // 5. Tokens serão armazenados pelo AuthContext.loginWithGoogle()
+      // Não armazenamos aqui para evitar duplicação
 
       setState({ loading: false, error: null });
       return data as GoogleLoginResponse;
