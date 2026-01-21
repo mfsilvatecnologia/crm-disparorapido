@@ -346,7 +346,7 @@ export const MarketplaceStatusLabels: Record<MarketplaceStatus, string> = {
  */
 export const AccessTypeColors: Record<AccessType, string> = {
   [AccessType.COMPRADO]: 'blue',
-  [AccessType.TRIAL]: 'purple',
+  [AccessType.TRIAL]: 'blue',
   [AccessType.BONUS]: 'green'
 };
 

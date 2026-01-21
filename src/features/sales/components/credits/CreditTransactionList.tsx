@@ -31,7 +31,7 @@ const TRANSACTION_COLORS = {
   compra: 'text-green-600',
   uso: 'text-red-600',
   bonus: 'text-blue-600',
-  reembolso: 'text-purple-600',
+  reembolso: 'text-blue-600',
 } as const;
 
 /**

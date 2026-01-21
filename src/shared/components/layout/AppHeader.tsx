@@ -1,7 +1,6 @@
 import React from 'react';
-import { Bell, Search, Settings, User, RefreshCw } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import {
   DropdownMenu,
@@ -11,20 +10,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
-import { Badge } from '@/shared/components/ui/badge';
 import { SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { useAuth } from '@/shared/contexts/AuthContext';
-import { useOrganization } from '@/shared/contexts/OrganizationContext';
-import { OrganizationSwitcher } from '@/shared/components/common/OrganizationSwitcher';
-import { useQueryClient } from '@tanstack/react-query';
-import { leadKeys } from '@/features/leads/hooks/useLeads';
-import { CreditsBadge } from '@/features/sales/components/navigation';
-import { ApiStatus } from '@/shared/components/common/ApiStatus';
+import { TenantLogo } from '@/shared/components/branding/TenantLogo';
+import { useNavigate } from 'react-router-dom';
 
 export function AppHeader() {
   const { user, logout } = useAuth();
-  const { currentOrganization } = useOrganization();
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
@@ -34,104 +27,57 @@ export function AppHeader() {
     }
   };
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: leadKeys.lists() });
-    queryClient.invalidateQueries({ queryKey: ['companies'] });
-  };
-
-  const getQuotaStatus = () => {
-    if (!currentOrganization?.quota) return 'normal';
-    const usagePercent = (currentOrganization.quota.used / currentOrganization.quota.total) * 100;
-    if (usagePercent >= 90) return 'critical';
-    if (usagePercent >= 75) return 'warning';
-    return 'normal';
-  };
-
-  const getQuotaColor = (status: string) => {
-    switch (status) {
-      case 'critical': return 'destructive' as const;
-      case 'warning': return 'secondary' as const;
-      default: return 'secondary' as const;
-    }
+  const handleLogoClick = () => {
+    navigate('/app');
   };
 
   return (
-    <header className="border-b bg-card/50 backdrop-blur-sm" style={{position: 'relative'}}>
-      <div className="flex h-16 items-center gap-4 px-6">
+    <header className="sticky top-0 z-[100] w-full border-b bg-card/50 backdrop-blur-sm">
+      <div className="flex h-16 items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <SidebarTrigger />
-        
-        {/* Search */}
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar leads, empresas..."
-              className="pl-9 bg-background/50"
-            />
-          </div>
-        </div>
 
-        <div className="flex items-center gap-4">
-          {/* Refresh Button */}
-          <Button variant="ghost" size="icon" onClick={handleRefresh}>
-            <RefreshCw className="h-5 w-5" />
-          </Button>
+        {/* Spacer */}
+        <div className="flex-1" />
 
-          {/* API Status */}
-          <ApiStatus />
-
-          {/* Credits Badge */}
-          <CreditsBadge />
-
-          {/* Organization Info */}
-          <div className="hidden md:flex items-center gap-3">
-            <OrganizationSwitcher />
-            {currentOrganization?.quota && (
-              <Badge variant={getQuotaColor(getQuotaStatus())} className="text-xs">
-                {currentOrganization.quota.used.toLocaleString()} / {currentOrganization.quota.total.toLocaleString()} leads
-              </Badge>
-            )}
-          </div>
-
-          {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-xs flex items-center justify-center text-destructive-foreground">
-              3
-            </span>
-          </Button>
-
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar} alt={user?.name} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user?.name?.charAt(0).toUpperCase()}
+        {/* User Menu */}
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="" alt={user?.nome || user?.email} />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 z-[110]" sideOffset={5}>
+            <DropdownMenuLabel className="font-normal p-2">
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8 flex-shrink-0">
+                  <AvatarImage src="" alt={user?.nome || user?.email} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    <User className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user?.name}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <div className="flex flex-col space-y-0.5 flex-1 min-w-0">
+                  <p className="text-sm font-medium leading-none truncate">{user?.nome || 'Usuário'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                 </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                <span>Sair</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/app/profile')}>
+              <User className="mr-2 h-4 w-4" />
+              <span>Meu Perfil</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sair</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

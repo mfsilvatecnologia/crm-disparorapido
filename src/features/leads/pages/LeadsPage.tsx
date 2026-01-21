@@ -434,14 +434,14 @@ export default function LeadsPage() {
       novo: 'bg-blue-100 text-blue-800 border-blue-200',
       qualificado: 'bg-green-100 text-green-800 border-green-200',
       contatado: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      convertido: 'bg-purple-100 text-purple-800 border-purple-200',
+      convertido: 'bg-blue-100 text-blue-800 border-blue-200',
       descartado: 'bg-red-100 text-red-800 border-red-200',
       privado: 'bg-gray-100 text-gray-800 border-gray-200',
       // Valores antigos (para compatibilidade)
       new: 'bg-blue-100 text-blue-800 border-blue-200',
       qualified: 'bg-green-100 text-green-800 border-green-200',
       contacted: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      converted: 'bg-purple-100 text-purple-800 border-purple-200',
+      converted: 'bg-blue-100 text-blue-800 border-blue-200',
       discarded: 'bg-red-100 text-red-800 border-red-200'
     };
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200';
@@ -1222,7 +1222,7 @@ export default function LeadsPage() {
                 { id: 'novo', title: 'Novos', color: 'bg-blue-50 border-blue-200' },
                 { id: 'qualificado', title: 'Qualificados', color: 'bg-green-50 border-green-200' },
                 { id: 'contatado', title: 'Contatados', color: 'bg-yellow-50 border-yellow-200' },
-                { id: 'convertido', title: 'Convertidos', color: 'bg-purple-50 border-purple-200' },
+                { id: 'convertido', title: 'Convertidos', color: 'bg-blue-50 border-blue-200' },
                 { id: 'descartado', title: 'Descartados', color: 'bg-red-50 border-red-200' }
               ].map((column) => {
                 const columnLeads = sortedLeads.filter(lead => (lead.status || 'novo') === column.id);

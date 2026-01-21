@@ -26,7 +26,7 @@ const statusConfig = {
   novo: { label: 'Novo', color: 'bg-blue-500', textColor: 'text-blue-700' },
   qualificado: { label: 'Qualificado', color: 'bg-green-500', textColor: 'text-green-700' },
   contatado: { label: 'Contatado', color: 'bg-yellow-500', textColor: 'text-yellow-700' },
-  interessado: { label: 'Interessado', color: 'bg-purple-500', textColor: 'text-purple-700' },
+  interessado: { label: 'Interessado', color: 'bg-blue-500', textColor: 'text-blue-700' },
   desqualificado: { label: 'Desqualificado', color: 'bg-red-500', textColor: 'text-red-700' },
   convertido: { label: 'Convertido', color: 'bg-emerald-500', textColor: 'text-emerald-700' },
 }

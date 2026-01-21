@@ -1,36 +1,14 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  BarChart3,
-  Users,
-  Kanban,
-  Phone,
-  CreditCard,
-  Settings,
-  Shield,
-  Building2,
   Home,
-  Zap,
-  Activity,
-  Search,
+  Target,
   Map,
   User,
-  Target,
-  ShoppingCart,
-  Coins,
-  Receipt,
-  TrendingUp,
-  ArrowRightLeft,
+  Shield,
+  Building2,
+  CreditCard,
   DollarSign,
-  MessageCircle,
-  Link2,
   Handshake,
-  Sparkles,
-  SearchCheck,
-  AlertTriangle,
-  BarChart4,
-  FileText,
-  CalendarClock,
-  LayoutDashboard
 } from 'lucide-react';
 import {
   Sidebar,
@@ -43,27 +21,20 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/shared/components/ui/sidebar';
-import { Badge } from '@/shared/components/ui/badge';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { leadKeys } from '@/features/leads/hooks/useLeads';
 import { FeatureGuard } from '@/shared/components/features/FeatureGuard';
 import { useTenant } from '@/shared/contexts/TenantContext';
+import { TenantLogo } from '@/shared/components/branding/TenantLogo';
 
 const navigationItems = [
   {
-    title: 'Dashboard',
+    title: 'HOME',
     url: '/app',
     icon: Home,
-    description: 'Visão geral e métricas',
+    description: 'Painel inicial',
     // Dashboard sempre disponível (sem feature required)
-  },
-  {
-    title: 'Leads',
-    url: '/app/leads',
-    icon: Users,
-    description: 'Gerenciar base de leads',
-    requiredFeature: 'enableBasicFeatures'
   },
   {
     title: 'Campanhas',
@@ -72,13 +43,6 @@ const navigationItems = [
     description: 'Marketing automation e campanhas',
     requiredFeature: 'enableCampaigns'
   },
-  // {
-  //   title: 'Segmentos',
-  //   url: '/app/segments',
-  //   icon: BarChart3,
-  //   description: 'Análise e segmentação',
-  //   requiredFeature: 'enableAnalytics'
-  // },
   {
     title: 'Scraping',
     url: '/app/scraping',
@@ -86,131 +50,6 @@ const navigationItems = [
     description: 'Jobs de coleta Google Maps',
     requiredFeature: 'enableScraping'
   }
-  // {
-  //   title: 'Workers',
-  //   url: '/app/workers',
-  //   icon: Activity,
-  //   description: 'Monitorar workers e jobs',
-  //   requiredFeature: 'enableWorkers'
-  // }
-  // Removido - workers agora são automáticos, status visível na tela de Scraping
-];
-
-const contatoItems = [
-  {
-    title: 'Mensagens',
-    url: '/app/disparorapido/messages',
-    icon: MessageCircle,
-    description: 'Consultar mensagens WhatsApp',
-    requiredFeature: 'enableBasicFeatures'
-  },
-  {
-    title: 'Vinculações',
-    url: '/app/disparorapido/vinculacoes',
-    icon: Link2,
-    description: 'Vincular contatos a leads',
-    requiredFeature: 'enableBasicFeatures'
-  },
-];
-
-const crmItems = [
-  {
-    title: 'CRM Unificado',
-    url: '/app/crm',
-    icon: LayoutDashboard,
-    description: 'Visão completa do fluxo de vendas',
-    requiredFeature: 'enableCRM'
-  },
-  {
-    title: 'Oportunidades',
-    url: '/app/crm/opportunities',
-    icon: Target,
-    description: 'Pipeline de oportunidades',
-    requiredFeature: 'enableCRM'
-  },
-  {
-    title: 'Clientes',
-    url: '/app/crm/customers',
-    icon: Users,
-    description: 'Perfis e historico de clientes',
-    requiredFeature: 'enableCRM'
-  },
-  {
-    title: 'Contratos',
-    url: '/app/crm/contracts',
-    icon: FileText,
-    description: 'Contratos ativos e historico',
-    requiredFeature: 'enableCRM'
-  },
-  {
-    title: 'Renovacoes',
-    url: '/app/crm/renewals',
-    icon: CalendarClock,
-    description: 'Renovacoes proximas',
-    requiredFeature: 'enableCRM'
-  },
-];
-
-const salesItems = [
-  {
-    title: 'Marketplace',
-    url: '/app/marketplace',
-    icon: ShoppingCart,
-    description: 'Comprar leads verificados',
-    requiredFeature: 'enableMarketplace'
-  },
-  {
-    title: 'Créditos',
-    url: '/app/credits',
-    icon: Coins,
-    description: 'Gerenciar créditos',
-    requiredFeature: 'enableBilling'
-  },
-  {
-    title: 'Afiliados',
-    url: '/app/afiliados',
-    icon: Handshake,
-    description: 'Programa de indicações e comissões',
-    requiredFeature: 'enableBilling'
-  },
-  {
-    title: 'Assinatura',
-    url: '/app/subscription',
-    icon: CreditCard,
-    description: 'Gerenciar assinatura',
-    requiredFeature: 'enableBilling'
-  },
-];
-
-const financialItems = [
-  {
-    title: 'Dashboard',
-    url: '/app/financial',
-    icon: TrendingUp,
-    description: 'Visão geral financeira',
-    requiredFeature: 'enableBilling'
-  },
-  {
-    title: 'Planos',
-    url: '/app/pricing',
-    icon: DollarSign,
-    description: 'Planos e preços',
-    requiredFeature: 'enablePlanos'
-  },
-  {
-    title: 'Pagamentos',
-    url: '/app/payments',
-    icon: Receipt,
-    description: 'Histórico de pagamentos',
-    requiredFeature: 'enableBilling'
-  },
-  {
-    title: 'Transações',
-    url: '/app/credits/transactions',
-    icon: ArrowRightLeft,
-    description: 'Transações de crédito',
-    requiredFeature: 'enableBilling'
-  },
 ];
 
 const settingsItems = [
@@ -222,6 +61,27 @@ const settingsItems = [
     requiredFeature: 'enableBasicFeatures'
   },
   {
+    title: 'Assinatura',
+    url: '/app/subscription',
+    icon: CreditCard,
+    description: 'Gerenciar assinatura',
+    requiredFeature: 'enableBilling'
+  },
+  {
+    title: 'Planos',
+    url: '/app/pricing',
+    icon: DollarSign,
+    description: 'Planos e preços',
+    requiredFeature: 'enablePlanos'
+  },
+  {
+    title: 'Afiliados',
+    url: '/app/afiliados',
+    icon: Handshake,
+    description: 'Programa de indicações e comissões',
+    requiredFeature: 'enableBilling'
+  },
+  {
     title: 'Sessões Ativas',
     url: '/app/sessions',
     icon: Shield,
@@ -229,77 +89,10 @@ const settingsItems = [
     requiredFeature: 'enableBasicFeatures'
   },
   {
-    title: 'Estágios de Campanha',
-    url: '/app/settings/campaign-stages',
-    icon: Kanban,
-    description: 'Configurar estágios e funil',
-    requiredFeature: 'enableCampaigns'
-  },
-    {
     title: 'Empresas',
     url: '/app/empresas',
     icon: Building2,
     description: 'Gestão de empresas',
-    requiredFeature: 'enableBasicFeatures'
-  },
-  {
-    title: 'Cobrança',
-    url: '/app/billing',
-    icon: CreditCard,
-    description: 'Uso e faturas',
-    requiredFeature: 'enableBilling'
-  },
-  // {
-  //   title: 'Configurações',
-  //   url: '/app/settings',
-  //   icon: Settings,
-  //   description: 'Integrações e sistema',
-  //   requiredFeature: 'enableBasicFeatures'
-  // },
-];
-
-const adminItems = [
-  {
-    title: 'Usuários',
-    url: '/app/users',
-    icon: Users,
-    description: 'Gerenciar usuários do sistema'
-  },
-  {
-    title: 'Organizações',
-    url: '/app/admin/organizations',
-    icon: Building2,
-    description: 'Gerenciar organizações'
-  },
-];
-
-const enrichmentItems = [
-  {
-    title: 'Enriquecer Lead',
-    url: '/app/enrichment/lead/:leadId',
-    icon: Sparkles,
-    description: 'Enriquecer com dados externos',
-    requiredFeature: 'enableBasicFeatures'
-  },
-  {
-    title: 'Investigação',
-    url: '/app/enrichment/investigation/:dossierId',
-    icon: AlertTriangle,
-    description: 'Investigar mídia negativa',
-    requiredFeature: 'enableBasicFeatures'
-  },
-  {
-    title: 'Admin Providers',
-    url: '/app/enrichment/admin/providers',
-    icon: SearchCheck,
-    description: 'Gerenciar data providers',
-    requiredFeature: 'enableBasicFeatures'
-  },
-  {
-    title: 'Estatísticas',
-    url: '/app/enrichment/stats',
-    icon: BarChart4,
-    description: 'Dashboard de enriquecimentos',
     requiredFeature: 'enableBasicFeatures'
   },
 ];
@@ -320,7 +113,7 @@ export function AppSidebar() {
 
   const getNavClassName = (path: string) => {
     return isActive(path) 
-      ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+      ? "text-primary-foreground hover:opacity-90" 
       : "hover:bg-accent hover:text-accent-foreground";
   };
 
@@ -328,8 +121,6 @@ export function AppSidebar() {
     queryClient.invalidateQueries({ queryKey: leadKeys.lists() });
     queryClient.invalidateQueries({ queryKey: ['companies'] });
   };
-
-  const isAdmin = user?.role === 'admin';
 
   // Render menu item with feature control
   const renderMenuItem = (item: any) => {
@@ -339,6 +130,7 @@ export function AppSidebar() {
           <NavLink
             to={item.url}
             className={getNavClassName(item.url)}
+            style={isActive(item.url) ? { backgroundColor: '#0055A4' } : undefined}
             title={!open ? item.description : undefined}
             onClick={handleNavClick}
           >
@@ -366,17 +158,11 @@ export function AppSidebar() {
       <SidebarContent className="bg-sidebar">
         {/* Logo */}
         <div className="p-4 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Zap className="h-5 w-5 text-white" />
-            </div>
-            {open && (
-              <div>
-                <h2 className="text-lg font-bold text-sidebar-foreground">{tenant.branding.companyName}</h2>
-                <p className="text-xs text-sidebar-foreground/60">{tenant.branding.companyTagline}</p>
-              </div>
-            )}
-          </div>
+          {open ? (
+            <TenantLogo size="lg" className="h-10 w-auto" />
+          ) : (
+            <TenantLogo size="md" className="h-8 w-auto mx-auto" />
+          )}
         </div>
 
         {/* Main Navigation */}
@@ -389,63 +175,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <FeatureGuard feature="enableCRM">
-          <SidebarGroup>
-            <SidebarGroupLabel>CRM</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {crmItems.map(renderMenuItem)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </FeatureGuard>
-
-        {/* Contato / DisparoRapido */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Contato</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {contatoItems.map(renderMenuItem)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Sales & Credits */}
-        <FeatureGuard anyFeatures={['enableMarketplace', 'enableBilling']}>
-          <SidebarGroup>
-            <SidebarGroupLabel>Vendas</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {salesItems.map(renderMenuItem)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </FeatureGuard>
-
-        {/* Financial */}
-        <FeatureGuard feature="enableBilling">
-          <SidebarGroup>
-            <SidebarGroupLabel>Financeiro</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {financialItems.map(renderMenuItem)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </FeatureGuard>
-
-        {/* Enriquecimento */}
-        <FeatureGuard feature="enableBasicFeatures">
-          <SidebarGroup>
-            <SidebarGroupLabel>Enriquecimento</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {enrichmentItems.map(renderMenuItem)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </FeatureGuard>
-
         {/* Settings */}
         <SidebarGroup>
           <SidebarGroupLabel>Configurações</SidebarGroupLabel>
@@ -455,37 +184,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Admin Section */}
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-2">
-              Admin
-              <Badge variant="destructive" className="text-xs h-4 px-1">
-                Admin
-              </Badge>
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        className={getNavClassName(item.url)}
-                        title={!open ? item.description : undefined}
-                        onClick={handleNavClick}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {open && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
     </Sidebar>
   );
