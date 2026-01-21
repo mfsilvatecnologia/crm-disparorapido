@@ -26,6 +26,7 @@ import {
 import { useDashboardData } from '../hooks/useDashboardData';
 import { DashboardSkeleton } from '../components/DashboardSkeleton';
 import { DashboardError } from '../components/DashboardError';
+import { HomeWelcomeCard } from '../components/HomeWelcomeCard';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -51,6 +52,11 @@ const Dashboard: React.FC = () => {
   // Show error state
   if (error) {
     return <DashboardError error={error} onRetry={() => window.location.reload()} />;
+  }
+
+  // Show welcome card when no data
+  if (stats.totalLeads === 0 && campaigns.length === 0 && recentLeads.length === 0) {
+    return <HomeWelcomeCard />;
   }
 
   // Extended usage data for monitor widget
