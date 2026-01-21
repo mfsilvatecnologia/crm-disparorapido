@@ -1,63 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  TrendingUp,
-  BarChart3,
-  Settings,
-  Bell,
-  Calendar,
-  Users,
-  Target,
-  Activity,
-} from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Badge } from '@/shared/components/ui/badge';
-import { useAuth } from '@/shared/contexts/AuthContext';
-import { RecentLeadsWidget, UsageMonitorWidget } from '@/features/dashboard';
-import {
-  LeadsMetricCard,
-  QualityMetricCard,
-  ROIMetricCard,
-  GrowthMetricCard,
-  QuickActions,
-  useQuickActions,
-} from '@/features/dashboard';
-import { useDashboardData } from '../hooks/useDashboardData';
-import { DashboardSkeleton } from '../components/DashboardSkeleton';
-import { DashboardError } from '../components/DashboardError';
 import { HomeWelcomeCard } from '../components/HomeWelcomeCard';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { actions } = useQuickActions();
+  return <HomeWelcomeCard />;
+};
 
-  // Fetch real dashboard data from APIs
-  const {
-    stats,
-    campaigns,
-    recentLeads,
-    usage,
-    insights,
-    isLoading,
-    error,
-  } = useDashboardData();
-
-  // Show loading state
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
-
-  // Show error state
-  if (error) {
-    return <DashboardError error={error} onRetry={() => window.location.reload()} />;
-  }
-
-  // Show welcome card when no data
-  if (stats.totalLeads === 0 && campaigns.length === 0 && recentLeads.length === 0) {
-    return <HomeWelcomeCard />;
-  }
+export default Dashboard;
 
   // Extended usage data for monitor widget
   const extendedUsage = {
