@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, User, Lock, Save, Eye, EyeOff } from 'lucide-react';
+import { Loader2, User, Lock, Save } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -17,8 +17,6 @@ import { apiClient } from '@/shared/services/client';
 const updateProfileSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
-  telefone: z.string().optional(),
-  cargo: z.string().optional(),
 });
 
 const changePasswordSchema = z.object({
@@ -36,10 +34,6 @@ type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 export default function UserProfilePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   // Fetch current user data
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['user', 'profile'],
@@ -65,10 +59,8 @@ export default function UserProfilePage() {
   } = useForm<UpdateProfileForm>({
     resolver: zodResolver(updateProfileSchema),
     values: user ? {
-      nome: user.nome || '',
-      email: user.email || '',
-      telefone: user.telefone || '',
-      cargo: user.cargo || '',
+      nome: (user as any).nome ?? (user as any).name ?? '',
+      email: user.email ?? '',
     } : undefined,
   });
 
@@ -124,7 +116,10 @@ export default function UserProfilePage() {
   });
 
   const onUpdateProfile = async (data: UpdateProfileForm) => {
-    updateProfileMutation.mutate(data);
+    updateProfileMutation.mutate({
+      nome: data.nome,
+      email: user?.email ?? '', // email só leitura, envia o atual
+    });
   };
 
   const onChangePassword = async (data: ChangePasswordForm) => {
@@ -163,17 +158,15 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Perfil do Usuário</h1>
-          <p className="text-muted-foreground">
-            Gerencie suas informações pessoais e configurações de segurança
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
+          {/* Header */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Perfil</h1>
+          </div>
 
-        <Tabs defaultValue="profile" className="w-full">
+          <Tabs defaultValue="profile" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
@@ -214,29 +207,10 @@ export default function UserProfilePage() {
                       <Input
                         id="email"
                         type="email"
-                        {...registerProfile('email')}
-                        className={profileErrors.email ? 'border-destructive' : ''}
-                      />
-                      {profileErrors.email && (
-                        <p className="text-sm text-destructive">{profileErrors.email.message}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="telefone">Telefone</Label>
-                      <Input
-                        id="telefone"
-                        {...registerProfile('telefone')}
-                        placeholder="(11) 99999-9999"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cargo">Cargo</Label>
-                      <Input
-                        id="cargo"
-                        {...registerProfile('cargo')}
-                        placeholder="Ex: Gerente de Vendas"
+                        readOnly
+                        disabled
+                        value={user?.email ?? ''}
+                        className="bg-muted cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -280,27 +254,12 @@ export default function UserProfilePage() {
                 <form onSubmit={handleSubmitPassword(onChangePassword)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentPassword">Senha Atual</Label>
-                    <div className="relative">
-                      <Input
-                        id="currentPassword"
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        {...registerPassword('currentPassword')}
-                        className={passwordErrors.currentPassword ? 'border-destructive pr-10' : 'pr-10'}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      >
-                        {showCurrentPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      {...registerPassword('currentPassword')}
+                      className={passwordErrors.currentPassword ? 'border-destructive' : ''}
+                    />
                     {passwordErrors.currentPassword && (
                       <p className="text-sm text-destructive">{passwordErrors.currentPassword.message}</p>
                     )}
@@ -308,27 +267,12 @@ export default function UserProfilePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="newPassword">Nova Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="newPassword"
-                        type={showNewPassword ? 'text' : 'password'}
-                        {...registerPassword('newPassword')}
-                        className={passwordErrors.newPassword ? 'border-destructive pr-10' : 'pr-10'}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                      >
-                        {showNewPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      {...registerPassword('newPassword')}
+                      className={passwordErrors.newPassword ? 'border-destructive' : ''}
+                    />
                     {passwordErrors.newPassword && (
                       <p className="text-sm text-destructive">{passwordErrors.newPassword.message}</p>
                     )}
@@ -336,27 +280,12 @@ export default function UserProfilePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        {...registerPassword('confirmPassword')}
-                        className={passwordErrors.confirmPassword ? 'border-destructive pr-10' : 'pr-10'}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      {...registerPassword('confirmPassword')}
+                      className={passwordErrors.confirmPassword ? 'border-destructive' : ''}
+                    />
                     {passwordErrors.confirmPassword && (
                       <p className="text-sm text-destructive">{passwordErrors.confirmPassword.message}</p>
                     )}
@@ -436,6 +365,7 @@ export default function UserProfilePage() {
             </Card> */}
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );
