@@ -318,7 +318,7 @@ export function FeatureDemoPage() {
                 );
               } else if (features.canUseCampaigns || features.canUsePipeline) {
                 return (
-                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg">
                     <h3 className="font-semibold text-blue-800">📈 Plano Intermediário</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       Você tem acesso a ferramentas de vendas básicas. 

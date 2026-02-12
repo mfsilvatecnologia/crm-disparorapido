@@ -137,8 +137,8 @@ export default function CRMPage() {
       change: '+18%',
       trend: 'up',
       icon: DollarSign,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 border-purple-200'
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50 border-blue-200'
     },
     {
       id: 'conversion',

@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSubscriptions } from '../hooks/subscriptions/useSubscriptions';
+import { useRestoreSubscription } from '../hooks/subscriptions/useRestoreSubscription';
 import { CancelDialog } from '../components/subscriptions/SubscriptionDashboard/CancelDialog';
+import { UpdateCardDialog } from '../components/subscriptions/SubscriptionDashboard/UpdateCardDialog';
 import type { Subscription } from '../types';
 
 export function SubscriptionManagementPage() {
-  const navigate = useNavigate();
   const { subscriptions, isLoading, refetch } = useSubscriptions();
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [subscriptionForCard, setSubscriptionForCard] = useState<Subscription | null>(null);
+  const { mutate: restoreSubscription, isPending: isRestoring } = useRestoreSubscription();
 
   const handleCancelClick = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
@@ -42,14 +44,8 @@ export function SubscriptionManagementPage() {
   if (subscriptions.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="rounded-lg bg-white p-8 shadow-sm">
-          <p className="mb-4 text-gray-600">Você não possui assinaturas.</p>
-          <a
-            href="/pricing"
-            className="inline-block rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            Ver Planos
-          </a>
+        <div className="rounded-lg bg-white p-8 shadow-sm text-center max-w-md">
+          <p className="text-gray-600">Você não possui assinaturas.</p>
         </div>
       </div>
     );
@@ -88,19 +84,8 @@ export function SubscriptionManagementPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Minhas Assinaturas</h1>
-            <p className="mt-2 text-gray-600">
-              Gerencie todas as suas assinaturas ativas e históricas
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/pricing')}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition-colors"
-          >
-            + Nova Assinatura
-          </button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Assinatura</h1>
         </div>
 
         {/* Subscriptions Summary */}
@@ -130,7 +115,7 @@ export function SubscriptionManagementPage() {
         </div>
 
         {/* Subscriptions List */}
-        <div className="rounded-lg bg-white shadow-sm overflow-hidden">
+        <div className="mb-6 rounded-lg bg-white shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -215,6 +200,14 @@ export function SubscriptionManagementPage() {
                             Ver Fatura
                           </a>
                         )}
+                        {(subscription.status === 'active' || subscription.status === 'trialing' || subscription.status === 'pending_payment_method') && (
+                          <button
+                            onClick={() => setSubscriptionForCard(subscription)}
+                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                          >
+                            Alterar cartão
+                          </button>
+                        )}
                         {(subscription.status === 'active' || subscription.status === 'trialing') && (
                           <button
                             onClick={() => handleCancelClick(subscription)}
@@ -223,10 +216,16 @@ export function SubscriptionManagementPage() {
                             Cancelar
                           </button>
                         )}
-                        {subscription.status === 'cancelada' && (
-                          <span className="text-gray-400">Cancelada</span>
+                        {(subscription.status === 'canceled' || subscription.status === 'cancelada') && (
+                          <button
+                            onClick={() => restoreSubscription(subscription.id, { onSuccess: () => refetch() })}
+                            disabled={isRestoring}
+                            className="text-green-600 hover:text-green-900 transition-colors disabled:opacity-50"
+                          >
+                            {isRestoring ? 'Retomando...' : 'Retomar assinatura'}
+                          </button>
                         )}
-                        {subscription.status === 'suspensa' && (
+                        {(subscription.status === 'suspended' || subscription.status === 'suspensa') && (
                           <span className="text-yellow-600">Suspensa</span>
                         )}
                       </div>
@@ -235,22 +234,6 @@ export function SubscriptionManagementPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {/* Additional Info */}
-        <div className="mt-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
-          <div className="flex">
-            <svg className="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div className="text-sm text-blue-900">
-              <p className="font-medium">Informações sobre suas assinaturas</p>
-              <p className="mt-1 text-blue-700">
-                Os valores são cobrados automaticamente de acordo com o ciclo de cobrança. 
-                Para gerenciar formas de pagamento ou cancelar uma assinatura, entre em contato com o suporte.
-              </p>
-            </div>
           </div>
         </div>
 
@@ -265,6 +248,20 @@ export function SubscriptionManagementPage() {
             subscriptionId={selectedSubscription.id}
             productName={selectedSubscription.description || 'Assinatura'}
             onSuccess={handleCancelSuccess}
+          />
+        )}
+
+        {/* Update Card Dialog */}
+        {subscriptionForCard && (
+          <UpdateCardDialog
+            isOpen={!!subscriptionForCard}
+            onClose={() => setSubscriptionForCard(null)}
+            subscriptionId={subscriptionForCard.id}
+            productName={subscriptionForCard.description || 'Assinatura'}
+            onSuccess={() => {
+              refetch();
+              setSubscriptionForCard(null);
+            }}
           />
         )}
       </div>

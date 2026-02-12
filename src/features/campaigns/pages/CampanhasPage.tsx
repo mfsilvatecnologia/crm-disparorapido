@@ -682,7 +682,7 @@ export default function CampanhasPage() {
                     <div className="text-xs text-muted-foreground">Taxa Conversão</div>
                   </div>
                   <div className="text-center p-3 border rounded">
-                    <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-2xl font-bold text-blue-600">
                       0
                     </div>
                     <div className="text-xs text-muted-foreground">Etapas</div>

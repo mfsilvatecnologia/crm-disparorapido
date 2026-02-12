@@ -52,7 +52,7 @@ export function CampaignCreator({ open, onClose }: CampaignCreatorProps) {
   const campaignTypes = [
     { id: 'email', label: 'E-mail Marketing', icon: Mail, color: 'text-blue-600', bgColor: 'bg-blue-50' },
     { id: 'phone', label: 'Ligações', icon: Phone, color: 'text-green-600', bgColor: 'bg-green-50' },
-    { id: 'sms', label: 'SMS', icon: MessageSquare, color: 'text-purple-600', bgColor: 'bg-purple-50' },
+    { id: 'sms', label: 'SMS', icon: MessageSquare, color: 'text-blue-600', bgColor: 'bg-blue-50' },
     { id: 'mixed', label: 'Multi-canal', icon: Megaphone, color: 'text-orange-600', bgColor: 'bg-orange-50' },
   ];
 

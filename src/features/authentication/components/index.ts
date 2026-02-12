@@ -2,7 +2,6 @@
 export { PermissionGate } from './PermissionGate'
 export { ProtectedRoute } from './ProtectedRoute'
 export { RoleSelector, SimpleRoleSelector } from './RoleSelector'
-export { RegisterPage } from '../pages/RegisterPage'
 
 // New components from spec 003
 export { LoginForm } from './LoginForm'

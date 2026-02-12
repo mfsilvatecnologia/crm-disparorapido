@@ -214,7 +214,6 @@ export default {
 		'bg-red-100',
 		'bg-gray-100',
 		'bg-blue-100',
-		'bg-purple-100',
 		// Status colors - text
 		'text-primary-700',
 		'text-green-700',
@@ -224,7 +223,6 @@ export default {
 		'text-gray-700',
 		'text-gray-600',
 		'text-blue-700',
-		'text-purple-700',
 		// Status colors - borders
 		'border-primary-500',
 		'border-green-500',
@@ -234,7 +232,6 @@ export default {
 		'border-gray-500',
 		'border-gray-400',
 		'border-blue-500',
-		'border-purple-500',
 		// Score colors
 		'text-red-500',
 		'text-amber-500',

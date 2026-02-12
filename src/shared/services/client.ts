@@ -181,10 +181,9 @@ class ApiClient {
           errorData = { message: response.statusText };
         }
 
-        // Handle NO_SUBSCRIPTION error - redirect to pricing
+        // Handle NO_SUBSCRIPTION error - redirect to subscription management (contratação pelo checkout do site)
         if (errorData.error === 'NO_SUBSCRIPTION' || errorData.error === 'NO_ACTIVE_SUBSCRIPTION') {
-          // Redirect to pricing page
-          window.location.href = '/app/pricing';
+          window.location.href = '/app/subscription';
           throw new ApiError(
             response.status,
             response.statusText,
@@ -318,12 +317,59 @@ class ApiClient {
     }
   }
 
-  // Auth methods
+  // Auth methods — CRM Disparo Rápido usa tabela users_disparo_rapido (endpoint login-disparo-rapido)
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return this.request('/api/v1/auth/login', {
+    return this.loginDisparoRapido(credentials);
+  }
+
+  private async loginDisparoRapido(credentials: LoginRequest): Promise<AuthResponse> {
+    const url = `${this.baseURL}/api/v1/auth/login-disparo-rapido`;
+    const body = {
+      email: credentials.email,
+      password: credentials.password,
+      device_id: credentials.device_id,
+      device_info: {
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      },
+    };
+    const res = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify(credentials),
-    }, AuthResponseSchema);
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const raw = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new ApiError(res.status, res.statusText, raw.message || raw.error || 'Falha no login', raw);
+    }
+    if (!raw.success || !raw.token) {
+      throw new ApiError(401, 'Unauthorized', raw.message || 'Email ou senha incorretos', raw);
+    }
+    const user = raw.user || {};
+    const empresa = raw.empresa || (raw.empresa_id ? { id: raw.empresa_id, nome: '', cnpj: '' } : { id: '', nome: '', cnpj: '' });
+    const mapped: AuthResponse = {
+      success: true,
+      data: {
+        token: raw.token,
+        user: {
+          id: user.id,
+          email: user.email,
+          nome: user.nome,
+          name: user.nome,
+          createdAt: user.created_at || new Date().toISOString(),
+          updatedAt: user.updated_at || new Date().toISOString(),
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+        },
+        empresa: { id: empresa.id, nome: empresa.nome || '', cnpj: empresa.cnpj || '' },
+        session: raw.session_id
+          ? { id: raw.session_id, device_id: credentials.device_id, expires_at: raw.expires_at || '' }
+          : null,
+        subscription: undefined,
+      },
+      message: raw.message || 'Login realizado com sucesso',
+      timestamp: new Date().toISOString(),
+    };
+    return AuthResponseSchema.parse(mapped);
   }
 
   async refresh(refreshToken: string): Promise<AuthResponse> {
@@ -334,40 +380,48 @@ class ApiClient {
   }
 
   async logout(): Promise<void> {
-    // Get sessionId from storage - it's required for the DELETE endpoint
     const sessionId = localStorage.getItem('session_id');
-
     if (!sessionId) {
       console.warn('No session ID found for logout');
-      // Still clear local storage even if no session ID
       return;
     }
-
-    // Use DELETE /api/v1/sessions/{sessionId} endpoint
+    const deviceId = getOrCreateDeviceId();
+    let revokedBy = '';
+    try {
+      const userJson = localStorage.getItem('user');
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        if (user?.id) revokedBy = user.id;
+      }
+    } catch {
+      // ignore
+    }
+    if (!revokedBy) revokedBy = 'logout-unknown';
     return this.request(`/api/v1/sessions/${sessionId}`, {
       method: 'DELETE',
+      body: JSON.stringify({
+        device_id: deviceId,
+        reason: 'user_logout',
+        revoked_by: revokedBy,
+      }),
     });
   }
 
   async forceLogin(credentials: LoginRequest): Promise<AuthResponse> {
-    // Add force_login flag to terminate existing sessions and login
-    return this.request('/api/v1/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ ...credentials, force_login: true }),
-    }, AuthResponseSchema);
+    return this.loginDisparoRapido(credentials);
   }
 
   async resetPassword(data: ResetPasswordRequest): Promise<{ success: boolean; message: string }> {
-    return this.request('/api/v1/auth/reset-password', {
+    return this.request('/api/v1/auth/reset-password-disparo-rapido', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ email: data.email }),
     });
   }
 
   async confirmResetPassword(data: ConfirmResetPasswordRequest): Promise<{ success: boolean; message: string }> {
-    return this.request('/api/v1/auth/confirm-reset-password', {
+    return this.request('/api/v1/auth/confirm-reset-password-disparo-rapido', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ token: data.token, newPassword: data.password }),
     });
   }
 

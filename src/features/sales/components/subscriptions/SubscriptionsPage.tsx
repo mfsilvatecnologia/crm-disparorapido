@@ -97,11 +97,7 @@ function SubscriptionCardComponent({ subscription, isPrimary = false }: Subscrip
   );
 }
 
-interface SubscriptionsPageProps {
-  onNavigateToPlans?: () => void;
-}
-
-export function SubscriptionsPage({ onNavigateToPlans }: SubscriptionsPageProps) {
+export function SubscriptionsPage() {
   const {
     subscription,
     subscriptions,
@@ -202,16 +198,8 @@ export function SubscriptionsPage({ onNavigateToPlans }: SubscriptionsPageProps)
             </svg>
             <h3 className="mt-4 text-lg font-medium text-gray-900">Nenhuma assinatura encontrada</h3>
             <p className="mt-2 text-gray-600">
-              Você ainda não possui nenhuma assinatura ativa. Explore nossos planos para começar.
+              Você ainda não possui assinatura ativa.
             </p>
-            {onNavigateToPlans && (
-              <button
-                onClick={onNavigateToPlans}
-                className="mt-6 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-              >
-                Ver Planos Disponíveis
-              </button>
-            )}
           </div>
         )}
       </div>

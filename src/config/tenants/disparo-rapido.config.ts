@@ -50,7 +50,7 @@ export const disparorapidoConfig: TenantConfig = {
     enableMarketplace: false,
     enableBilling: true,
     enableWorkers: false,
-    enablePlanos: true,
+    enablePlanos: false, // Contratação pelo checkout transparente no site
   },
 
   settings: {

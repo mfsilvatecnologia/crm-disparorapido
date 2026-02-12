@@ -29,7 +29,7 @@ interface MetricCardProps {
     period: string;
   };
   icon: React.ReactNode;
-  color?: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'gray';
+  color?: 'blue' | 'green' | 'yellow' | 'red' | 'gray';
   breakdown?: Array<{
     label: string;
     value: number;
@@ -78,12 +78,6 @@ export function MetricCard({
       icon: 'text-red-600',
       border: 'border-red-200',
       accent: 'text-red-600'
-    },
-    purple: {
-      bg: 'bg-purple-50',
-      icon: 'text-purple-600',
-      border: 'border-purple-200',
-      accent: 'text-purple-600'
     },
     gray: {
       bg: 'bg-gray-50',
@@ -384,7 +378,7 @@ export function ROIMetricCard({
         period: 'vs período anterior'
       }}
       icon={<Target className="h-5 w-5" />}
-      color="purple"
+      color="blue"
       breakdown={[
         {
           label: 'Projeção próximo mês',

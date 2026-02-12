@@ -12,7 +12,7 @@ export const STAGE_LIMITS = {
 
 export const DEFAULT_STAGE_COLORS: Record<StageCategory, string> = {
   novo: '#3B82F6',
-  contato: '#8B5CF6',
+  contato: '#2563EB',
   qualificacao: '#10B981',
   negociacao: '#F59E0B',
   ganho: '#10B981',

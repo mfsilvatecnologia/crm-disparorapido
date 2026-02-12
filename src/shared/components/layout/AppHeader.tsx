@@ -45,7 +45,7 @@ export function AppHeader() {
             <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="" alt={user?.nome || user?.email} />
-                <AvatarFallback className="bg-primary text-primary-foreground">
+                <AvatarFallback className="bg-gray-100 text-gray-600">
                   <User className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
@@ -56,7 +56,7 @@ export function AppHeader() {
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage src="" alt={user?.nome || user?.email} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                  <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
                     <User className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>

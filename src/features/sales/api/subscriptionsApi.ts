@@ -160,22 +160,23 @@ export async function fetchCurrentSubscription(): Promise<Subscription | null> {
 }
 
 /**
- * Cancel subscription
+ * Cancel subscription (assinatura Asaas).
+ * Usa o endpoint genérico que cancela no Asaas e localmente.
+ * O cliente pode cancelar pelo CRM; não precisa ir ao Asaas.
  */
 export async function cancelSubscription(
   subscriptionId: string,
   data: CancelSubscriptionSchema
 ): Promise<void> {
-  const response = await apiClient.post<ApiResponse<null>>(
-    `${SUBSCRIPTIONS_PATH}/trial/${subscriptionId}/cancel`,
-    data
+  const response = await apiClient.post<ApiResponse<unknown>>(
+    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/cancel`,
+    { reason: data.reason?.trim() || undefined }
   );
   
   if (!response.success) {
-    throw new Error(response.message || 'Failed to cancel subscription');
+    throw new Error(response.message || 'Falha ao cancelar assinatura');
   }
   
-  // API returns null on success, just return void
   return;
 }
 
@@ -218,46 +219,108 @@ export async function fetchSubscriptionStatus(): Promise<{
 }
 
 /**
- * Reactivate canceled subscription
+ * Retomar assinatura cancelada (cria nova no Asaas e atualiza registro local).
+ * Retorna a assinatura com asaasInvoiceUrl para o cliente cadastrar o cartão.
  */
-export async function reactivateSubscription(
-  subscriptionId: string
-): Promise<Subscription> {
-  const data = await apiClient.patch<Subscription>(
-    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/reactivate`
+export async function restoreSubscription(subscriptionId: string): Promise<Subscription> {
+  const response = await apiClient.post<ApiResponse<Subscription>>(
+    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/restore`,
+    {}
   );
-  
-  // Validate response
-  const validation = validateSubscription(data);
-  if (!validation.success) {
-    throw new Error('Invalid subscription data from API');
+
+  if (!response.success || !response.data) {
+    throw new Error(response.message || 'Falha ao retomar assinatura');
   }
-  
-  return data;
+
+  const validation = validateSubscription(response.data);
+  if (!validation.success) {
+    throw new Error('Dados inválidos da assinatura');
+  }
+
+  return response.data;
 }
 
 /**
- * Update payment method
+ * Alias para compatibilidade: retomar assinatura cancelada
+ */
+export async function reactivateSubscription(subscriptionId: string): Promise<Subscription> {
+  return restoreSubscription(subscriptionId);
+}
+
+/**
+ * Atualizar cartão de crédito da assinatura (PATCH /subscriptions/:id/credit-card).
+ * Envie apenas creditCard para "só alterar cartão"; o backend usa os dados do titular já cadastrados no Asaas.
+ */
+export async function updateSubscriptionCreditCard(
+  subscriptionId: string,
+  paymentData: {
+    creditCard: {
+      holderName: string;
+      number: string;
+      expiryMonth: string;
+      expiryYear: string;
+      ccv: string;
+    };
+    creditCardHolderInfo?: {
+      name: string;
+      email: string;
+      cpfCnpj: string;
+      postalCode: string;
+      addressNumber: string;
+      addressComplement?: string;
+      phone: string;
+    };
+  }
+): Promise<Subscription> {
+  const response = await apiClient.patch<ApiResponse<Subscription>>(
+    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/credit-card`,
+    paymentData
+  );
+
+  if (!response.success || !response.data) {
+    throw new Error(response.message || 'Falha ao atualizar cartão');
+  }
+
+  const validation = validateSubscription(response.data);
+  if (!validation.success) {
+    throw new Error('Dados inválidos da assinatura');
+  }
+
+  return response.data;
+}
+
+/**
+ * Update payment method (legacy) - redireciona para updateSubscriptionCreditCard
  */
 export async function updatePaymentMethod(
   subscriptionId: string,
   paymentData: {
-    paymentMethod: 'CREDIT_CARD' | 'BOLETO' | 'PIX';
-    creditCardToken?: string;
+    paymentMethod?: 'CREDIT_CARD' | 'BOLETO' | 'PIX';
+    creditCard?: {
+      holderName: string;
+      number: string;
+      expiryMonth: string;
+      expiryYear: string;
+      ccv: string;
+    };
+    creditCardHolderInfo?: {
+      name: string;
+      email: string;
+      cpfCnpj: string;
+      postalCode: string;
+      addressNumber: string;
+      addressComplement?: string;
+      phone: string;
+    };
   }
 ): Promise<Subscription> {
-  const data = await apiClient.patch<Subscription>(
-    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/payment-method`,
-    paymentData
-  );
-  
-  // Validate response
-  const validation = validateSubscription(data);
-  if (!validation.success) {
-    throw new Error('Invalid subscription data from API');
+  if (paymentData.creditCard) {
+    return updateSubscriptionCreditCard(subscriptionId, {
+      creditCard: paymentData.creditCard,
+      ...(paymentData.creditCardHolderInfo && { creditCardHolderInfo: paymentData.creditCardHolderInfo }),
+    });
   }
-  
-  return data;
+  throw new Error('creditCard é obrigatório');
 }
 
 /**

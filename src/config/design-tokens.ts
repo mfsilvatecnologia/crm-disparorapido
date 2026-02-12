@@ -170,9 +170,9 @@ export const opportunityStatusConfig: Record<OpportunityStatus, StatusConfig> = 
     label: 'Proposta',
     icon: FileText,
     colors: {
-      bg: 'bg-purple-100',
-      text: 'text-purple-700',
-      border: 'border-purple-500',
+      bg: 'bg-blue-100',
+      text: 'text-blue-700',
+      border: 'border-blue-500',
     },
   },
   negociacao: {

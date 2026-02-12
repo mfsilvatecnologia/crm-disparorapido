@@ -126,9 +126,9 @@ export function ConversionPipeline() {
       count: negotiationOpportunities,
       value: formatCurrency(opportunitiesValue * 0.6), // Estimativa: 60% do valor
       icon: Handshake,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-300',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-300',
       conversionRate: totalLeads > 0 ? (negotiationOpportunities / totalLeads) * 100 : 0,
       trend: 'up',
       trendValue: '+3%'

@@ -12,7 +12,7 @@ import { TourProvider, Tour } from "./shared/components/tour";
 import { leadsTour } from "./features/leads/tours/leadsTour";
 // Feature imports
 import { Index } from "./features/landing";
-import { LoginPage, RegisterPage, ResetPasswordPage, NewPasswordPage, UserProfilePage } from "./features/authentication";
+import { LoginPage, ResetPasswordPage, NewPasswordPage, UserProfilePage } from "./features/authentication";
 import AuthCallbackPage from "./features/authentication/pages/AuthCallbackPage";
 import SessionManagementPage from "./features/authentication/pages/SessionManagementPage";
 import { Dashboard } from "./features/dashboard";
@@ -35,7 +35,6 @@ import { StageConfigPage } from "./features/campaign-stages/pages/StageConfigPag
 import { CampaignFunnelPage } from "./features/campaign-stages/pages/CampaignFunnelPage";
 import { CampaignDashboard } from "./features/campaign-stages/components/metrics/CampaignDashboard";
 import {
-  PricingPage,
   CheckoutPage,
   SubscriptionManagementPage,
   CreditPackagesPage,
@@ -122,20 +121,18 @@ function AppRoutes() {
   );
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         {/* Public Landing Page */}
         <Route path="/" element={<LoginPage />} />
 
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/nova-senha" element={<NewPasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-        {/* Public Sales Routes */}
-        <Route path="/pricing" element={<PricingPage />} />
+        {/* Public Sales Routes (checkout transparente no site; sem página de planos no CRM) */}
         <Route path="/checkout" element={<CheckoutPage />} />
 
         {/* Protected App Routes */}
@@ -200,8 +197,7 @@ function AppRoutes() {
           {/* DisparoRapido Routes */}
           <Route path="disparorapido/messages" element={<MessagesPage />} />
           <Route path="disparorapido/vinculacoes" element={<VinculacoesPendentesPage />} />
-          <Route path="pricing" element={<PricingPage />} />
-          
+
           <Route path="profile" element={<UserProfilePage />} />
           <Route path="sessions" element={<SessionManagementPage />} />
           <Route path="users" element={<UsersPage />} />

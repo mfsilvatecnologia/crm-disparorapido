@@ -88,7 +88,7 @@ const typeConfig = {
   sms: { label: 'SMS', icon: MessageSquare, color: 'bg-green-500' },
   whatsapp: { label: 'WhatsApp', icon: MessageSquare, color: 'bg-green-600' },
   linkedin: { label: 'LinkedIn', icon: Linkedin, color: 'bg-blue-600' },
-  phone: { label: 'Telefone', icon: Phone, color: 'bg-purple-500' },
+  phone: { label: 'Telefone', icon: Phone, color: 'bg-blue-500' },
   mixed: { label: 'Mista', icon: Users, color: 'bg-gray-500' }
 } as const
 

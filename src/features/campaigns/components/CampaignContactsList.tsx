@@ -36,7 +36,7 @@ export function CampaignContactsList({ campaignId }: CampaignContactsListProps) 
       completed: 'bg-gray-100 text-gray-800',
       paused: 'bg-yellow-100 text-yellow-800',
       failed: 'bg-red-100 text-red-800',
-      unsubscribed: 'bg-purple-100 text-purple-800',
+      unsubscribed: 'bg-blue-100 text-blue-800',
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
   }

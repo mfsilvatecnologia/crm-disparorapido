@@ -14,7 +14,7 @@ export async function debugApiConnection() {
   try {
     // Teste básico de conectividade
     console.log('📡 Testing basic connectivity...');
-    const healthResponse = await fetch(`${baseURL}/health`, {
+    const healthResponse = await fetch(`${baseURL}/api/v1/health`, {
       method: 'GET',
     });
     console.log('❤️ Health check:', healthResponse.status, await healthResponse.text());

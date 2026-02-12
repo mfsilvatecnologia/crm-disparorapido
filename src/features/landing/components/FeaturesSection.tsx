@@ -23,7 +23,7 @@ export function FeaturesSection() {
       title: 'API + Webhooks + Export',
       description: 'Conecte diretamente com seu CRM ou exporte para planilhas com um clique',
       benefit: 'Mantenha seu workflow atual sem precisar mudar ferramentas',
-      color: 'text-purple-600'
+      color: 'text-blue-600'
     }
   ];
 

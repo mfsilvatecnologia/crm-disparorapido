@@ -38,7 +38,7 @@ const API_CONFIGS: Record<TenantId, ApiConfig> = {
   'disparorapido': {
     baseURL: import.meta.env.VITE_API_BASE_URL || 
              (process.env.NODE_ENV === 'production' 
-               ? 'https://api.disparorapido.ia.br' 
+               ? 'https://api.disparorapido.com.br' 
                : 'http://localhost:3000'),
     timeout: 30000,
     retries: 3,
@@ -108,7 +108,7 @@ export async function checkApiHealth(baseUrl: string): Promise<boolean> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    const response = await fetch(`${baseUrl}/health`, {
+    const response = await fetch(`${baseUrl}/api/v1/health`, {
       method: 'GET',
       signal: controller.signal,
       headers: {

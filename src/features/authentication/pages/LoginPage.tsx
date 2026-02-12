@@ -114,17 +114,17 @@ export default function LoginPage() {
       setLoginError(null);
       await login({ email: data.email, password: data.password });
 
-      // Check if we need to redirect to pricing due to no active subscription
+      // Redirecionar para gestão de assinatura se não houver assinatura ativa (contratação pelo checkout do site)
       const subscriptionRedirect = localStorage.getItem('subscription_redirect');
       if (subscriptionRedirect === 'true') {
         localStorage.removeItem('subscription_redirect');
         toast({
           title: "Assinatura Necessária",
-          description: "Você precisa de uma assinatura ativa para continuar usando o sistema.",
+          description: "Você precisa de uma assinatura ativa. Contrate pelo checkout do site.",
           variant: "destructive",
           duration: 5000,
         });
-        navigate('/app/pricing');
+        navigate('/app/subscription');
         return;
       }
 
@@ -133,15 +133,15 @@ export default function LoginPage() {
         description: `Bem-vindo ao ${tenant.branding.companyName}!`,
       });
     } catch (error: unknown) {
-      // Se for erro de falta de subscription, redireciona para pricing
+      // Se for erro de falta de subscription, redireciona para assinatura (contratação pelo checkout do site)
       if (error instanceof Error && error.message === 'NO_ACTIVE_SUBSCRIPTION') {
         toast({
           title: "Assinatura Necessária",
-          description: "Você precisa de uma assinatura ativa para continuar usando o sistema.",
+          description: "Você precisa de uma assinatura ativa. Contrate pelo checkout do site.",
           variant: "destructive",
           duration: 5000,
         });
-        navigate('/app/pricing');
+        navigate('/app/subscription');
         return;
       }
       
@@ -276,9 +276,9 @@ export default function LoginPage() {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
                         <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
                       )}
                     </Button>
                   </div>
@@ -310,26 +310,6 @@ export default function LoginPage() {
               </form>
 
               <div className="mt-6 space-y-4">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Não tem conta?
-                    </span>
-                  </div>
-                </div>
-
-                <Link to="/register">
-                  <Button
-                    variant="outline"
-                    className="w-full border-border text-[#22c55e] hover:bg-[#22c55e] hover:text-white"
-                  >
-                    Criar Nova Conta
-                  </Button>
-                </Link>
-
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
                     Esqueceu sua senha?{' '}

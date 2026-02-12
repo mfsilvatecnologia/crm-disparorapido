@@ -154,16 +154,16 @@ export function ScrapingButton({ open, onClose }: ScrapingButtonProps) {
           </div>
 
           {/* Custo Estimado */}
-          <Card className="border-purple-200 bg-purple-50">
+          <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-purple-900">Custo Estimado</p>
-                  <p className="text-xs text-purple-700 mt-0.5">
+                  <p className="text-sm font-semibold text-blue-900">Custo Estimado</p>
+                  <p className="text-xs text-blue-700 mt-0.5">
                     {quantity} leads × R$ 2,50 = R$ {(parseInt(quantity) * 2.5).toFixed(2)}
                   </p>
                 </div>
-                <Badge className="bg-purple-600 text-white">
+                <Badge className="bg-blue-600 text-white">
                   <Sparkles className="h-3 w-3 mr-1" />
                   Premium
                 </Badge>

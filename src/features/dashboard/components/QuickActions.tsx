@@ -6,7 +6,6 @@ import {
   Rocket,
   BarChart3,
   FileDown,
-  Settings,
   Zap,
   Phone,
   Mail,
@@ -268,14 +267,6 @@ export function useQuickActions() {
       icon: <TrendingUp className="h-5 w-5" />,
       color: 'info',
       onClick: () => console.log('Analytics')
-    },
-    {
-      id: 'settings',
-      title: 'Configurações',
-      description: 'Ajuste suas preferências',
-      icon: <Settings className="h-5 w-5" />,
-      color: 'secondary',
-      onClick: () => console.log('Configurações')
     },
     {
       id: 'refresh',

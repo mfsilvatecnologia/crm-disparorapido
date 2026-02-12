@@ -5,17 +5,13 @@ import {
   Map,
   User,
   Shield,
-  Building2,
   CreditCard,
-  DollarSign,
-  Handshake,
 } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -68,31 +64,10 @@ const settingsItems = [
     requiredFeature: 'enableBilling'
   },
   {
-    title: 'Planos',
-    url: '/app/pricing',
-    icon: DollarSign,
-    description: 'Planos e preços',
-    requiredFeature: 'enablePlanos'
-  },
-  {
-    title: 'Afiliados',
-    url: '/app/afiliados',
-    icon: Handshake,
-    description: 'Programa de indicações e comissões',
-    requiredFeature: 'enableBilling'
-  },
-  {
     title: 'Sessões Ativas',
     url: '/app/sessions',
     icon: Shield,
     description: 'Gerenciar dispositivos e sessões',
-    requiredFeature: 'enableBasicFeatures'
-  },
-  {
-    title: 'Empresas',
-    url: '/app/empresas',
-    icon: Building2,
-    description: 'Gestão de empresas',
     requiredFeature: 'enableBasicFeatures'
   },
 ];
@@ -108,13 +83,19 @@ export function AppSidebar() {
     if (path === '/') {
       return location.pathname === '/';
     }
+    // HOME (/app) só fica ativo na rota exata, não em /app/profile, /app/subscription, etc.
+    if (path === '/app') {
+      return location.pathname === '/app' || location.pathname === '/app/';
+    }
     return location.pathname.startsWith(path);
   };
 
   const getNavClassName = (path: string) => {
-    return isActive(path) 
-      ? "text-primary-foreground hover:opacity-90" 
-      : "hover:bg-accent hover:text-accent-foreground";
+    // Item ativo: sem efeito de hover (sobrescreve hover do SidebarMenuButton)
+    if (isActive(path)) {
+      return "text-primary-foreground hover:!bg-[#0055A4] hover:!text-primary-foreground";
+    }
+    return "hover:bg-accent hover:text-accent-foreground";
   };
 
   const handleNavClick = () => {
@@ -165,21 +146,11 @@ export function AppSidebar() {
           )}
         </div>
 
-        {/* Main Navigation */}
+        {/* Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map(renderMenuItem)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Settings */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Configurações</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
               {settingsItems.map(renderMenuItem)}
             </SidebarMenu>
           </SidebarGroupContent>

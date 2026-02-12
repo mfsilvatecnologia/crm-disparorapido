@@ -218,7 +218,7 @@ export function MessagesPage({ title = 'Mensagens DisparoRapido' }: MessagesPage
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-purple-500" />
+              <Calendar className="h-5 w-5 text-blue-500" />
               <div>
                 <p className="text-sm text-muted-foreground">% Vinculação</p>
                 <p className="text-xl font-bold">{stats.percentualVinculacao}%</p>

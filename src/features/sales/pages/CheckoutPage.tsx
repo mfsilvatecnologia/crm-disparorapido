@@ -57,7 +57,7 @@ export function CheckoutPage() {
   }, [products, productId]);
 
   const handleChangePlan = () => {
-    navigate('/pricing');
+    navigate('/app/subscription');
   };
 
   const handleContinueToConfirmation = () => {
@@ -152,12 +152,12 @@ export function CheckoutPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Nenhum plano selecionado.</p>
+          <p className="text-gray-600">Nenhum plano selecionado. A contratação é feita pelo checkout do site.</p>
           <button
-            onClick={() => navigate('/pricing')}
+            onClick={() => navigate('/app/subscription')}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           >
-            Ver Planos
+            Ver minha assinatura
           </button>
         </div>
       </div>
