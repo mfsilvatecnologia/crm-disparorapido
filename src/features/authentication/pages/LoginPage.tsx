@@ -4,7 +4,7 @@ import { Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Zap, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Zap, Eye, EyeOff, LogOut } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -228,7 +228,24 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {loginError && (
+                {sessionLimitError && (
+                  <Alert variant="destructive" className="flex flex-col gap-3">
+                    <AlertDescription>
+                      Limite de sessões atingido ({sessionLimitError.current_sessions}/{sessionLimitError.max_sessions}). Encerre uma sessão para continuar.
+                    </AlertDescription>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => setShowSessionManager(true)}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Encerrar uma sessão
+                    </Button>
+                  </Alert>
+                )}
+                {loginError && !sessionLimitError && (
                   <Alert variant="destructive">
                     <AlertDescription>{loginError}</AlertDescription>
                   </Alert>
