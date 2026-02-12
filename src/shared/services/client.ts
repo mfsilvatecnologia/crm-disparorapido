@@ -328,6 +328,7 @@ class ApiClient {
       email: credentials.email,
       password: credentials.password,
       device_id: credentials.device_id,
+      client_type: 'web', // CRM usa max_web_sessions em empresa_session_limits
       device_info: {
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
       },
