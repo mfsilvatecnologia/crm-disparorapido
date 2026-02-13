@@ -145,12 +145,12 @@ export default function LoginPage() {
         return;
       }
       
-      // Se for erro de limite de sessões, mostra o gerenciador
-      if (error instanceof SessionLimitExceededError) {
-        setPendingLoginData(data); // Guarda os dados para retry após revogar
-        setShowSessionManager(true);
-        return;
-      }
+      // [BLOQUEIO POR LIMITE DE SESSÕES DESATIVADO NO CRM - apenas extensão tem limite]
+      // if (error instanceof SessionLimitExceededError) {
+      //   setPendingLoginData(data);
+      //   setShowSessionManager(true);
+      //   return;
+      // }
 
       const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login. Tente novamente.';
       setLoginError(errorMessage);
@@ -228,6 +228,7 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* [BLOQUEIO POR LIMITE DE SESSÕES DESATIVADO NO CRM - apenas extensão tem limite]
                 {sessionLimitError && (
                   <Alert variant="destructive" className="flex flex-col gap-3">
                     <AlertDescription>
@@ -245,7 +246,8 @@ export default function LoginPage() {
                     </Button>
                   </Alert>
                 )}
-                {loginError && !sessionLimitError && (
+                */}
+                {loginError && (
                   <Alert variant="destructive">
                     <AlertDescription>{loginError}</AlertDescription>
                   </Alert>

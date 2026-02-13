@@ -276,96 +276,71 @@ export function AuthProvider({ children }: AuthProviderProps) {
         message: error?.message
       });
 
+      // [BLOQUEIO POR LIMITE DE SESSÕES DESATIVADO NO CRM - apenas extensão tem limite]
       // Handle SESSION_LIMIT_EXCEEDED (409) - Auto force login without modal
-      if (error?.status === 409 && (error?.data?.error === 'SESSION_LIMIT_EXCEEDED' || error?.message === 'SESSION_LIMIT_EXCEEDED')) {
-        try {
-          const sessionData = error?.data?.data;
-          const managementToken = sessionData?.management_token;
-          const activeSessions = sessionData?.active_sessions || [];
-
-          if (!managementToken || activeSessions.length === 0) {
-            setSessionLimitError(error.data.data);
-            throw new SessionLimitExceededError(error.data.data);
-          }
-
-          // Get the first active session (or the current one if identifiable)
-          const sessionToClose = activeSessions[0];
-
-          // Use the management token to close the session
-          try {
-            await apiClient.request(`/api/v1/sessions/${sessionToClose.id}`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': `Bearer ${managementToken}`,
-              },
-              body: JSON.stringify({
-                device_id: deviceId,
-                reason: 'AUTO_REPLACE_SESSION',
-                revoked_by: credentials.email,
-              }),
-            });
-          } catch (deleteError) {
-            // If deletion fails, show modal as fallback
-            setSessionLimitError(error.data.data);
-            throw new SessionLimitExceededError(error.data.data);
-          }
-
-          // Clear local session data
-          localStorage.removeItem('session_id');
-
-          // Now try to login again with same device info
-          const retryLoginData = {
-            email: credentials.email,
-            password: credentials.password,
-            device_id: deviceId,
-            device_fingerprint: fingerprint,
-            client_type: clientType,
-          };
-
-          const response: AuthResponse = await apiClient.login(retryLoginData);
-
-          // Store tokens and user data
-          const accessToken = response.data.token;
-
-          localStorage.setItem(TOKEN_KEY, accessToken);
-          localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
-
-          // Store session ID if available
-          if (response.data.session?.id) {
-            localStorage.setItem('session_id', response.data.session.id);
-          }
-
-          // Store empresa data if available
-          if (response.data.empresa) {
-            localStorage.setItem(EMPRESA_KEY, JSON.stringify(response.data.empresa));
-            setEmpresa({
-              id: response.data.empresa.id,
-              nome: response.data.empresa.nome,
-              cnpj: response.data.empresa.cnpj,
-            });
-          }
-
-          // Update API client and state
-          apiClient.setAccessToken(accessToken);
-          libApiClient.setAccessToken(accessToken);
-          setUser({
-            ...response.data.user,
-            created_at: response.data.user.createdAt || new Date().toISOString(),
-            updated_at: response.data.user.updatedAt || new Date().toISOString(),
-          } as User);
-          setToken(accessToken);
-          setRefreshToken(null);
-
-          // TODO: Implementar sistema de permissões quando backend estiver pronto
-          setPermissions({} as ComputedPermissions);
-
-          return; // Exit successfully
-        } catch (forceLoginError) {
-          // If force login fails, show the modal as fallback
-          setSessionLimitError(error.data.data);
-          throw new SessionLimitExceededError(error.data.data);
-        }
-      }
+      // if (error?.status === 409 && (error?.data?.error === 'SESSION_LIMIT_EXCEEDED' || error?.message === 'SESSION_LIMIT_EXCEEDED')) {
+      //   try {
+      //     const sessionData = error?.data?.data;
+      //     const managementToken = sessionData?.management_token;
+      //     const activeSessions = sessionData?.active_sessions || [];
+      //     if (!managementToken || activeSessions.length === 0) {
+      //       setSessionLimitError(error.data.data);
+      //       throw new SessionLimitExceededError(error.data.data);
+      //     }
+      //     const sessionToClose = activeSessions[0];
+      //     try {
+      //       await apiClient.request(`/api/v1/sessions/${sessionToClose.id}`, {
+      //         method: 'DELETE',
+      //         headers: { 'Authorization': `Bearer ${managementToken}` },
+      //         body: JSON.stringify({
+      //           device_id: deviceId,
+      //           reason: 'AUTO_REPLACE_SESSION',
+      //           revoked_by: credentials.email,
+      //         }),
+      //       });
+      //     } catch (deleteError) {
+      //       setSessionLimitError(error.data.data);
+      //       throw new SessionLimitExceededError(error.data.data);
+      //     }
+      //     localStorage.removeItem('session_id');
+      //     const retryLoginData = {
+      //       email: credentials.email,
+      //       password: credentials.password,
+      //       device_id: deviceId,
+      //       device_fingerprint: fingerprint,
+      //       client_type: clientType,
+      //     };
+      //     const response: AuthResponse = await apiClient.login(retryLoginData);
+      //     const accessToken = response.data.token;
+      //     localStorage.setItem(TOKEN_KEY, accessToken);
+      //     localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+      //     if (response.data.session?.id) {
+      //       localStorage.setItem('session_id', response.data.session.id);
+      //     }
+      //     if (response.data.empresa) {
+      //       localStorage.setItem(EMPRESA_KEY, JSON.stringify(response.data.empresa));
+      //       setEmpresa({
+      //         id: response.data.empresa.id,
+      //         nome: response.data.empresa.nome,
+      //         cnpj: response.data.empresa.cnpj,
+      //       });
+      //     }
+      //     apiClient.setAccessToken(accessToken);
+      //     libApiClient.setAccessToken(accessToken);
+      //     setUser({
+      //       ...response.data.user,
+      //       created_at: response.data.user.createdAt || new Date().toISOString(),
+      //       updated_at: response.data.user.updatedAt || new Date().toISOString(),
+      //     } as User);
+      //     setToken(accessToken);
+      //     setRefreshToken(null);
+      //     setPermissions({} as ComputedPermissions);
+      //     return;
+      //   } catch (forceLoginError) {
+      //     setSessionLimitError(error.data.data);
+      //     throw new SessionLimitExceededError(error.data.data);
+      //   }
+      // }
 
       throw error;
     } finally {

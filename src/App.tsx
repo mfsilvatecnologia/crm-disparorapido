@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/shared/components/ui/sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./shared/contexts/AuthContext";
 import { OrganizationProvider } from "./shared/contexts/OrganizationContext";
 import { TenantProvider } from "./shared/contexts/TenantContext";
@@ -115,6 +115,12 @@ const ProviderAdminRoute = () => <ProviderAdminPage />;
 
 const EnrichmentStatsRoute = () => <EnrichmentStatsPage />;
 
+/** Redireciona /redefinir-senha?token= para /reset-password?token= (mesmo fluxo da extensão). */
+function RedirectRedefinirSenha() {
+  const location = useLocation();
+  return <Navigate to={`/reset-password${location.search}`} replace />;
+}
+
 function AppRoutes() {
   const withErrorBoundary = (element: React.ReactNode) => (
     <ErrorBoundary>{element}</ErrorBoundary>
@@ -129,6 +135,8 @@ function AppRoutes() {
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* Mesmo fluxo da extensão: link do email de reset pode vir como /redefinir-senha?token= (compatibilidade) */}
+        <Route path="/redefinir-senha" element={<RedirectRedefinirSenha />} />
         <Route path="/nova-senha" element={<NewPasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
