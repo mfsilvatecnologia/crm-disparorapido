@@ -57,6 +57,7 @@ import { CustomersPage, CustomerDetailPage } from "./features/customers";
 import { RenewalsPage, ContractsPage } from "./features/contracts";
 import { ErrorBoundary } from "./shared/components/common/ErrorBoundary";
 import { CRMPage } from "./features/crm";
+import { TutorialPage } from "./features/tutorial/pages/TutorialPage";
 
 const shouldRetry = (failureCount: number, error: unknown) => {
   const status = (error as { status?: number; response?: { status?: number } })?.status
@@ -207,6 +208,7 @@ function AppRoutes() {
           <Route path="disparorapido/vinculacoes" element={<VinculacoesPendentesPage />} />
 
           <Route path="profile" element={<UserProfilePage />} />
+          <Route path="tutorial" element={<TutorialPage />} />
           <Route path="sessions" element={<SessionManagementPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="settings/campaign-stages" element={<StageConfigPage />} />

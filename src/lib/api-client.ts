@@ -123,6 +123,14 @@ class ApiClient {
                 data?.error?.details
               );
 
+            case 400:
+              throw new ApiClientError(
+                400,
+                data?.error?.code || 'VALIDATION_ERROR',
+                this.getErrorMessage(data, 'Requisição inválida. Tente novamente.'),
+                data?.error?.details ?? data?.details
+              );
+
             case 422:
               throw new ApiClientError(
                 422,

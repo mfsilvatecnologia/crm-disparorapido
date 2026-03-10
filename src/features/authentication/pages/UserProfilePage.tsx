@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui
 import { Separator } from '@/shared/components/ui/separator';
 import { useToast } from '@/shared/hooks/use-toast';
 import { apiClient } from '@/shared/services/client';
+import { useNavigate } from 'react-router-dom';
 
 const updateProfileSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -34,6 +35,7 @@ type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 export default function UserProfilePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   // Fetch current user data
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['user', 'profile'],
@@ -138,6 +140,42 @@ export default function UserProfilePage() {
 
   if (error) {
     console.error('Erro detectado no componente:', error);
+
+    const apiError = error as any;
+    const apiErrorCode = apiError?.data?.error;
+
+    // Tratamento amigável para assinatura inativa
+    if (apiErrorCode === 'SUBSCRIPTION_INACTIVE') {
+      return (
+        <div className="container mx-auto p-6">
+          <Alert variant="default">
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="font-semibold text-gray-900">
+                  Sua assinatura está inativa.
+                </p>
+                <p className="text-sm text-gray-700">
+                  Para editar seu perfil e continuar usando a plataforma, é necessário regularizar o pagamento da
+                  assinatura.
+                </p>
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                    onClick={() => navigate('/app/subscription')}
+                  >
+                    Ir para a tela de Assinatura
+                  </Button>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      );
+    }
+
+    // Fallback genérico para outros erros
     return (
       <div className="container mx-auto p-6">
         <Alert variant="destructive">

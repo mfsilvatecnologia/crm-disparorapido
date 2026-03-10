@@ -219,25 +219,69 @@ export async function fetchSubscriptionStatus(): Promise<{
 }
 
 /**
- * Retomar assinatura cancelada (cria nova no Asaas e atualiza registro local).
- * Retorna a assinatura com asaasInvoiceUrl para o cliente cadastrar o cartão.
+ * Payload opcional para retomar assinatura: com outro cartão (creditCard) ou só com o já usado (vazio).
  */
-export async function restoreSubscription(subscriptionId: string): Promise<Subscription> {
-  const response = await apiClient.post<ApiResponse<Subscription>>(
-    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/restore`,
-    {}
-  );
+export interface RestoreSubscriptionPayload {
+  creditCard?: {
+    holderName: string;
+    number: string;
+    expiryMonth: string;
+    expiryYear: string;
+    ccv: string;
+  };
+}
 
-  if (!response.success || !response.data) {
-    throw new Error(response.message || 'Falha ao retomar assinatura');
+/**
+ * Retomar assinatura cancelada (cria nova no Asaas e atualiza registro local).
+ * Sem body: usa cartão já cadastrado (se houver). Com creditCard: reativa com outro cartão.
+ * Retorna a assinatura; asaasInvoiceUrl pode vir preenchido se precisar cadastrar cartão.
+ */
+export async function restoreSubscription(
+  subscriptionId: string,
+  payload: RestoreSubscriptionPayload = {}
+): Promise<Subscription> {
+  try {
+    const body: Record<string, unknown> = {};
+    if (payload.creditCard) {
+      body.creditCard = {
+        holderName: payload.creditCard.holderName.trim(),
+        number: payload.creditCard.number.replace(/\s/g, ''),
+        expiryMonth: payload.creditCard.expiryMonth.padStart(2, '0').slice(-2),
+        expiryYear:
+          payload.creditCard.expiryYear.length === 2
+            ? payload.creditCard.expiryYear
+            : payload.creditCard.expiryYear.slice(-2),
+        ccv: payload.creditCard.ccv.trim(),
+      };
+    }
+    const response = await apiClient.post<ApiResponse<Subscription>>(
+      `${SUBSCRIPTIONS_PATH}/${subscriptionId}/restore`,
+      body
+    );
+
+    if (!response.success || !response.data) {
+      throw new Error(response.message || 'Falha ao retomar assinatura');
+    }
+
+    const validation = validateSubscription(response.data);
+    if (!validation.success) {
+      throw new Error('Dados inválidos da assinatura');
+    }
+
+    return response.data;
+  } catch (error: any) {
+    // Backend pode enviar error como string ou em details.detail; api-client já coloca em error.message
+    const data = error?.response?.data;
+    const msg =
+      (typeof data?.error === 'string' ? data.error : null) ??
+      data?.error?.message ??
+      data?.message ??
+      (error?.message && String(error.message).trim() ? error.message : null) ??
+      'Falha ao retomar assinatura. Tente novamente.';
+    const detail = data?.details?.detail ?? data?.error?.details?.detail;
+    const finalMessage = (typeof detail === 'string' && detail.trim() ? detail.trim() : null) ?? msg;
+    throw new Error(finalMessage);
   }
-
-  const validation = validateSubscription(response.data);
-  if (!validation.success) {
-    throw new Error('Dados inválidos da assinatura');
-  }
-
-  return response.data;
 }
 
 /**
@@ -245,6 +289,61 @@ export async function restoreSubscription(subscriptionId: string): Promise<Subsc
  */
 export async function reactivateSubscription(subscriptionId: string): Promise<Subscription> {
   return restoreSubscription(subscriptionId);
+}
+
+/**
+ * Fetch latest payment link for a subscription (pending/overdue charges).
+ */
+export async function fetchSubscriptionPaymentLink(subscriptionId: string): Promise<string | null> {
+  const response = await apiClient.get<ApiResponse<{ paymentUrl: string | null }>>(
+    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/payment-link`
+  );
+
+  if (!response.success) {
+    throw new Error(response.message || 'Falha ao obter link de pagamento');
+  }
+
+  return response.data.paymentUrl ?? null;
+}
+
+/**
+ * Pay latest pending/overdue charge of a subscription with credit card.
+ */
+export async function paySubscriptionWithCard(
+  subscriptionId: string,
+  payload: {
+    creditCard: {
+      holderName: string;
+      number: string;
+      expiryMonth: string;
+      expiryYear: string;
+      ccv: string;
+    };
+  }
+): Promise<{ paymentId: string; status: string }> {
+  try {
+    const response = await apiClient.post<ApiResponse<{ paymentId: string; status: string }>>(
+      `${SUBSCRIPTIONS_PATH}/${subscriptionId}/pay-with-card`,
+      payload
+    );
+
+    if (!response.success) {
+      throw new Error(response.message || 'Falha ao pagar fatura com cartão');
+    }
+
+    return response.data;
+  } catch (error: any) {
+    const data = error?.response?.data;
+    const msg =
+      (typeof data?.error === 'string' ? data.error : null) ??
+      data?.error?.message ??
+      data?.message ??
+      (error?.message && String(error.message).trim() ? error.message : null) ??
+      'Falha ao processar pagamento. Tente novamente.';
+    const detail = data?.details?.detail ?? data?.error?.details?.detail;
+    const finalMessage = (typeof detail === 'string' && detail.trim() ? detail.trim() : null) ?? msg;
+    throw new Error(finalMessage);
+  }
 }
 
 /**
@@ -272,21 +371,34 @@ export async function updateSubscriptionCreditCard(
     };
   }
 ): Promise<Subscription> {
-  const response = await apiClient.patch<ApiResponse<Subscription>>(
-    `${SUBSCRIPTIONS_PATH}/${subscriptionId}/credit-card`,
-    paymentData
-  );
+  try {
+    const response = await apiClient.patch<ApiResponse<Subscription>>(
+      `${SUBSCRIPTIONS_PATH}/${subscriptionId}/credit-card`,
+      paymentData
+    );
 
-  if (!response.success || !response.data) {
-    throw new Error(response.message || 'Falha ao atualizar cartão');
+    if (!response.success || !response.data) {
+      throw new Error(response.message || 'Falha ao atualizar cartão');
+    }
+
+    const validation = validateSubscription(response.data);
+    if (!validation.success) {
+      throw new Error('Dados inválidos da assinatura');
+    }
+
+    return response.data;
+  } catch (error: any) {
+    const data = error?.response?.data;
+    const msg =
+      (typeof data?.error === 'string' ? data.error : null) ??
+      data?.error?.message ??
+      data?.message ??
+      (error?.message && String(error.message).trim() ? error.message : null) ??
+      'Falha ao atualizar cartão. Tente novamente.';
+    const detail = data?.details?.detail ?? data?.error?.details?.detail;
+    const finalMessage = (typeof detail === 'string' && detail.trim() ? detail.trim() : null) ?? msg;
+    throw new Error(finalMessage);
   }
-
-  const validation = validateSubscription(response.data);
-  if (!validation.success) {
-    throw new Error('Dados inválidos da assinatura');
-  }
-
-  return response.data;
 }
 
 /**

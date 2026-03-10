@@ -29,15 +29,17 @@ export function UpdateCardDialog({
   const [creditCard, setCreditCard] = useState(initialCard);
   const [showSuccess, setShowSuccess] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { mutate: updateCard, isPending } = useUpdateSubscriptionCreditCard();
 
-  // Ao abrir o diálogo, garantir estado limpo (não mostrar sucesso de uma abertura anterior)
+  // Ao abrir o diálogo, garantir estado limpo (não mostrar sucesso/erro de uma abertura anterior)
   useEffect(() => {
     if (isOpen) {
       setShowSuccess(false);
       setCountdown(0);
+      setErrorMessage(null);
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
@@ -66,6 +68,7 @@ export function UpdateCardDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     const payload: UpdateCreditCardPayload = {
       creditCard: {
         holderName: creditCard.holderName.trim(),
@@ -86,6 +89,9 @@ export function UpdateCardDialog({
             setCountdown((prev) => (prev > 1 ? prev - 1 : 0));
           }, 1000);
           closeTimeoutRef.current = setTimeout(finishAndClose, SUCCESS_DELAY_MS);
+        },
+        onError: (err) => {
+          setErrorMessage(err?.message || 'Erro ao atualizar cartão. Tente novamente.');
         },
       }
     );
@@ -108,6 +114,7 @@ export function UpdateCardDialog({
         countdownIntervalRef.current = null;
       }
       setCreditCard(initialCard);
+      setErrorMessage(null);
       onClose();
     }
   };
@@ -167,6 +174,11 @@ export function UpdateCardDialog({
             </div>
           ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {errorMessage && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800" role="alert">
+                {errorMessage}
+              </div>
+            )}
             <div>
               <p className="text-sm text-gray-600 mb-3">
                 Informe apenas os dados do novo cartão. O titular e endereço já cadastrados serão mantidos para a próxima fatura.

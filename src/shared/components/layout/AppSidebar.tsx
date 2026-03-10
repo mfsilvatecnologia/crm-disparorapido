@@ -6,10 +6,13 @@ import {
   User,
   Shield,
   CreditCard,
+  BookOpen,
+  LogOut,
 } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
@@ -57,6 +60,13 @@ const settingsItems = [
     requiredFeature: 'enableBasicFeatures'
   },
   {
+    title: 'Tutorial',
+    url: '/app/tutorial',
+    icon: BookOpen,
+    description: 'Manual de uso em PDF',
+    requiredFeature: 'enableBasicFeatures'
+  },
+  {
     title: 'Assinatura',
     url: '/app/subscription',
     icon: CreditCard,
@@ -76,7 +86,7 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const { tenant } = useTenant();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const queryClient = useQueryClient();
 
   const isActive = (path: string) => {
@@ -155,6 +165,25 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Sair */}
+        <SidebarFooter className="border-t border-sidebar-border pt-2 mt-auto">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  className="w-full hover:bg-accent hover:text-accent-foreground text-left"
+                  title={!open ? 'Sair' : undefined}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {open && <span>Sair</span>}
+                </button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
       </SidebarContent>
     </Sidebar>
   );

@@ -13,52 +13,41 @@ import { SubscriptionStatus, BillingCycle } from '../types';
 export const subscriptionStatusSchema = z.nativeEnum(SubscriptionStatus);
 
 /**
- * Subscription schema
+ * Subscription schema - alinhado ao SubscriptionResponseDTO da API (lista, restore, etc.)
+ * Ref: resposta da API de assinaturas (GET/POST restore, etc.)
  */
 export const subscriptionSchema = z.object({
-  id: z.string().uuid('ID deve ser um UUID válido'),
-  
-  // New API fields
-  userId: z.string().uuid('ID do usuário deve ser um UUID válido'),
-  produtoId: z.string().uuid('ID do produto deve ser um UUID válido'),
-  dataInicio: z.string().datetime('Data de início inválida'),
-  dataExpiracao: z.string().datetime('Data de expiração inválida'),
-  status: z.enum(['trial', 'trialing', 'ativa', 'active', 'expirada', 'cancelada', 'suspensa']),
-  tipo: z.enum(['trial', 'paga', 'vitalicia']),
-  valorPago: z.number().nullable(),
-  asaasPaymentId: z.string().nullable(),
-  diaCobranca: z.number().int().nullable(),
-  diasRestantes: z.number().int(),
-  isActive: z.boolean(),
-  isExpirando: z.boolean(),
-  descricaoStatus: z.string(),
-  
-  // New trial fields from API
+  id: z.string().min(1, 'ID é obrigatório'),
+  empresaId: z.string().min(1),
+  produtoId: z.string().min(1),
+  asaasSubscriptionId: z.string().nullable(),
   asaasInvoiceUrl: z.string().url().nullable().optional(),
-  trialDays: z.number().int().positive().optional(),
-  trialEndDate: z.string().optional(),
+  status: z.string().min(1), // API pode retornar active, trialing, canceled, past_due, pending_payment_method, etc.
+  billingCycle: z.string().optional(),
+  billingCycleDescription: z.string().optional(),
+  value: z.number().optional(),
+  valueFormatted: z.string().optional(),
+  hasTrial: z.boolean().optional(),
+  trialDays: z.number().int().nullable().optional(),
+  trialEndDate: z.string().nullable().optional(),
+  isInTrial: z.boolean().optional(),
+  nextDueDate: z.string().nullable().optional(),
+  firstPaymentDate: z.string().nullable().optional(),
+  lastPaymentDate: z.string().nullable().optional(),
+  maxPayments: z.number().int().nullable().optional(),
+  paymentsCount: z.number().int().optional(),
+  remainingPayments: z.number().int().nullable().optional(),
+  description: z.string().nullable().optional(),
+  externalReference: z.string().nullable().optional(),
+  metadata: z.record(z.unknown()).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().nullable().optional(),
+  canceledAt: z.string().nullable().optional(),
+  suspendedAt: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
   firstChargeDate: z.string().optional(),
   nextSteps: z.array(z.string()).optional(),
-  
-  createdAt: z.string().datetime('Data de criação inválida'),
-  updatedAt: z.string().datetime('Data de atualização inválida'),
-  
-  // Backward compatibility fields (optional)
-  empresaId: z.string().uuid().optional(),
-  companyId: z.string().uuid().optional(),
-  productId: z.string().uuid().optional(),
-  trialStart: z.string().datetime().nullable().optional(),
-  trialEnd: z.string().datetime().nullable().optional(),
-  currentPeriodStart: z.string().datetime().optional(),
-  currentPeriodEnd: z.string().datetime().optional(),
-  nextDueDate: z.string().datetime().nullable().optional(),
-  valorCentavos: z.number().int().min(0).optional(),
-  amount: z.number().int().min(0).optional(),
-  billingCycle: z.nativeEnum(BillingCycle).optional(),
-  asaasSubscriptionId: z.string().nullable().optional(),
-  cancellationReason: z.string().nullable().optional(),
-  canceledAt: z.string().datetime().nullable().optional(),
-  deletedAt: z.string().datetime().nullable().optional(),
 });
 
 /**
