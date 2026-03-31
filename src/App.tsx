@@ -116,10 +116,16 @@ const ProviderAdminRoute = () => <ProviderAdminPage />;
 
 const EnrichmentStatsRoute = () => <EnrichmentStatsPage />;
 
-/** Redireciona /redefinir-senha?token= para /reset-password?token= (mesmo fluxo da extensão). */
+/** Legado: emails e links antigos com /reset-password?token= */
+function RedirectResetPasswordLegacy() {
+  const location = useLocation();
+  return <Navigate to={`/recuperar-senha${location.search}`} replace />;
+}
+
+/** Compatibilidade: link pode vir como /redefinir-senha?token= */
 function RedirectRedefinirSenha() {
   const location = useLocation();
-  return <Navigate to={`/reset-password${location.search}`} replace />;
+  return <Navigate to={`/recuperar-senha${location.search}`} replace />;
 }
 
 function AppRoutes() {
@@ -135,8 +141,8 @@ function AppRoutes() {
 
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        {/* Mesmo fluxo da extensão: link do email de reset pode vir como /redefinir-senha?token= (compatibilidade) */}
+        <Route path="/recuperar-senha" element={<ResetPasswordPage />} />
+        <Route path="/reset-password" element={<RedirectResetPasswordLegacy />} />
         <Route path="/redefinir-senha" element={<RedirectRedefinirSenha />} />
         <Route path="/nova-senha" element={<NewPasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />

@@ -55,6 +55,21 @@ export default function LoginPage() {
     },
   });
 
+  useEffect(() => {
+    if (tenant.id !== 'disparo-rapido') return;
+    const seoTitle = 'Painel do Cliente | Disparo Rápido';
+    const seoDesc =
+      'Acesse o Painel do Cliente Disparo Rápido. Acesse os dados da sua assinatura e o material de apoio para você enviar mensagens no WhatsApp através da ferramenta Disparo Rápido.';
+    const meta = document.querySelector('meta[name="description"]');
+    const prevDesc = meta?.getAttribute('content') ?? '';
+    document.title = seoTitle;
+    if (meta) meta.setAttribute('content', seoDesc);
+    return () => {
+      document.title = tenant.branding.companyName;
+      if (meta) meta.setAttribute('content', prevDesc);
+    };
+  }, [tenant]);
+
   // Exibe toast quando usuário foi registrado com sucesso
   useEffect(() => {
     if (isRegistered && emailFromUrl) {
@@ -332,7 +347,7 @@ export default function LoginPage() {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
                     Esqueceu sua senha?{' '}
-                    <Link to="/reset-password" className="text-primary hover:underline">
+                    <Link to="/recuperar-senha" className="text-primary hover:underline">
                       Recuperar senha
                     </Link>
                   </p>

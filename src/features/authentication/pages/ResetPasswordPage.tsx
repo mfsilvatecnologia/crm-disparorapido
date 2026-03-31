@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -325,6 +325,21 @@ export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const { tenant } = useTenant();
+
+  useEffect(() => {
+    if (tenant.id !== 'disparo-rapido') return;
+    const seoTitle = 'Recuperar Senha | Disparo Rápido';
+    const seoDesc =
+      'Recupere a sua senha informando o e-mail da sua assinatura Disparo Rápido. Você receberá um link para redefinir a senha.';
+    const meta = document.querySelector('meta[name="description"]');
+    const prevDesc = meta?.getAttribute('content') ?? '';
+    document.title = seoTitle;
+    if (meta) meta.setAttribute('content', seoDesc);
+    return () => {
+      document.title = tenant.branding.companyName;
+      if (meta) meta.setAttribute('content', prevDesc);
+    };
+  }, [tenant]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-background" style={{ position: 'relative' }}>
