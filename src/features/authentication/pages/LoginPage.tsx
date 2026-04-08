@@ -347,8 +347,8 @@ export default function LoginPage() {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
                     Esqueceu sua senha?{' '}
-                    <Link to="/recuperar-senha" className="text-primary hover:underline">
-                      Recuperar senha
+                    <Link to="/redefinir-senha" className="text-primary hover:underline">
+                      Redefinir senha
                     </Link>
                   </p>
                 </div>

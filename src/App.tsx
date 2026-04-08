@@ -116,16 +116,16 @@ const ProviderAdminRoute = () => <ProviderAdminPage />;
 
 const EnrichmentStatsRoute = () => <EnrichmentStatsPage />;
 
-/** Legado: emails e links antigos com /reset-password?token= */
+/** Legado: /reset-password?token= */
 function RedirectResetPasswordLegacy() {
   const location = useLocation();
-  return <Navigate to={`/recuperar-senha${location.search}`} replace />;
+  return <Navigate to={`/redefinir-senha${location.search}`} replace />;
 }
 
-/** Compatibilidade: link pode vir como /redefinir-senha?token= */
-function RedirectRedefinirSenha() {
+/** Legado: URL antiga do CRM */
+function RedirectRecuperarSenha() {
   const location = useLocation();
-  return <Navigate to={`/recuperar-senha${location.search}`} replace />;
+  return <Navigate to={`/redefinir-senha${location.search}`} replace />;
 }
 
 function AppRoutes() {
@@ -141,9 +141,9 @@ function AppRoutes() {
 
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/recuperar-senha" element={<ResetPasswordPage />} />
+        <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+        <Route path="/recuperar-senha" element={<RedirectRecuperarSenha />} />
         <Route path="/reset-password" element={<RedirectResetPasswordLegacy />} />
-        <Route path="/redefinir-senha" element={<RedirectRedefinirSenha />} />
         <Route path="/nova-senha" element={<NewPasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
 

@@ -328,9 +328,9 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     if (tenant.id !== 'disparo-rapido') return;
-    const seoTitle = 'Recuperar Senha | Disparo Rápido';
+    const seoTitle = 'Redefinir Senha | Disparo Rápido';
     const seoDesc =
-      'Recupere a sua senha informando o e-mail da sua assinatura Disparo Rápido. Você receberá um link para redefinir a senha.';
+      'Redefina a sua senha informando o e-mail da sua assinatura Disparo Rápido. Você receberá um link para cadastrar uma nova senha.';
     const meta = document.querySelector('meta[name="description"]');
     const prevDesc = meta?.getAttribute('content') ?? '';
     document.title = seoTitle;

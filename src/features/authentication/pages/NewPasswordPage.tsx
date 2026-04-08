@@ -95,7 +95,7 @@ export default function NewPasswordPage() {
         description: 'Link para redefinição de senha é inválido ou expirado.',
         variant: 'destructive',
       });
-      navigate('/recuperar-senha');
+      navigate('/redefinir-senha');
     }
   }, [token, type, navigate, toast]);
 
