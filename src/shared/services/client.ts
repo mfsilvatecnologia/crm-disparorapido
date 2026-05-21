@@ -347,6 +347,13 @@ class ApiClient {
     }
     const user = raw.user || {};
     const empresa = raw.empresa || (raw.empresa_id ? { id: raw.empresa_id, nome: '', cnpj: '' } : { id: '', nome: '', cnpj: '' });
+    const empresaIdFromUser = typeof user.empresa_id === 'string' ? user.empresa_id : empresa.id;
+    const roleFromUser =
+      typeof user.role === 'string' && user.role.trim()
+        ? user.role.trim()
+        : typeof user.user_metadata?.role === 'string' && user.user_metadata.role.trim()
+          ? user.user_metadata.role.trim()
+          : 'usuario';
     const mapped: AuthResponse = {
       success: true,
       data: {
@@ -360,6 +367,9 @@ class ApiClient {
           updatedAt: user.updated_at || new Date().toISOString(),
           created_at: user.created_at,
           updated_at: user.updated_at,
+          empresa_id: empresaIdFromUser,
+          role: roleFromUser,
+          ativo: user.ativo !== false,
         },
         empresa: { id: empresa.id, nome: empresa.nome || '', cnpj: empresa.cnpj || '' },
         session: raw.session_id

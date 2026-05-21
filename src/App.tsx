@@ -44,7 +44,7 @@ import {
   CreditTransactionsPage,
   FinancialDashboardPage
 } from "./features/sales/pages";
-import { AffiliateCommissionsPage, AffiliateDashboardPage } from "./features/affiliates/pages";
+import { AffiliateCommissionsPage, AffiliateDashboardPage, AffiliateClientsPage, AffiliateFinancialPage, AffiliateInvoicesPage } from "./features/affiliates/pages";
 import { NotFound } from "./shared/pages";
 import { BillingConfigPage } from "./features/campaign-stages/pages/BillingConfigPage";
 import { FeatureDemoPage } from "./shared/components/features/FeatureDemoPage";
@@ -182,7 +182,10 @@ function AppRoutes() {
 
           {/* Affiliates */}
           <Route path="afiliados" element={<AffiliateDashboardPage />} />
+          <Route path="afiliados/clientes" element={withErrorBoundary(<AffiliateClientsPage />)} />
           <Route path="afiliados/comissoes" element={<AffiliateCommissionsPage />} />
+          <Route path="afiliados/financeiro" element={<AffiliateFinancialPage />} />
+          <Route path="afiliados/notas-fiscais" element={<AffiliateInvoicesPage />} />
 
           {/* Sales & Subscriptions Routes */}
           <Route path="subscription" element={<SubscriptionManagementPage />} />

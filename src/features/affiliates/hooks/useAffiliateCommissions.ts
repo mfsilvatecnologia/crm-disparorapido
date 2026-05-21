@@ -9,5 +9,6 @@ export function useAffiliateCommissions(params: CommissionListParams) {
     queryFn: () => affiliatesApi.getAffiliateCommissions(params),
     placeholderData: keepPreviousData,
     staleTime: 60 * 1000,
+    retry: false,
   });
 }

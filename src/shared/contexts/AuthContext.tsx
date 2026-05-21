@@ -3,6 +3,7 @@ import { useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/reac
 import { SessionProvider } from './SessionContext';
 import { getOrCreateDeviceId, generateDeviceFingerprint } from '@/shared/utils/device';
 import type { User, ComputedPermissions, LoginCredentials } from '../types';
+import { derivePermissionsFromUser } from '@/shared/auth/derivePermissionsFromUser';
 import { ClientType } from '@/features/authentication/types/auth';
 import apiClient from '../services/client';
 import { apiClient as libApiClient } from '@/lib/api-client';
@@ -138,21 +139,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const empresaData = localStorage.getItem(EMPRESA_KEY);
 
         if (savedToken && userData) {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-          setToken(savedToken);
-          setRefreshToken(savedRefreshToken); // Pode ser null
-          apiClient.setAccessToken(savedToken);
-          libApiClient.setAccessToken(savedToken); // Sync with lib api client
+          const parsedUser = JSON.parse(userData) as User;
+          let mergedUser = parsedUser;
 
           // Load empresa if available
           if (empresaData) {
             const parsedEmpresa = JSON.parse(empresaData);
             setEmpresa(parsedEmpresa);
+            if (!mergedUser.empresa_id && parsedEmpresa?.id) {
+              mergedUser = { ...mergedUser, empresa_id: parsedEmpresa.id };
+            }
           }
 
-          // TODO: Implementar sistema de permissões quando backend estiver pronto
-          setPermissions({} as ComputedPermissions);
+          setUser(mergedUser);
+          setToken(savedToken);
+          setRefreshToken(savedRefreshToken); // Pode ser null
+          apiClient.setAccessToken(savedToken);
+          libApiClient.setAccessToken(savedToken); // Sync with lib api client
+
+          setPermissions(derivePermissionsFromUser(mergedUser));
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
@@ -201,7 +206,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Store tokens temporarily for the redirect
         const accessToken = response.data.token;
         localStorage.setItem(TOKEN_KEY, accessToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
 
         if (response.data.empresa) {
           localStorage.setItem(EMPRESA_KEY, JSON.stringify(response.data.empresa));
@@ -212,17 +216,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         libApiClient.setAccessToken(accessToken);
 
         // Set user state to allow navigation
-        setUser({
-          ...response.data.user,
-          created_at: response.data.user.createdAt || new Date().toISOString(),
-          updated_at: response.data.user.updatedAt || new Date().toISOString(),
-        } as User);
+        const u = response.data.user;
+        const subUser: User = {
+          id: u.id,
+          email: u.email,
+          nome: u.nome ?? u.name ?? '',
+          role: (u as { role?: string }).role ?? 'usuario',
+          empresa_id: (u as { empresa_id?: string }).empresa_id ?? response.data.empresa?.id ?? '',
+          ativo: (u as { ativo?: boolean }).ativo ?? true,
+          created_at: u.createdAt || u.created_at || new Date().toISOString(),
+          updated_at: u.updatedAt || u.updated_at || new Date().toISOString(),
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(subUser));
+        setUser(subUser);
         setToken(accessToken);
         setEmpresa(response.data.empresa ? {
           id: response.data.empresa.id,
           nome: response.data.empresa.nome,
           cnpj: response.data.empresa.cnpj,
         } : null);
+
+        setPermissions(derivePermissionsFromUser(subUser));
 
         // Store subscription info for redirect
         localStorage.setItem('subscription_redirect', 'true');
@@ -237,7 +251,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const accessToken = response.data.token;
 
       localStorage.setItem(TOKEN_KEY, accessToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
 
       // Store session ID if available
       if (response.data.session?.id) {
@@ -257,16 +270,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Update API client and state
       apiClient.setAccessToken(accessToken);
       libApiClient.setAccessToken(accessToken); // Sync with lib api client
-      setUser({
-        ...response.data.user,
-        created_at: response.data.user.createdAt || new Date().toISOString(),
-        updated_at: response.data.user.updatedAt || new Date().toISOString(),
-      } as User);
+      const u = response.data.user;
+      const nextUser: User = {
+        id: u.id,
+        email: u.email,
+        nome: u.nome ?? u.name ?? '',
+        role: (u as { role?: string }).role ?? 'usuario',
+        empresa_id: (u as { empresa_id?: string }).empresa_id ?? response.data.empresa?.id ?? '',
+        ativo: (u as { ativo?: boolean }).ativo ?? true,
+        created_at: u.createdAt || u.created_at || new Date().toISOString(),
+        updated_at: u.updatedAt || u.updated_at || new Date().toISOString(),
+      };
+      setUser(nextUser);
+      localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
       setToken(accessToken);
       setRefreshToken(null); // API não retorna refresh token no login
 
-      // TODO: Implementar sistema de permissões quando backend estiver pronto
-      setPermissions({} as ComputedPermissions);
+      setPermissions(derivePermissionsFromUser(nextUser));
     } catch (error: any) {
       console.error('Login failed:', error);
       console.error('Error details:', {
@@ -389,7 +409,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         email: data.user.email,
         nome: data.user.user_metadata?.full_name,
         role: data.user.roles[0] || data.user.user_metadata?.role || 'usuario',
-        empresa_id: data.user.empresa_id || '',
+        empresa_id: data.user.empresa_id || data.empresa?.id || '',
         ativo: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -397,8 +417,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setUser(userData);
       setToken(accessToken);
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
 
-      // Check if user has a valid subscription
+      setPermissions(derivePermissionsFromUser(userData));
       // Note: The backend response should include subscription info
       // If no subscription or invalid subscription, create a free trial
       const hasValidSubscription = data.subscription && data.subscription.isActive;
@@ -430,9 +451,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // User is still logged in, they can activate subscription later
         }
       }
-
-      // TODO: Implementar sistema de permissões quando backend estiver pronto
-      setPermissions({} as ComputedPermissions);
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
@@ -495,12 +513,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Update user data if provided
       if (response.data.user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
-        setUser({
-          ...response.data.user,
-          created_at: response.data.user.created_at || response.data.user.createdAt || new Date().toISOString(),
-          updated_at: response.data.user.updated_at || response.data.user.updatedAt || new Date().toISOString(),
-        } as User);
+        const raw = response.data.user;
+        const merged: User = {
+          id: raw.id,
+          email: raw.email,
+          nome: raw.nome ?? raw.name ?? '',
+          role: (raw as { role?: string }).role ?? 'usuario',
+          empresa_id: (raw as { empresa_id?: string }).empresa_id ?? response.data.empresa?.id ?? '',
+          ativo: (raw as { ativo?: boolean }).ativo ?? true,
+          created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
+          updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString(),
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(merged));
+        setUser(merged);
+        setPermissions(derivePermissionsFromUser(merged));
       }
 
       // Update empresa data if provided

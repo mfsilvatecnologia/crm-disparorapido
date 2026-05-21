@@ -1,9 +1,6 @@
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
-import { AffiliateCodeCard } from '../components/AffiliateCodeCard';
 import { ShareLinkCard } from '../components/ShareLinkCard';
-import { StatisticsCards } from '../components/StatisticsCards';
-import { RecentCommissionsList } from '../components/RecentCommissionsList';
 import { useAffiliateCode } from '../hooks/useAffiliateCode';
 import { useAffiliateStatistics } from '../hooks/useAffiliateStatistics';
 
@@ -14,23 +11,13 @@ export function AffiliateDashboardPage() {
     isError: isCodeError,
     error: codeError,
   } = useAffiliateCode();
-  const {
-    data: statistics,
-    isLoading: loadingStats,
-    isError: isStatsError,
-    error: statsError,
-  } = useAffiliateStatistics();
+  const { data: statistics, isError: isStatsError, error: statsError } = useAffiliateStatistics();
 
   const hasError = isCodeError || isStatsError;
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Programa de Afiliados</h1>
-        <p className="text-muted-foreground">
-          Compartilhe seu link, acompanhe suas indicações e visualize suas comissões em tempo real.
-        </p>
-      </div>
+      <h1 className="text-3xl font-bold tracking-tight">Link do Afiliado</h1>
 
       {hasError && (
         <Alert variant="destructive">
@@ -42,14 +29,32 @@ export function AffiliateDashboardPage() {
         </Alert>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <AffiliateCodeCard code={code} isLoading={loadingCode} />
-        <ShareLinkCard link={code?.linkIndicacao} fallbackCode={code?.codigoAfiliado} isLoading={loadingCode} />
-      </div>
+      {statistics?.tipoPlano === 'MENSALIDADE' &&
+        statistics?.statusAssinatura === 'INADIMPLENTE' && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Mensalidade do programa de afiliados em atraso</AlertTitle>
+            <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                {statistics.modoRepasse === 'MANUAL_NF'
+                  ? 'Regularize o pagamento para manter o programa de indicações ativo.'
+                  : 'Regularize o pagamento para voltar a receber comissões nos indicadores com split Asaas.'}
+              </span>
+              {statistics.mensalidadePagamentoUrl ? (
+                <a
+                  href={statistics.mensalidadePagamentoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline underline-offset-4 shrink-0"
+                >
+                  Abrir link de pagamento
+                </a>
+              ) : null}
+            </AlertDescription>
+          </Alert>
+        )}
 
-      <StatisticsCards statistics={statistics} isLoading={loadingStats} />
-
-      <RecentCommissionsList commissions={statistics?.ultimasComissoes} isLoading={loadingStats} />
+      <ShareLinkCard link={code?.linkIndicacao} fallbackCode={code?.codigoAfiliado} isLoading={loadingCode} />
     </div>
   );
 }

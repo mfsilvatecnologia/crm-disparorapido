@@ -13,7 +13,11 @@ export function RoleManagement() {
   const isAdmin = true
 
   if (!canManageRoles) {
-    return <div className="p-4 text-gray-600">Carregando permissões...</div>
+    return (
+      <div className="p-4 text-gray-600">
+        Sem permissão para gerir roles. É necessário o papel de administrador na empresa.
+      </div>
+    )
   }
 
   if (isLoading) {

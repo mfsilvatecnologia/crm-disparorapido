@@ -8,5 +8,6 @@ export function useAffiliateStatistics() {
     queryFn: affiliatesApi.getAffiliateStatistics,
     staleTime: 60 * 1000,
     refetchInterval: 60 * 1000,
+    retry: false,
   });
 }

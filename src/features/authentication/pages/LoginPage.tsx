@@ -16,6 +16,7 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { ConnectionStatus } from '@/shared/components/common/ConnectionStatus';
 import { useConnectivity } from '@/shared/hooks/useConnectivity';
 import { ActiveSessionsManager } from '../components/ActiveSessionsManager';
+import { affiliatesApi } from '@/features/affiliates/api/affiliatesApi';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -23,6 +24,25 @@ const loginSchema = z.object({
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
+
+const POST_LOGIN_REDIRECT_KEY = 'crm_post_login_path';
+
+function readAffiliateOnlyUserFromStorage(): boolean {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return false;
+    const u = JSON.parse(raw) as { role?: string; roles?: string[] };
+    const role = String(u?.role || '').toUpperCase();
+    const roles = Array.isArray(u?.roles)
+      ? u.roles.map((r) => String(r).toUpperCase())
+      : [];
+    if (role === 'AFILIADO') return true;
+    if (roles.length === 1 && roles[0] === 'AFILIADO') return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading, sessionLimitError, clearSessionLimitError } = useAuth();
@@ -59,7 +79,7 @@ export default function LoginPage() {
     if (tenant.id !== 'disparo-rapido') return;
     const seoTitle = 'Painel do Cliente | Disparo Rápido';
     const seoDesc =
-      'Acesse o Painel do Cliente Disparo Rápido. Acesse os dados da sua assinatura e o material de apoio para você enviar mensagens no WhatsApp através da ferramenta Disparo Rápido.';
+      'Acesse o Painel do Cliente da Disparo Rápido para gerenciar sua assinatura, alterar sua senha, acessar tutoriais, materiais de treinamento e suporte da ferramenta.';
     const meta = document.querySelector('meta[name="description"]');
     const prevDesc = meta?.getAttribute('content') ?? '';
     document.title = seoTitle;
@@ -120,7 +140,13 @@ export default function LoginPage() {
   }, [isAuthenticated]);
   
   if (shouldRedirect) {
-    // Redireciona para a URL especificada no parâmetro redirect ou para /app
+    if (typeof window !== 'undefined') {
+      const postLogin = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
+      if (postLogin) {
+        sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+        return <Navigate to={postLogin} replace />;
+      }
+    }
     return <Navigate to={redirectUrl} replace />;
   }
 
@@ -141,6 +167,19 @@ export default function LoginPage() {
         });
         navigate('/app/subscription');
         return;
+      }
+
+      const defaultAppTarget =
+        redirectUrl === '/app' || redirectUrl === '/app/' || redirectUrl === '';
+      if (defaultAppTarget) {
+        try {
+          await affiliatesApi.getAffiliateCode();
+          if (readAffiliateOnlyUserFromStorage()) {
+            sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, '/app/afiliados');
+          }
+        } catch {
+          /* não é afiliado ou falha de rede — segue fluxo normal */
+        }
       }
 
       toast({

@@ -4,4 +4,6 @@ export const affiliateKeys = {
   statistics: () => [...affiliateKeys.all, 'statistics'] as const,
   commissions: (params?: Record<string, unknown>) =>
     [...affiliateKeys.all, 'commissions', params] as const,
+  repasses: (afiliadoId: string) => [...affiliateKeys.all, 'repasses', afiliadoId] as const,
+  clients: (afiliadoId: string) => [...affiliateKeys.all, 'clients', afiliadoId] as const,
 };

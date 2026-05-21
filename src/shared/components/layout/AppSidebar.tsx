@@ -8,6 +8,11 @@ import {
   CreditCard,
   BookOpen,
   LogOut,
+  LayoutDashboard,
+  Users,
+  Wallet,
+  FileText,
+  UserCog,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -21,20 +26,20 @@ import {
   useSidebar,
 } from '@/shared/components/ui/sidebar';
 import { useAuth } from '@/shared/contexts/AuthContext';
+import { useIsAffiliateUser } from '@/features/affiliates/hooks/useIsAffiliateUser';
 import { useQueryClient } from '@tanstack/react-query';
 import { leadKeys } from '@/features/leads/hooks/useLeads';
 import { FeatureGuard } from '@/shared/components/features/FeatureGuard';
-import { useTenant } from '@/shared/contexts/TenantContext';
 import { TenantLogo } from '@/shared/components/branding/TenantLogo';
 
-const navigationItems = [
-  {
-    title: 'HOME',
-    url: '/app',
-    icon: Home,
-    description: 'Painel inicial',
-    // Dashboard sempre disponível (sem feature required)
-  },
+const homeNavItem = {
+  title: 'HOME',
+  url: '/app',
+  icon: Home,
+  description: 'Painel inicial',
+};
+
+const featureNavigationItems = [
   {
     title: 'Campanhas',
     url: '/app/campanhas',
@@ -50,6 +55,13 @@ const navigationItems = [
     requiredFeature: 'enableScraping'
   }
 ];
+
+const adminNavItem = {
+  title: 'Administração',
+  url: '/app/admin',
+  icon: UserCog,
+  description: 'Afiliados, repasses e configurações',
+};
 
 const settingsItems = [
   {
@@ -84,10 +96,55 @@ const settingsItems = [
 
 export function AppSidebar() {
   const { open } = useSidebar();
-  const { tenant } = useTenant();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { logout, hasPermission } = useAuth();
   const queryClient = useQueryClient();
+  const { isAffiliate } = useIsAffiliateUser();
+
+  type AffiliateNavItem = {
+    title: string;
+    url: string;
+    icon: typeof LayoutDashboard;
+    description: string;
+    end?: boolean;
+  };
+
+  const affiliateNavItems: AffiliateNavItem[] = [
+    {
+      title: 'Link do Afiliado',
+      url: '/app/afiliados',
+      icon: LayoutDashboard,
+      description: 'Seu link de indicação',
+      end: true,
+    },
+    {
+      title: 'Minhas indicações',
+      url: '/app/afiliados/clientes',
+      icon: Users,
+      description: 'Minhas indicações',
+    },
+    // Comissões (/app/afiliados/comissoes): oculta temporariamente no menu
+    {
+      title: 'Financeiro',
+      url: '/app/afiliados/financeiro',
+      icon: Wallet,
+      description: 'Resumo financeiro',
+    },
+    {
+      title: 'Notas fiscais',
+      url: '/app/afiliados/notas-fiscais',
+      icon: FileText,
+      description: 'NFS-e e faturas',
+    },
+  ];
+
+  const isAffiliateNavActive = (url: string, end?: boolean) => {
+    const p = location.pathname;
+    if (end) {
+      return p === url || p === `${url}/`;
+    }
+    return p === url || p.startsWith(`${url}/`);
+  };
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -144,6 +201,31 @@ export function AppSidebar() {
     return menuItem;
   };
 
+  const renderAffiliateMenuItem = (item: AffiliateNavItem) => {
+    const end = Boolean(item.end);
+    const active = isAffiliateNavActive(item.url, end);
+    const className = active
+      ? 'text-primary-foreground hover:!bg-[#0055A4] hover:!text-primary-foreground'
+      : 'hover:bg-accent hover:text-accent-foreground';
+    return (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton asChild>
+          <NavLink
+            to={item.url}
+            end={end}
+            className={className}
+            style={active ? { backgroundColor: '#0055A4' } : undefined}
+            title={!open ? item.description : undefined}
+            onClick={handleNavClick}
+          >
+            <item.icon className="h-4 w-4" />
+            {open && <span>{item.title}</span>}
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  };
+
   return (
     <Sidebar className={!open ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent className="bg-sidebar">
@@ -160,9 +242,21 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map(renderMenuItem)}
+              {renderMenuItem(homeNavItem)}
               {settingsItems.map(renderMenuItem)}
+              {hasPermission('admin.access') ? renderMenuItem(adminNavItem) : null}
+              {featureNavigationItems.map(renderMenuItem)}
             </SidebarMenu>
+            {isAffiliate ? (
+              <>
+                {open && (
+                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Programa de afiliados
+                  </div>
+                )}
+                <SidebarMenu>{affiliateNavItems.map(renderAffiliateMenuItem)}</SidebarMenu>
+              </>
+            ) : null}
           </SidebarGroupContent>
         </SidebarGroup>
 
