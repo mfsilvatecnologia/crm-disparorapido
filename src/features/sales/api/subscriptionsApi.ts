@@ -509,3 +509,11 @@ export async function checkHasUsedTrial(): Promise<boolean> {
     return false;
   }
 }
+
+export {
+  startPixAutomaticMigration,
+  startPixAutomaticRestore,
+  getPixMigrationStatus,
+  type StartPixMigrationResult,
+  type PixMigrationStatusResult,
+} from './pixMigrationApi';

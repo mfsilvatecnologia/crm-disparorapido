@@ -40,6 +40,7 @@ export const subscriptionSchema = z.object({
   description: z.string().nullable().optional(),
   externalReference: z.string().nullable().optional(),
   metadata: z.record(z.unknown()).optional(),
+  paymentMethod: z.enum(['CREDIT_CARD', 'PIX_AUTOMATIC', 'OTHER']).optional(),
   startDate: z.string().optional(),
   endDate: z.string().nullable().optional(),
   canceledAt: z.string().nullable().optional(),

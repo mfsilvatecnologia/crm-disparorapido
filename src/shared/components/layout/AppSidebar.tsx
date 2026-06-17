@@ -12,7 +12,8 @@ import {
   Users,
   Wallet,
   FileText,
-  UserCog,
+  Plug,
+  UserCheck,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -31,75 +32,117 @@ import { useQueryClient } from '@tanstack/react-query';
 import { leadKeys } from '@/features/leads/hooks/useLeads';
 import { FeatureGuard } from '@/shared/components/features/FeatureGuard';
 import { TenantLogo } from '@/shared/components/branding/TenantLogo';
+import { isAdminTab } from '@/features/admin/components/AdminPage';
 
-const homeNavItem = {
+type NavItem = {
+  title: string;
+  url: string;
+  icon: typeof Home;
+  description: string;
+  requiredFeature?: string;
+  adminTab?: string;
+};
+
+const homeNavItem: NavItem = {
   title: 'HOME',
   url: '/app',
   icon: Home,
   description: 'Painel inicial',
 };
 
-const featureNavigationItems = [
+const platformAdminNavItems: NavItem[] = [
+  {
+    title: 'HOME',
+    url: '/app/admin?tab=home',
+    icon: Home,
+    description: 'Painel administrativo',
+    adminTab: 'home',
+  },
+  {
+    title: 'Afiliados',
+    url: '/app/admin?tab=afiliados',
+    icon: UserCheck,
+    description: 'Gestão de afiliados',
+    adminTab: 'afiliados',
+  },
+  {
+    title: 'Clientes',
+    url: '/app/admin?tab=clientes',
+    icon: Users,
+    description: 'Gestão de clientes',
+    adminTab: 'clientes',
+  },
+  {
+    title: 'Financeiro',
+    url: '/app/admin?tab=financeiro',
+    icon: Wallet,
+    description: 'Indicadores e pagamentos',
+    adminTab: 'financeiro',
+  },
+  {
+    title: 'Integrações',
+    url: '/app/admin?tab=integracoes',
+    icon: Plug,
+    description: 'Webhooks e integrações',
+    adminTab: 'integracoes',
+  },
+];
+
+const featureNavigationItems: NavItem[] = [
   {
     title: 'Campanhas',
     url: '/app/campanhas',
     icon: Target,
     description: 'Marketing automation e campanhas',
-    requiredFeature: 'enableCampaigns'
+    requiredFeature: 'enableCampaigns',
   },
   {
     title: 'Scraping',
     url: '/app/scraping',
     icon: Map,
     description: 'Jobs de coleta Google Maps',
-    requiredFeature: 'enableScraping'
-  }
+    requiredFeature: 'enableScraping',
+  },
 ];
 
-const adminNavItem = {
-  title: 'Administração',
-  url: '/app/admin',
-  icon: UserCog,
-  description: 'Afiliados, repasses e configurações',
-};
-
-const settingsItems = [
+const settingsItems: NavItem[] = [
   {
     title: 'Perfil',
     url: '/app/profile',
     icon: User,
     description: 'Configurações do perfil',
-    requiredFeature: 'enableBasicFeatures'
+    requiredFeature: 'enableBasicFeatures',
   },
   {
     title: 'Tutorial',
     url: '/app/tutorial',
     icon: BookOpen,
     description: 'Manual de uso em PDF',
-    requiredFeature: 'enableBasicFeatures'
+    requiredFeature: 'enableBasicFeatures',
   },
   {
     title: 'Assinatura',
     url: '/app/subscription',
     icon: CreditCard,
     description: 'Gerenciar assinatura',
-    requiredFeature: 'enableBilling'
+    requiredFeature: 'enableBilling',
   },
   {
     title: 'Sessões Ativas',
     url: '/app/sessions',
     icon: Shield,
     description: 'Gerenciar dispositivos e sessões',
-    requiredFeature: 'enableBasicFeatures'
+    requiredFeature: 'enableBasicFeatures',
   },
 ];
 
 export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
-  const { logout, hasPermission } = useAuth();
+  const { logout, hasRole } = useAuth();
   const queryClient = useQueryClient();
   const { isAffiliate } = useIsAffiliateUser();
+  const isPlatformAdmin = hasRole('admin');
 
   type AffiliateNavItem = {
     title: string;
@@ -123,7 +166,6 @@ export function AppSidebar() {
       icon: Users,
       description: 'Minhas indicações',
     },
-    // Comissões (/app/afiliados/comissoes): oculta temporariamente no menu
     {
       title: 'Financeiro',
       url: '/app/afiliados/financeiro',
@@ -138,6 +180,13 @@ export function AppSidebar() {
     },
   ];
 
+  const getActiveAdminTab = (): string => {
+    if (location.pathname !== '/app/admin') return '';
+    const tab = new URLSearchParams(location.search).get('tab');
+    if (!tab || tab === 'home') return 'home';
+    return isAdminTab(tab) ? tab : 'home';
+  };
+
   const isAffiliateNavActive = (url: string, end?: boolean) => {
     const p = location.pathname;
     if (end) {
@@ -146,23 +195,28 @@ export function AppSidebar() {
     return p === url || p.startsWith(`${url}/`);
   };
 
-  const isActive = (path: string) => {
+  const isActive = (path: string, adminTab?: string) => {
+    if (adminTab) {
+      return location.pathname === '/app/admin' && getActiveAdminTab() === adminTab;
+    }
+
     if (path === '/') {
       return location.pathname === '/';
     }
-    // HOME (/app) só fica ativo na rota exata, não em /app/profile, /app/subscription, etc.
+
     if (path === '/app') {
       return location.pathname === '/app' || location.pathname === '/app/';
     }
-    return location.pathname.startsWith(path);
+
+    const pathOnly = path.split('?')[0];
+    return location.pathname.startsWith(pathOnly);
   };
 
-  const getNavClassName = (path: string) => {
-    // Item ativo: sem efeito de hover (sobrescreve hover do SidebarMenuButton)
-    if (isActive(path)) {
-      return "text-primary-foreground hover:!bg-[#0055A4] hover:!text-primary-foreground";
+  const getNavClassName = (path: string, adminTab?: string) => {
+    if (isActive(path, adminTab)) {
+      return 'text-primary-foreground hover:!bg-[#0055A4] hover:!text-primary-foreground';
     }
-    return "hover:bg-accent hover:text-accent-foreground";
+    return 'hover:bg-accent hover:text-accent-foreground';
   };
 
   const handleNavClick = () => {
@@ -170,15 +224,15 @@ export function AppSidebar() {
     queryClient.invalidateQueries({ queryKey: ['companies'] });
   };
 
-  // Render menu item with feature control
-  const renderMenuItem = (item: any) => {
+  const renderMenuItem = (item: NavItem) => {
+    const active = isActive(item.url, item.adminTab);
     const menuItem = (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton asChild>
           <NavLink
             to={item.url}
-            className={getNavClassName(item.url)}
-            style={isActive(item.url) ? { backgroundColor: '#0055A4' } : undefined}
+            className={getNavClassName(item.url, item.adminTab)}
+            style={active ? { backgroundColor: '#0055A4' } : undefined}
             title={!open ? item.description : undefined}
             onClick={handleNavClick}
           >
@@ -189,7 +243,6 @@ export function AppSidebar() {
       </SidebarMenuItem>
     );
 
-    // If item has required feature, wrap with FeatureGuard
     if (item.requiredFeature) {
       return (
         <FeatureGuard key={item.title} feature={item.requiredFeature}>
@@ -227,9 +280,8 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={!open ? "w-16" : "w-64"} collapsible="icon">
+    <Sidebar className={!open ? 'w-16' : 'w-64'} collapsible="icon">
       <SidebarContent className="bg-sidebar">
-        {/* Logo */}
         <div className="p-4 border-b border-sidebar-border">
           {open ? (
             <TenantLogo size="lg" className="h-10 w-auto" />
@@ -238,16 +290,20 @@ export function AppSidebar() {
           )}
         </div>
 
-        {/* Navigation */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {renderMenuItem(homeNavItem)}
-              {settingsItems.map(renderMenuItem)}
-              {hasPermission('admin.access') ? renderMenuItem(adminNavItem) : null}
-              {featureNavigationItems.map(renderMenuItem)}
+              {isPlatformAdmin
+                ? platformAdminNavItems.map(renderMenuItem)
+                : (
+                  <>
+                    {renderMenuItem(homeNavItem)}
+                    {settingsItems.map(renderMenuItem)}
+                    {featureNavigationItems.map(renderMenuItem)}
+                  </>
+                )}
             </SidebarMenu>
-            {isAffiliate ? (
+            {!isPlatformAdmin && isAffiliate ? (
               <>
                 {open && (
                   <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -260,7 +316,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Sair */}
         <SidebarFooter className="border-t border-sidebar-border pt-2 mt-auto">
           <SidebarMenu>
             <SidebarMenuItem>

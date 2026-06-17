@@ -32,6 +32,8 @@ import {
 import type { AffiliateClienteIndicado } from '../types';
 import { useIsAffiliateUser } from '../hooks/useIsAffiliateUser';
 import { useAffiliateClients } from '../hooks/useAffiliateClients';
+import { useAffiliateCode } from '../hooks/useAffiliateCode';
+import { AffiliateCadastroStatusBanner } from '../components/AffiliateCadastroStatusBanner';
 import {
   formatBillingCycleLabelPt,
   formatClientePlanoLabel,
@@ -134,6 +136,7 @@ function matchesStatusFilter(client: AffiliateClienteIndicado, statusFilter: str
 
 export function AffiliateClientsPage() {
   const { isAffiliate, isLoading: loadingAffiliate, affiliateId } = useIsAffiliateUser();
+  const { data: affiliateCode } = useAffiliateCode();
   const { data, isLoading, isError, error } = useAffiliateClients(affiliateId);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -227,6 +230,10 @@ export function AffiliateClientsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 p-4 pb-10">
+      <AffiliateCadastroStatusBanner
+        statusCadastro={affiliateCode?.statusCadastro}
+        motivoRejeicao={affiliateCode?.motivoRejeicao}
+      />
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-3">

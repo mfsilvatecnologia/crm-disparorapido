@@ -1,6 +1,10 @@
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
 import { ShareLinkCard } from '../components/ShareLinkCard';
+import {
+  AffiliateCadastroStatusBanner,
+  isAffiliateCadastroApproved,
+} from '../components/AffiliateCadastroStatusBanner';
 import { useAffiliateCode } from '../hooks/useAffiliateCode';
 import { useAffiliateStatistics } from '../hooks/useAffiliateStatistics';
 
@@ -14,6 +18,7 @@ export function AffiliateDashboardPage() {
   const { data: statistics, isError: isStatsError, error: statsError } = useAffiliateStatistics();
 
   const hasError = isCodeError || isStatsError;
+  const cadastroAprovado = isAffiliateCadastroApproved(code?.statusCadastro);
 
   return (
     <div className="space-y-6">
@@ -29,7 +34,13 @@ export function AffiliateDashboardPage() {
         </Alert>
       )}
 
-      {statistics?.tipoPlano === 'MENSALIDADE' &&
+      <AffiliateCadastroStatusBanner
+        statusCadastro={code?.statusCadastro}
+        motivoRejeicao={code?.motivoRejeicao}
+      />
+
+      {cadastroAprovado &&
+        statistics?.tipoPlano === 'MENSALIDADE' &&
         statistics?.statusAssinatura === 'INADIMPLENTE' && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -54,7 +65,9 @@ export function AffiliateDashboardPage() {
           </Alert>
         )}
 
-      <ShareLinkCard link={code?.linkIndicacao} fallbackCode={code?.codigoAfiliado} isLoading={loadingCode} />
+      {cadastroAprovado ? (
+        <ShareLinkCard link={code?.linkIndicacao} fallbackCode={code?.codigoAfiliado} isLoading={loadingCode} />
+      ) : null}
     </div>
   );
 }

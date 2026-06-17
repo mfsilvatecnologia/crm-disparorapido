@@ -10,12 +10,14 @@ const adminAfiliadoListItemSchema = z.object({
   split_percentual: z.coerce.number(),
   tipo_plano: z.string(),
   status_assinatura: z.string(),
+  status_cadastro: z.string().optional(),
   created_at: z.string(),
 });
 
 const adminAfiliadoListResponseSchema = z.object({
   items: z.array(adminAfiliadoListItemSchema),
   total: z.number(),
+  pendentes_cadastro: z.number().optional(),
   limit: z.number(),
   offset: z.number(),
 });
@@ -53,6 +55,9 @@ const adminAfiliadoDetailSchema = z.object({
     split_percentual: z.coerce.number(),
     tipo_plano: z.string(),
     status_assinatura: z.string(),
+    status_cadastro: z.string().optional(),
+    motivo_rejeicao: z.string().nullable().optional(),
+    cadastro_aprovado_em: z.string().nullable().optional(),
     chave_pix: z.string().nullable().optional(),
     chave_pix_tipo: z.string().nullable().optional(),
     asaas_wallet_id: z.string().nullable().optional(),
@@ -68,6 +73,7 @@ export type AdminAfiliadoDetail = z.infer<typeof adminAfiliadoDetailSchema>;
 
 export async function adminListAfiliados(params?: {
   repasse_status?: string;
+  status_cadastro?: string;
   limit?: number;
   offset?: number;
 }): Promise<AdminAfiliadoListResponse> {
@@ -147,6 +153,27 @@ export async function adminPatchRepasse(
   return adminRepasseRowSchema.parse(data);
 }
 
+export async function adminPatchAfiliadoCadastro(
+  afiliadoId: string,
+  body: { action: 'aprovar' | 'rejeitar'; motivo?: string }
+): Promise<{ id: string; status_cadastro: string; motivo_rejeicao: string | null }> {
+  const response = await apiClient.patch<unknown>(
+    `/api/v1/admin/afiliados/${encodeURIComponent(afiliadoId)}/cadastro`,
+    body
+  );
+  const payload =
+    response && typeof response === 'object' && 'data' in response
+      ? (response as { data: unknown }).data
+      : response;
+  return z
+    .object({
+      id: z.string(),
+      status_cadastro: z.string(),
+      motivo_rejeicao: z.string().nullable(),
+    })
+    .parse(payload);
+}
+
 export const adminAffiliatesApi = {
   listAfiliados: adminListAfiliados,
   listRepassesPendentes: adminListRepassesPendentes,
@@ -155,4 +182,5 @@ export const adminAffiliatesApi = {
   getRepasseComprovantePixSignedUrl: adminGetRepasseComprovantePixSignedUrl,
   uploadRepasseComprovantePix: adminUploadRepasseComprovantePix,
   patchRepasse: adminPatchRepasse,
+  patchCadastro: adminPatchAfiliadoCadastro,
 };

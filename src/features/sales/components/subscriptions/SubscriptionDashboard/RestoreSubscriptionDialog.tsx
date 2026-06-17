@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Subscription } from '../../../types';
 import { useRestoreSubscription } from '../../../hooks/subscriptions/useRestoreSubscription';
+import { MigrateToPixAutomaticDialog } from './MigrateToPixAutomaticDialog';
 
 /** Mesmo tempo do PayOverdueDialog: mensagem "Atualizando página..." antes de fechar e dar reload. */
 const RELOAD_DELAY_MS = 4000;
@@ -20,7 +21,7 @@ interface RestoreSubscriptionDialogProps {
   onSuccess?: () => void;
 }
 
-type Step = 'choice' | 'form';
+type Step = 'choice' | 'form' | 'pix';
 
 export function RestoreSubscriptionDialog({
   subscription,
@@ -124,6 +125,25 @@ export function RestoreSubscriptionDialog({
 
   if (!subscription || !isOpen) return null;
 
+  if (step === 'pix') {
+    return (
+      <MigrateToPixAutomaticDialog
+        flow="restore"
+        subscriptionId={subscription.id}
+        productName={subscription.description || 'Assinatura'}
+        isOpen={isOpen}
+        onClose={() => {
+          setStep('choice');
+          onClose();
+        }}
+        onSuccess={() => {
+          setStep('choice');
+          onSuccess?.();
+        }}
+      />
+    );
+  }
+
   return (
     <>
       <div
@@ -221,6 +241,15 @@ export function RestoreSubscriptionDialog({
                   >
                     <span>Reativar com outro cartão</span>
                     <span className="text-blue-600">→</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep('pix')}
+                    disabled={isPending}
+                    className="w-full rounded-lg border-2 border-emerald-600 bg-emerald-50 px-4 py-3 text-left font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 flex items-center justify-between"
+                  >
+                    <span>Reativar com PIX Automático</span>
+                    <span className="text-emerald-600">→</span>
                   </button>
                 </div>
               </div>

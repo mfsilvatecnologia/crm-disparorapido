@@ -1,16 +1,32 @@
 import { useState } from 'react';
 import { useSubscriptions } from '../hooks/subscriptions/useSubscriptions';
 import { CancelDialog } from '../components/subscriptions/SubscriptionDashboard/CancelDialog';
-import { UpdateCardDialog } from '../components/subscriptions/SubscriptionDashboard/UpdateCardDialog';
 import { PayOverdueDialog } from '../components/subscriptions/SubscriptionDashboard/PayOverdueDialog';
 import { RestoreSubscriptionDialog } from '../components/subscriptions/SubscriptionDashboard/RestoreSubscriptionDialog';
+import { ChangePaymentMethodDialog } from '../components/subscriptions/SubscriptionDashboard/ChangePaymentMethodDialog';
 import type { Subscription } from '../types';
+
+function isCreditCardSubscription(subscription: Subscription): boolean {
+  if (subscription.paymentMethod === 'PIX_AUTOMATIC') return false;
+  if (subscription.paymentMethod === 'CREDIT_CARD') return true;
+  const asaasId = subscription.asaasSubscriptionId || '';
+  return asaasId.startsWith('sub_');
+}
+
+function getPaymentMethodLabel(subscription: Subscription): string {
+  if (subscription.paymentMethod === 'PIX_AUTOMATIC') return 'PIX Automático';
+  if (subscription.paymentMethod === 'CREDIT_CARD') return 'Cartão de crédito';
+  const asaasId = subscription.asaasSubscriptionId || '';
+  if (asaasId.startsWith('pixauto_')) return 'PIX Automático';
+  if (asaasId.startsWith('sub_')) return 'Cartão de crédito';
+  return '—';
+}
 
 export function SubscriptionManagementPage() {
   const { subscriptions, isLoading, refetch } = useSubscriptions();
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [subscriptionForCard, setSubscriptionForCard] = useState<Subscription | null>(null);
+  const [subscriptionForPaymentMethod, setSubscriptionForPaymentMethod] = useState<Subscription | null>(null);
   const [subscriptionToRestore, setSubscriptionToRestore] = useState<Subscription | null>(null);
   const [subscriptionForPayment, setSubscriptionForPayment] = useState<Subscription | null>(null);
 
@@ -147,6 +163,9 @@ export function SubscriptionManagementPage() {
                     Próximo Vencimento
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Pagamento
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Trial
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -189,6 +208,9 @@ export function SubscriptionManagementPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                         {formatDate(subscription.nextDueDate)}
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                        {getPaymentMethodLabel(subscription)}
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         {subscription.isInTrial ? (
                           <span className="text-blue-600 font-medium">
@@ -207,12 +229,13 @@ export function SubscriptionManagementPage() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                         <div className="flex flex-col gap-2 items-end">
-                          {isActiveOrTrial && (
+                          {isActiveOrTrial && isCreditCardSubscription(subscription) && (
                             <button
-                              onClick={() => setSubscriptionForCard(subscription)}
+                              type="button"
+                              onClick={() => setSubscriptionForPaymentMethod(subscription)}
                               className="text-blue-600 hover:text-blue-900 transition-colors"
                             >
-                              Alterar cartão
+                              Alterar meio de pagamento
                             </button>
                           )}
                           {isActiveOrTrial && (
@@ -281,16 +304,17 @@ export function SubscriptionManagementPage() {
           />
         )}
 
-        {/* Update Card Dialog */}
-        {subscriptionForCard && (
-          <UpdateCardDialog
-            isOpen={!!subscriptionForCard}
-            onClose={() => setSubscriptionForCard(null)}
-            subscriptionId={subscriptionForCard.id}
-            productName={subscriptionForCard.description || 'Assinatura'}
+        {subscriptionForPaymentMethod && (
+          <ChangePaymentMethodDialog
+            subscription={subscriptionForPaymentMethod}
+            isOpen={!!subscriptionForPaymentMethod}
+            onClose={() => setSubscriptionForPaymentMethod(null)}
             onSuccess={() => {
+              setSubscriptionForPaymentMethod(null);
               refetch();
-              setSubscriptionForCard(null);
+              if (typeof window !== 'undefined') {
+                window.location.reload();
+              }
             }}
           />
         )}
@@ -325,6 +349,7 @@ export function SubscriptionManagementPage() {
             }}
           />
         )}
+
       </div>
     </div>
   );

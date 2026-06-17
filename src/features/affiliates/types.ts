@@ -8,6 +8,8 @@ export type CommissionStatus = 'pending' | 'credited' | 'failed';
 
 export type ModoRepasse = 'ASAAS_SPLIT' | 'MANUAL_NF';
 
+export type StatusCadastroAfiliado = 'PENDENTE' | 'APROVADO' | 'REJEITADO';
+
 export interface AffiliateCode {
   codigoAfiliado: string;
   /** UUID para chamadas autenticadas que exigem o id interno (ex.: listagem de clientes). */
@@ -15,7 +17,9 @@ export interface AffiliateCode {
   comissaoPadraoTipo: 'percentual' | 'fixo';
   comissaoPadraoValor: number;
   ativo: boolean;
-  linkIndicacao: string;
+  linkIndicacao: string | null;
+  statusCadastro?: StatusCadastroAfiliado;
+  motivoRejeicao?: string | null;
   tipoPlano?: 'ISENTO' | 'MENSALIDADE';
   statusAssinatura?: 'ATIVA' | 'INADIMPLENTE' | 'ISENTA';
   mensalidadePagamentoUrl?: string | null;

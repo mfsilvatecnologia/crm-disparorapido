@@ -117,6 +117,9 @@ export interface Subscription {
   
   /** Metadata object */
   metadata: Record<string, any>;
+
+  /** Payment method: CREDIT_CARD | PIX_AUTOMATIC | OTHER */
+  paymentMethod?: 'CREDIT_CARD' | 'PIX_AUTOMATIC' | 'OTHER';
   
   /** Start date */
   startDate: string;

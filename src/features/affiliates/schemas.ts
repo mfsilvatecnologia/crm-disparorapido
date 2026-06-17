@@ -9,6 +9,8 @@ export const commissionOriginTypeSchema = z.enum([
 
 export const commissionStatusSchema = z.enum(['pending', 'credited', 'failed']);
 
+export const statusCadastroAfiliadoSchema = z.enum(['PENDENTE', 'APROVADO', 'REJEITADO']);
+
 export const affiliateCodeSchema = z.object({
   codigoAfiliado: z.string(),
   /** UUID do afiliado — usar em rotas `/afiliados/:id/...` (codigoAfiliado é o slug público). */
@@ -16,7 +18,9 @@ export const affiliateCodeSchema = z.object({
   comissaoPadraoTipo: z.enum(['percentual', 'fixo']),
   comissaoPadraoValor: z.coerce.number(),
   ativo: z.boolean(),
-  linkIndicacao: z.string(),
+  linkIndicacao: z.string().nullable(),
+  statusCadastro: statusCadastroAfiliadoSchema.optional(),
+  motivoRejeicao: z.string().nullable().optional(),
   tipoPlano: z.enum(['ISENTO', 'MENSALIDADE']).optional(),
   statusAssinatura: z.enum(['ATIVA', 'INADIMPLENTE', 'ISENTA']).optional(),
   mensalidadePagamentoUrl: z.string().nullable().optional(),

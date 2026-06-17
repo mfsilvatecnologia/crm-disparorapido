@@ -11,6 +11,8 @@ import { cn } from '@/shared/utils/utils';
 import type { AffiliateFinanceiroPainel } from '../types';
 import { useIsAffiliateUser } from '../hooks/useIsAffiliateUser';
 import { useAffiliateStatistics } from '../hooks/useAffiliateStatistics';
+import { useAffiliateCode } from '../hooks/useAffiliateCode';
+import { AffiliateCadastroStatusBanner } from '../components/AffiliateCadastroStatusBanner';
 import { affiliatesApi } from '../api/affiliatesApi';
 import { affiliateKeys } from '../hooks/queryKeys';
 
@@ -78,6 +80,7 @@ function PainelMetric({
 export function AffiliateFinancialPage() {
   const queryClient = useQueryClient();
   const { isAffiliate, isLoading: loadingAffiliate } = useIsAffiliateUser();
+  const { data: affiliateCode } = useAffiliateCode();
   const { data: statistics, isLoading, isError, error } = useAffiliateStatistics();
   const [chavePix, setChavePix] = useState('');
   const [chavePixTipo, setChavePixTipo] = useState('');
@@ -123,6 +126,10 @@ export function AffiliateFinancialPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
+      <AffiliateCadastroStatusBanner
+        statusCadastro={affiliateCode?.statusCadastro}
+        motivoRejeicao={affiliateCode?.motivoRejeicao}
+      />
       <div className="space-y-2 border-b border-slate-200 pb-6">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Financeiro</h1>
         <h2 className="pt-2 text-lg font-semibold text-slate-900">Acompanhe as estatísticas de suas vendas</h2>

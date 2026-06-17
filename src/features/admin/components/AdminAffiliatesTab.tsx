@@ -14,6 +14,7 @@ import {
   Upload,
   Users,
   Wallet,
+  XCircle,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -46,6 +47,15 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/components/ui/collapsible';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { useToast } from '@/shared/hooks/use-toast';
 import { cn } from '@/shared/utils/utils';
 import {
@@ -79,6 +89,39 @@ const MODO_REPASSE_LABEL: Record<string, string> = {
   MANUAL_NF: 'Manual (NF)',
   SPLIT_ASAAS: 'Split Asaas',
 };
+
+const CADASTRO_STATUS_LABEL: Record<string, string> = {
+  PENDENTE: 'Pendente',
+  APROVADO: 'Aprovado',
+  REJEITADO: 'Rejeitado',
+};
+
+function cadastroStatusTone(status?: string) {
+  switch (status) {
+    case 'PENDENTE':
+      return 'bg-amber-50 text-amber-800 border-amber-200';
+    case 'APROVADO':
+      return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+    case 'REJEITADO':
+      return 'bg-red-50 text-red-800 border-red-200';
+    default:
+      return 'bg-slate-50 text-slate-700 border-slate-200';
+  }
+}
+
+function CadastroStatusBadge({ status }: { status?: string }) {
+  const value = status ?? 'APROVADO';
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+        cadastroStatusTone(value)
+      )}
+    >
+      {CADASTRO_STATUS_LABEL[value] ?? value}
+    </span>
+  );
+}
 
 function formatBrl(cents: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
@@ -163,6 +206,9 @@ export function AdminAffiliatesTab() {
   const [nfLoadingId, setNfLoadingId] = useState<string | null>(null);
   const [pixLoadingId, setPixLoadingId] = useState<string | null>(null);
   const [searchAfiliado, setSearchAfiliado] = useState('');
+  const [cadastroFilter, setCadastroFilter] = useState<'all' | 'PENDENTE' | 'APROVADO' | 'REJEITADO'>('PENDENTE');
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectMotivo, setRejectMotivo] = useState('');
   const [mainTab, setMainTab] = useState('afiliados');
 
   const pendentesQuery = useQuery({
@@ -171,8 +217,12 @@ export function AdminAffiliatesTab() {
   });
 
   const afiliadosQuery = useQuery({
-    queryKey: ['admin', 'afiliados', 'list'],
-    queryFn: () => adminAffiliatesApi.listAfiliados({ limit: 100 }),
+    queryKey: ['admin', 'afiliados', 'list', cadastroFilter],
+    queryFn: () =>
+      adminAffiliatesApi.listAfiliados({
+        limit: 100,
+        ...(cadastroFilter !== 'all' ? { status_cadastro: cadastroFilter } : {}),
+      }),
   });
 
   const detailQuery = useQuery({
@@ -220,6 +270,33 @@ export function AdminAffiliatesTab() {
     onError: (e: unknown) => {
       toast({
         title: 'Erro ao salvar',
+        description: e instanceof Error ? e.message : 'Tente novamente.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const cadastroMutation = useMutation({
+    mutationFn: (vars: { afiliadoId: string; action: 'aprovar' | 'rejeitar'; motivo?: string }) =>
+      adminAffiliatesApi.patchCadastro(vars.afiliadoId, {
+        action: vars.action,
+        motivo: vars.motivo,
+      }),
+    onSuccess: async (_data, vars) => {
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'afiliados'] });
+      toast({
+        title: vars.action === 'aprovar' ? 'Cadastro aprovado' : 'Cadastro rejeitado',
+        description:
+          vars.action === 'aprovar'
+            ? 'O afiliado já pode usar o link de indicação.'
+            : 'O afiliado foi notificado no painel.',
+      });
+      setRejectDialogOpen(false);
+      setRejectMotivo('');
+    },
+    onError: (e: unknown) => {
+      toast({
+        title: 'Erro ao atualizar cadastro',
         description: e instanceof Error ? e.message : 'Tente novamente.',
         variant: 'destructive',
       });
@@ -288,15 +365,22 @@ export function AdminAffiliatesTab() {
   };
 
   const pendentesCount = pendentesQuery.data?.length ?? 0;
+  const pendentesCadastroCount = afiliadosQuery.data?.pendentes_cadastro ?? 0;
   const afiliadosCount = afiliadosQuery.data?.total ?? afiliadosQuery.data?.items.length ?? 0;
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <SummaryMetric
           label="Afiliados cadastrados"
           value={afiliadosCount}
           icon={Users}
+          loading={afiliadosQuery.isLoading}
+        />
+        <SummaryMetric
+          label="Cadastros pendentes"
+          value={pendentesCadastroCount}
+          icon={Clock}
           loading={afiliadosQuery.isLoading}
         />
         <SummaryMetric
@@ -328,14 +412,30 @@ export function AdminAffiliatesTab() {
                   <CardTitle>Afiliados</CardTitle>
                   <CardDescription>Clique em uma linha para abrir detalhes e gerenciar repasses.</CardDescription>
                 </div>
-                <div className="relative w-full sm:max-w-xs">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nome, plano…"
-                    value={searchAfiliado}
-                    onChange={(e) => setSearchAfiliado(e.target.value)}
-                    className="pl-9"
-                  />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Select
+                    value={cadastroFilter}
+                    onValueChange={(v) => setCadastroFilter(v as typeof cadastroFilter)}
+                  >
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Status cadastro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PENDENTE">Pendentes</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="APROVADO">Aprovados</SelectItem>
+                      <SelectItem value="REJEITADO">Rejeitados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="relative w-full sm:max-w-xs">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por nome, plano…"
+                      value={searchAfiliado}
+                      onChange={(e) => setSearchAfiliado(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -476,6 +576,11 @@ export function AdminAffiliatesTab() {
                   })
                 }
                 patchPending={patchMutation.isPending}
+                onApproveCadastro={() =>
+                  cadastroMutation.mutate({ afiliadoId: selectedAfiliadoId!, action: 'aprovar' })
+                }
+                onRejectCadastro={() => setRejectDialogOpen(true)}
+                cadastroPending={cadastroMutation.isPending}
                 onUploadComprovantePix={async (repasseId, file) => {
                   await uploadPixMutation.mutateAsync({
                     afiliadoId: selectedAfiliadoId!,
@@ -490,6 +595,43 @@ export function AdminAffiliatesTab() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejeitar cadastro de afiliado</DialogTitle>
+            <DialogDescription>
+              O afiliado verá o status no painel. Informe um motivo opcional.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Motivo da rejeição (opcional)"
+            value={rejectMotivo}
+            onChange={(e) => setRejectMotivo(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={!selectedAfiliadoId || cadastroMutation.isPending}
+              onClick={() => {
+                if (!selectedAfiliadoId) return;
+                cadastroMutation.mutate({
+                  afiliadoId: selectedAfiliadoId,
+                  action: 'rejeitar',
+                  motivo: rejectMotivo.trim() || undefined,
+                });
+              }}
+            >
+              {cadastroMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Rejeitar cadastro'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -549,6 +691,7 @@ function AfiliadosTable({
             <TableHead>Repasse</TableHead>
             <TableHead>Split</TableHead>
             <TableHead>Plano</TableHead>
+            <TableHead>Cadastro</TableHead>
             <TableHead>Assinatura</TableHead>
             <TableHead>Cadastro</TableHead>
           </TableRow>
@@ -566,6 +709,9 @@ function AfiliadosTable({
               </TableCell>
               <TableCell>{a.split_percentual}%</TableCell>
               <TableCell>{a.tipo_plano}</TableCell>
+              <TableCell>
+                <CadastroStatusBadge status={a.status_cadastro} />
+              </TableCell>
               <TableCell>
                 <Badge variant="outline" className="font-normal">
                   {a.status_assinatura}
@@ -588,6 +734,9 @@ function AdminAfiliadoDetailView({
   pixLoadingId,
   onPatch,
   patchPending,
+  onApproveCadastro,
+  onRejectCadastro,
+  cadastroPending,
   onUploadComprovantePix,
   uploadPixPending,
 }: {
@@ -598,6 +747,9 @@ function AdminAfiliadoDetailView({
   pixLoadingId: string | null;
   onPatch: (repasseId: string, status: string, obs?: string) => void;
   patchPending: boolean;
+  onApproveCadastro: () => void;
+  onRejectCadastro: () => void;
+  cadastroPending: boolean;
   onUploadComprovantePix: (repasseId: string, file: File) => Promise<void>;
   uploadPixPending: boolean;
 }) {
@@ -629,6 +781,26 @@ function AdminAfiliadoDetailView({
   return (
     <div className="space-y-6 text-sm">
       <div className="rounded-lg border bg-slate-50/80 p-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <CadastroStatusBadge status={a.status_cadastro} />
+          {a.status_cadastro === 'PENDENTE' ? (
+            <>
+              <Button type="button" size="sm" disabled={cadastroPending} onClick={onApproveCadastro}>
+                {cadastroPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
+                Aprovar
+              </Button>
+              <Button type="button" size="sm" variant="outline" disabled={cadastroPending} onClick={onRejectCadastro}>
+                <XCircle className="h-4 w-4 mr-1" />
+                Rejeitar
+              </Button>
+            </>
+          ) : null}
+        </div>
+        {a.status_cadastro === 'REJEITADO' && a.motivo_rejeicao ? (
+          <p className="text-xs text-red-700">
+            <span className="font-medium">Motivo:</span> {a.motivo_rejeicao}
+          </p>
+        ) : null}
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary">{MODO_REPASSE_LABEL[a.modo_repasse] ?? a.modo_repasse}</Badge>
           <Badge variant="outline">Split {a.split_percentual}%</Badge>
