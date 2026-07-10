@@ -11,7 +11,6 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useToast } from '@/shared/hooks/use-toast';
-import { cn } from '@/shared/utils/utils';
 
 import { disparoBrand } from '@/features/affiliates/utils/repasseStatus';
 
@@ -47,7 +46,7 @@ export function ShareLinkCard({ link, fallbackCode, isLoading }: ShareLinkCardPr
   const handleShareWhatsApp = () => {
     if (!shareLink) return;
     const message = encodeURIComponent(
-      `Conheça o LeadsRapido! Use meu link para ganhar benefícios: ${shareLink}`
+      `Conheça a Disparo Rápido! Ferramenta de envios em massa de mensagens no WhatsApp: ${shareLink}`
     );
     window.open(`https://wa.me/?text=${message}`, '_blank');
   };
@@ -67,7 +66,8 @@ export function ShareLinkCard({ link, fallbackCode, isLoading }: ShareLinkCardPr
               <Input readOnly value={shareLink} className="font-mono" placeholder="Carregando link..." />
               <Button
                 type="button"
-                className={cn('shrink-0', disparoGreenBtn)}
+                variant="outline"
+                className="shrink-0"
                 size="icon"
                 onClick={handleCopy}
                 aria-label="Copiar link"
@@ -76,10 +76,10 @@ export function ShareLinkCard({ link, fallbackCode, isLoading }: ShareLinkCardPr
               </Button>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button type="button" variant="outline" onClick={handleShareWhatsApp} size="sm">
+              <Button type="button" className={disparoGreenBtn} onClick={handleShareWhatsApp} size="sm">
                 <MessageCircle className="h-4 w-4 mr-2" /> WhatsApp
               </Button>
-              <Button type="button" className={disparoGreenBtn} onClick={handleCopy} size="sm">
+              <Button type="button" variant="outline" onClick={handleCopy} size="sm">
                 <Share2 className="h-4 w-4 mr-2" /> Copiar Link
               </Button>
             </div>

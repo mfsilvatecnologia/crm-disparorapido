@@ -11,50 +11,23 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-import { Skeleton } from '@/shared/components/ui/skeleton';
 import { cn } from '@/shared/utils/utils';
 import { useIsAffiliateUser } from '../hooks/useIsAffiliateUser';
 import { useAffiliateStatistics } from '../hooks/useAffiliateStatistics';
-import { SolicitarRepasse } from '@/components/afiliado/SolicitarRepasse';
-import { AffiliateRepasseHistoryCard } from '../components/AffiliateRepasseHistoryCard';
-import { disparoBrand, formatMoneyCentavos } from '../utils/repasseStatus';
-
-function SaldoMetric({
-  label,
-  value,
-  hint,
-  loading,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  loading: boolean;
-}) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      {loading ? (
-        <Skeleton className="mt-2 h-8 w-28" />
-      ) : (
-        <>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-        </>
-      )}
-    </div>
-  );
-}
+import { AFFILIATE_PAGE_CLASS, AffiliatePageHeader, AffiliatePageLoading } from '../components/AffiliatePageLayout';
+import { AffiliateRepasseMonthList } from '../components/AffiliateRepasseMonthList';
+import { disparoBrand } from '../utils/repasseStatus';
 
 const FLUXO_PASSOS = [
   {
     icon: KeyRound,
     title: 'Chave PIX cadastrada',
-    desc: 'Em Financeiro, informe a chave para receber o repasse após aprovação da NF.',
+    desc: 'Informe a chave PIX para receber o repasse após aprovação da NF.',
   },
   {
     icon: FileText,
     title: 'Envie a nota fiscal',
-    desc: 'PDF ou XML do mês em que você quer receber as comissões disponíveis.',
+    desc: 'Uma NF por mês: selecione o período na lista e anexe PDF ou XML referente àquele mês.',
   },
   {
     icon: CheckCircle2,
@@ -73,12 +46,7 @@ export function AffiliateInvoicesPage() {
   const affiliateId = statistics?.codigoAfiliadoId ?? code?.codigoAfiliadoId;
 
   if (loadingAffiliate) {
-    return (
-      <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
-        <Loader2 className="h-5 w-5 animate-spin" />
-        <span>Carregando…</span>
-      </div>
-    );
+    return <AffiliatePageLoading />;
   }
 
   if (!isAffiliate) {
@@ -92,7 +60,9 @@ export function AffiliateInvoicesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className={AFFILIATE_PAGE_CLASS}>
+      <AffiliatePageHeader title="Notas fiscais" />
+
       {isError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -105,21 +75,6 @@ export function AffiliateInvoicesPage() {
 
       {isManual ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SaldoMetric
-              label="Saldo disponível"
-              value={formatMoneyCentavos(statistics?.saldoDisponivelCentavos ?? 0)}
-              hint="Comissões liberadas para nova NF"
-              loading={isLoading}
-            />
-            <SaldoMetric
-              label="Em análise"
-              value={formatMoneyCentavos(statistics?.saldoPendenteRepasseCentavos ?? 0)}
-              hint="Solicitações ainda não pagas"
-              loading={isLoading}
-            />
-          </div>
-
           <Card className="border-slate-200 bg-slate-50/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Como funciona</CardTitle>
@@ -142,22 +97,20 @@ export function AffiliateInvoicesPage() {
                 ))}
               </ol>
               <Button variant="link" className="mt-4 h-auto p-0 text-sm" asChild>
-                <Link to="/app/afiliados/financeiro">
-                  <Wallet className="h-3.5 w-3.5 mr-1" />
-                  Ir para Financeiro (chave PIX)
+                <Link to="/app/afiliados/chave-pix">
+                  <KeyRound className="h-3.5 w-3.5 mr-1" />
+                  Cadastrar chave PIX
                 </Link>
               </Button>
             </CardContent>
           </Card>
 
           {affiliateId ? (
-            <>
-              <SolicitarRepasse
-                affiliateId={affiliateId}
-                saldoDisponivelCentavos={statistics?.saldoDisponivelCentavos ?? 0}
-              />
-              <AffiliateRepasseHistoryCard affiliateId={affiliateId} />
-            </>
+            <AffiliateRepasseMonthList
+              affiliateId={affiliateId}
+              saldosPorMes={statistics?.saldosPorMes ?? []}
+              loading={isLoading}
+            />
           ) : (
             <Alert>
               <AlertCircle className="h-4 w-4" />

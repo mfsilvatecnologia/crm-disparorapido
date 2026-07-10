@@ -5,11 +5,13 @@ import type { StatusCadastroAfiliado } from '../types';
 type AffiliateCadastroStatusBannerProps = {
   statusCadastro?: StatusCadastroAfiliado;
   motivoRejeicao?: string | null;
+  permiteCorrecaoCadastro?: boolean | null;
 };
 
 export function AffiliateCadastroStatusBanner({
   statusCadastro,
   motivoRejeicao,
+  permiteCorrecaoCadastro,
 }: AffiliateCadastroStatusBannerProps) {
   if (statusCadastro === 'PENDENTE') {
     return (
@@ -25,13 +27,18 @@ export function AffiliateCadastroStatusBanner({
   }
 
   if (statusCadastro === 'REJEITADO') {
+    const podeCorrigir = permiteCorrecaoCadastro !== false;
+
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Cadastro não aprovado</AlertTitle>
         <AlertDescription className="space-y-2">
           <p>
-            Sua solicitação de afiliado não foi aprovada. Entre em contato com o suporte se tiver dúvidas.
+            Sua solicitação de afiliado não foi aprovada.
+            {podeCorrigir
+              ? ' Corrija os dados abaixo e reenvie para nova análise.'
+              : ' Entre em contato com o suporte se tiver dúvidas.'}
           </p>
           {motivoRejeicao ? (
             <p className="text-sm">

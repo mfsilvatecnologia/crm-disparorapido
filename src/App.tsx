@@ -17,6 +17,7 @@ import AuthCallbackPage from "./features/authentication/pages/AuthCallbackPage";
 import SessionManagementPage from "./features/authentication/pages/SessionManagementPage";
 import { Dashboard } from "./features/dashboard";
 import { LeadsPage } from "./features/leads";
+import { MonthlyLeadsPage } from "./features/monthly-leads";
 import LeadCreatePage from "./features/leads/pages/LeadCreatePage";
 import LeadEditPage from "./features/leads/pages/LeadEditPage";
 import { LeadAgentPage } from "./features/lead-agent";
@@ -44,7 +45,7 @@ import {
   CreditTransactionsPage,
   FinancialDashboardPage
 } from "./features/sales/pages";
-import { AffiliateCommissionsPage, AffiliateDashboardPage, AffiliateClientsPage, AffiliateFinancialPage, AffiliateInvoicesPage } from "./features/affiliates/pages";
+import { AffiliateCommissionsPage, AffiliateDashboardPage, AffiliateClientsPage, AffiliateFinancialPage, AffiliatePixKeyPage, AffiliateInvoicesPage, AffiliateToolSubscriptionPage } from "./features/affiliates/pages";
 import { NotFound } from "./shared/pages";
 import { BillingConfigPage } from "./features/campaign-stages/pages/BillingConfigPage";
 import { FeatureDemoPage } from "./shared/components/features/FeatureDemoPage";
@@ -160,9 +161,10 @@ function AppRoutes() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="crm" element={withErrorBoundary(<CRMPage />)} />
-          <Route path="leads" element={<LeadsPage />} />
           <Route path="leads/novo" element={<LeadCreatePage />} />
           <Route path="leads/:id/edit" element={<LeadEditPage />} />
+          <Route path="leads/gerenciar" element={<LeadsPage />} />
+          <Route path="leads" element={<MonthlyLeadsPage />} />
           <Route path="lead-agent" element={<LeadAgentPage />} />
           {/* <Route path="workers" element={<WorkerMonitorPage />} /> */}
           {/* Rota comentada - workers agora são automáticos, gerenciados pela tela de Scraping */}
@@ -185,7 +187,9 @@ function AppRoutes() {
           <Route path="afiliados/clientes" element={withErrorBoundary(<AffiliateClientsPage />)} />
           <Route path="afiliados/comissoes" element={<AffiliateCommissionsPage />} />
           <Route path="afiliados/financeiro" element={<AffiliateFinancialPage />} />
+          <Route path="afiliados/chave-pix" element={<AffiliatePixKeyPage />} />
           <Route path="afiliados/notas-fiscais" element={<AffiliateInvoicesPage />} />
+          <Route path="afiliados/assinatura-ferramenta" element={<AffiliateToolSubscriptionPage />} />
 
           {/* Sales & Subscriptions Routes */}
           <Route path="subscription" element={<SubscriptionManagementPage />} />

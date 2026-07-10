@@ -1,9 +1,6 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, HelpCircle, Loader2, Wallet, KeyRound } from 'lucide-react';
+import { AlertCircle, HelpCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
-import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -13,8 +10,7 @@ import { useIsAffiliateUser } from '../hooks/useIsAffiliateUser';
 import { useAffiliateStatistics } from '../hooks/useAffiliateStatistics';
 import { useAffiliateCode } from '../hooks/useAffiliateCode';
 import { AffiliateCadastroStatusBanner } from '../components/AffiliateCadastroStatusBanner';
-import { affiliatesApi } from '../api/affiliatesApi';
-import { affiliateKeys } from '../hooks/queryKeys';
+import { AFFILIATE_PAGE_CLASS, AffiliatePageHeader, AffiliatePageLoading } from '../components/AffiliatePageLayout';
 
 const EMPTY_FINANCEIRO: AffiliateFinanceiroPainel = {
   vendasBrutasCentavos: 0,
@@ -35,6 +31,17 @@ function pctLabel(part: number, total: number): string {
   if (total <= 0) return '(0%)';
   const p = (part / total) * 100;
   return `(${p.toFixed(2)}%)`;
+}
+
+function currentPeriodo(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatPeriodoLabel(periodo: string): string {
+  const [year, month] = periodo.split('-').map(Number);
+  if (!year || !month) return periodo;
+  return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 }
 
 function PainelMetric({
@@ -78,40 +85,19 @@ function PainelMetric({
 }
 
 export function AffiliateFinancialPage() {
-  const queryClient = useQueryClient();
   const { isAffiliate, isLoading: loadingAffiliate } = useIsAffiliateUser();
   const { data: affiliateCode } = useAffiliateCode();
-  const { data: statistics, isLoading, isError, error } = useAffiliateStatistics();
-  const [chavePix, setChavePix] = useState('');
-  const [chavePixTipo, setChavePixTipo] = useState('');
-  const [pixMsg, setPixMsg] = useState<string | null>(null);
+  const [periodo, setPeriodo] = useState(currentPeriodo);
+  const { data: statistics, isLoading: loadingStatistics, isError, error } = useAffiliateStatistics();
+  const { data: monthlyStatistics, isLoading: loadingMonthly } = useAffiliateStatistics(periodo);
 
   const isManual = statistics?.modoRepasse === 'MANUAL_NF';
-  const fp = statistics?.financeiroPainel ?? EMPTY_FINANCEIRO;
-
-  const pixMutation = useMutation({
-    mutationFn: () =>
-      affiliatesApi.patchAffiliateChavePix({
-        chave_pix: chavePix.trim(),
-        ...(chavePixTipo.trim() ? { chave_pix_tipo: chavePixTipo.trim() } : {}),
-      }),
-    onSuccess: async () => {
-      setPixMsg('Chave PIX salva com sucesso.');
-      setChavePix('');
-      await queryClient.invalidateQueries({ queryKey: affiliateKeys.code() });
-    },
-    onError: (e: unknown) => {
-      setPixMsg(e instanceof Error ? e.message : 'Não foi possível salvar a chave PIX.');
-    },
-  });
+  const fp = monthlyStatistics?.financeiroPainel ?? EMPTY_FINANCEIRO;
+  const loadingSaldo = loadingStatistics;
+  const loadingFaturas = loadingMonthly;
 
   if (loadingAffiliate) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" />
-        <span>Carregando…</span>
-      </div>
-    );
+    return <AffiliatePageLoading />;
   }
 
   if (!isAffiliate) {
@@ -125,15 +111,12 @@ export function AffiliateFinancialPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className={AFFILIATE_PAGE_CLASS}>
       <AffiliateCadastroStatusBanner
         statusCadastro={affiliateCode?.statusCadastro}
         motivoRejeicao={affiliateCode?.motivoRejeicao}
       />
-      <div className="space-y-2 border-b border-slate-200 pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Financeiro</h1>
-        <h2 className="pt-2 text-lg font-semibold text-slate-900">Acompanhe as estatísticas de suas vendas</h2>
-      </div>
+      <AffiliatePageHeader title="Financeiro" />
 
       {isError && (
         <Alert variant="destructive">
@@ -168,149 +151,76 @@ export function AffiliateFinancialPage() {
 
       {isManual && (
         <div className="grid gap-4 md:grid-cols-2">
-          <Card className="border-slate-200">
-            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base font-medium">Saldo disponível</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              ) : (
-                <>
-                  <p className="text-2xl font-bold">
-                    {formatMoneyFromCentavos(statistics?.saldoDisponivelCentavos ?? 0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Estimativa após NF já quitadas (status pago)</p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-          <Card className="border-slate-200">
-            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base font-medium">Em análise / pendente</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              ) : (
-                <>
-                  <p className="text-2xl font-bold">
-                    {formatMoneyFromCentavos(statistics?.saldoPendenteRepasseCentavos ?? 0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Valores em solicitações ainda não pagas</p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <PainelMetric
+            label="Saldo"
+            hint="Valor referente as comissões das indicações que já foram pagas. Sujeito a alterações até a data de fechamento do mês, por motivos de cancelamento ou estorno."
+            value={formatMoneyFromCentavos(statistics?.saldoDisponivelCentavos ?? 0)}
+            subline="Saldo disponível para Transferência"
+            isLoading={loadingSaldo}
+          />
+          <PainelMetric
+            label="Transferências em análise"
+            hint="Valores aguardando o processamento da nota fiscal e a efetivação do pagamento."
+            value={formatMoneyFromCentavos(statistics?.saldoPendenteRepasseCentavos ?? 0)}
+            subline="Solicitações aguardando pagamento"
+            isLoading={loadingSaldo}
+          />
         </div>
       )}
 
-      <section className="space-y-3">
-        <p className="text-sm font-medium text-slate-600">
-          Comissões acumuladas das suas indicações:
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <PainelMetric
-            label="Total de vendas"
-            hint="Soma de todas as suas comissões sobre pagamentos confirmados dos clientes indicados (inclui renovações)."
-            value={formatMoneyFromCentavos(fp.vendasBrutasCentavos)}
-            isLoading={isLoading}
-          />
-          <PainelMetric
-            label="Total em recuperação"
-            hint="Valor bruto das assinaturas em atraso ou suspensas por inadimplência (past_due / suspended)."
-            value={formatMoneyFromCentavos(fp.totalRecuperacaoCentavos)}
-            isLoading={isLoading}
-          />
+      <section className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-slate-600">Visão do mês</p>
+            <p className="text-xs text-slate-500">
+              Faturas das suas indicações em {formatPeriodoLabel(periodo)}.
+            </p>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="periodo_financeiro">Mês de referência</Label>
+            <Input
+              id="periodo_financeiro"
+              type="month"
+              value={periodo}
+              onChange={(e) => setPeriodo(e.target.value)}
+              className="w-full max-w-xs"
+            />
+          </div>
         </div>
-      </section>
-
-      <section className="space-y-3">
-        <p className="text-sm font-medium text-slate-600">
-          Faturas totais brutas de acordo com as suas indicações:
-        </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <PainelMetric
             label="Total de faturas"
-            hint="Quantidade de assinaturas vinculadas ao seu código de afiliado."
+            hint="Pagamentos confirmados no mês e novas indicações criadas no período."
             value={String(fp.faturasTotal)}
-            subline="assinaturas"
-            isLoading={isLoading}
+            subline="no mês"
+            isLoading={loadingFaturas}
           />
           <PainelMetric
             label="Pagas"
-            hint="Assinaturas com status ativo (pagamento em dia)."
+            hint="Indicações com pagamento confirmado neste mês."
             value={`${fp.faturasPagas} ${pctLabel(fp.faturasPagas, fp.faturasTotal)}`}
-            isLoading={isLoading}
+            isLoading={loadingFaturas}
           />
           <PainelMetric
             label="Abertas"
-            hint="Em teste, aguardando pagamento, inativas ou em atraso ainda não canceladas."
+            hint="Novas indicações do mês em teste, aguardando pagamento."
             value={`${fp.faturasAbertas} ${pctLabel(fp.faturasAbertas, fp.faturasTotal)}`}
-            isLoading={isLoading}
+            isLoading={loadingFaturas}
+          />
+          <PainelMetric
+            label="Vencidas"
+            hint="Indicações inadimplentes."
+            value={`${fp.faturasExpiradas} ${pctLabel(fp.faturasExpiradas, fp.faturasTotal)}`}
+            isLoading={loadingFaturas}
           />
           <PainelMetric
             label="Canceladas"
-            hint="Assinaturas canceladas pelo cliente ou sistema."
+            hint="Novas indicações do mês já canceladas."
             value={`${fp.faturasCanceladas} ${pctLabel(fp.faturasCanceladas, fp.faturasTotal)}`}
-            isLoading={isLoading}
-          />
-          <PainelMetric
-            label="Expiradas"
-            hint="Assinaturas encerradas por limite de cobranças ou validade."
-            value={`${fp.faturasExpiradas} ${pctLabel(fp.faturasExpiradas, fp.faturasTotal)}`}
-            isLoading={isLoading}
+            isLoading={loadingFaturas}
           />
         </div>
       </section>
-
-      {isManual && (
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <KeyRound className="h-5 w-5" />
-              Chave PIX para repasse
-            </CardTitle>
-            <CardDescription>
-              Usada apenas para pagamento após aprovação da sua NF. Não é exibida publicamente.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="max-w-lg space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="chave_pix">Chave PIX</Label>
-              <Input
-                id="chave_pix"
-                autoComplete="off"
-                value={chavePix}
-                onChange={(e) => setChavePix(e.target.value)}
-                placeholder="CPF, e-mail, telefone, EVP ou chave aleatória"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="chave_pix_tipo">Tipo (opcional)</Label>
-              <Input
-                id="chave_pix_tipo"
-                value={chavePixTipo}
-                onChange={(e) => setChavePixTipo(e.target.value)}
-                placeholder="ex.: email, cpf, cnpj, phone, EVP"
-              />
-            </div>
-            {pixMsg && <p className="text-sm text-muted-foreground">{pixMsg}</p>}
-            <Button type="button" onClick={() => pixMutation.mutate()} disabled={pixMutation.isPending}>
-              {pixMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando…
-                </>
-              ) : (
-                'Salvar chave PIX'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

@@ -5,13 +5,28 @@ const adminAfiliadoListItemSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   nome: z.string().optional(),
+  email: z.string().nullable().optional(),
+  cnpj: z.string().nullable().optional(),
   ref_slug: z.string(),
+  area_atuacao: z.string().nullable().optional(),
+  telefone: z.string().nullable().optional(),
+  razao_social: z.string().nullable().optional(),
+  cep: z.string().nullable().optional(),
+  rua: z.string().nullable().optional(),
+  numero: z.string().nullable().optional(),
+  complemento: z.string().nullable().optional(),
+  bairro: z.string().nullable().optional(),
+  cidade: z.string().nullable().optional(),
+  estado: z.string().nullable().optional(),
   modo_repasse: z.string(),
   split_percentual: z.coerce.number(),
+  comissao_mensal_centavos: z.coerce.number().optional(),
+  comissao_anual_centavos: z.coerce.number().optional(),
   tipo_plano: z.string(),
   status_assinatura: z.string(),
   status_cadastro: z.string().optional(),
   created_at: z.string(),
+  updated_at: z.string().nullable().optional(),
 });
 
 const adminAfiliadoListResponseSchema = z.object({
@@ -20,6 +35,17 @@ const adminAfiliadoListResponseSchema = z.object({
   pendentes_cadastro: z.number().optional(),
   limit: z.number(),
   offset: z.number(),
+});
+
+const adminRepasseHistoricoSchema = z.object({
+  id: z.string(),
+  status_anterior: z.string().nullable(),
+  status_novo: z.string(),
+  observacao: z.string().nullable().optional(),
+  alterado_por_user_id: z.string().nullable().optional(),
+  alterado_por_nome: z.string().nullable().optional(),
+  alterado_por_tipo: z.enum(['admin', 'afiliado', 'sistema']),
+  created_at: z.string(),
 });
 
 const adminRepasseRowSchema = z.object({
@@ -43,6 +69,17 @@ const adminRepasseRowSchema = z.object({
   comprovante_pix_uploaded_at: z.string().nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
+  historico_status: z.array(adminRepasseHistoricoSchema).optional().default([]),
+  afiliado_nome: z.string().nullable().optional(),
+  afiliado_ref_slug: z.string().nullable().optional(),
+});
+
+const adminChavePixHistoricoSchema = z.object({
+  id: z.string(),
+  chave_pix: z.string().nullable(),
+  chave_pix_tipo: z.string().nullable().optional(),
+  ativa: z.boolean(),
+  created_at: z.string(),
 });
 
 const adminAfiliadoDetailSchema = z.object({
@@ -50,20 +87,40 @@ const adminAfiliadoDetailSchema = z.object({
     id: z.string(),
     user_id: z.string(),
     nome: z.string().optional(),
+    email: z.string().nullable().optional(),
+    cnpj: z.string().nullable().optional(),
     ref_slug: z.string(),
+    area_atuacao: z.string().nullable().optional(),
+    telefone: z.string().nullable().optional(),
+    razao_social: z.string().nullable().optional(),
+    cep: z.string().nullable().optional(),
+    rua: z.string().nullable().optional(),
+    numero: z.string().nullable().optional(),
+    complemento: z.string().nullable().optional(),
+    bairro: z.string().nullable().optional(),
+    cidade: z.string().nullable().optional(),
+    estado: z.string().nullable().optional(),
     modo_repasse: z.string(),
     split_percentual: z.coerce.number(),
+    comissao_mensal_centavos: z.coerce.number().optional(),
+    comissao_anual_centavos: z.coerce.number().optional(),
     tipo_plano: z.string(),
     status_assinatura: z.string(),
     status_cadastro: z.string().optional(),
     motivo_rejeicao: z.string().nullable().optional(),
+    permite_correcao_cadastro: z.boolean().nullable().optional(),
     cadastro_aprovado_em: z.string().nullable().optional(),
+    cadastro_aprovado_por: z.string().nullable().optional(),
+    cadastro_moderado_por_nome: z.string().nullable().optional(),
     chave_pix: z.string().nullable().optional(),
     chave_pix_tipo: z.string().nullable().optional(),
     asaas_wallet_id: z.string().nullable().optional(),
+    created_at: z.string().nullable().optional(),
+    updated_at: z.string().nullable().optional(),
   }),
   clientes: z.array(z.unknown()).default([]),
   repasses: z.array(adminRepasseRowSchema).default([]),
+  chaves_pix: z.array(adminChavePixHistoricoSchema).default([]),
 });
 
 export type AdminAfiliadoListItem = z.infer<typeof adminAfiliadoListItemSchema>;
@@ -155,8 +212,17 @@ export async function adminPatchRepasse(
 
 export async function adminPatchAfiliadoCadastro(
   afiliadoId: string,
-  body: { action: 'aprovar' | 'rejeitar'; motivo?: string }
-): Promise<{ id: string; status_cadastro: string; motivo_rejeicao: string | null }> {
+  body: {
+    action: 'aprovar' | 'rejeitar' | 'revogar_rejeicao';
+    motivo?: string;
+    permite_correcao_cadastro?: boolean;
+  }
+): Promise<{
+  id: string;
+  status_cadastro: string;
+  motivo_rejeicao: string | null;
+  permite_correcao_cadastro: boolean | null;
+}> {
   const response = await apiClient.patch<unknown>(
     `/api/v1/admin/afiliados/${encodeURIComponent(afiliadoId)}/cadastro`,
     body
@@ -170,12 +236,40 @@ export async function adminPatchAfiliadoCadastro(
       id: z.string(),
       status_cadastro: z.string(),
       motivo_rejeicao: z.string().nullable(),
+      permite_correcao_cadastro: z.boolean().nullable().optional(),
     })
     .parse(payload);
 }
 
+export interface AdminPatchAfiliadoBody {
+  split_percentual?: number;
+  comissao_mensal_centavos?: number;
+  comissao_anual_centavos?: number;
+  tipo_plano?: string;
+  area_atuacao?: string | null;
+  chave_pix?: string | null;
+  chave_pix_tipo?: string | null;
+  created_at?: string;
+}
+
+export async function adminPatchAfiliado(
+  afiliadoId: string,
+  body: AdminPatchAfiliadoBody
+): Promise<{ id: string }> {
+  const response = await apiClient.patch<unknown>(
+    `/api/v1/admin/afiliados/${encodeURIComponent(afiliadoId)}`,
+    body
+  );
+  const payload =
+    response && typeof response === 'object' && 'data' in response
+      ? (response as { data: unknown }).data
+      : response;
+  return z.object({ id: z.string() }).parse(payload);
+}
+
 export const adminAffiliatesApi = {
   listAfiliados: adminListAfiliados,
+  patchAfiliado: adminPatchAfiliado,
   listRepassesPendentes: adminListRepassesPendentes,
   getAfiliado: adminGetAfiliado,
   getRepasseNfSignedUrl: adminGetRepasseNfSignedUrl,

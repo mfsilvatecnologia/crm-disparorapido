@@ -3,6 +3,54 @@ import { TenantConfig, TenantId } from '@/config/tenants/types';
 import { getTenantByDomain, DEFAULT_TENANT_ID, tenants } from '@/config/tenants/tenants.config';
 
 /**
+ * Converte hex (#RRGGBB) para componentes HSL no formato usado pelo Tailwind: "H S% L%"
+ * (sem a função hsl(), pois as classes usam `hsl(var(--primary))`).
+ */
+function hexToHslChannels(hex: string): string | null {
+  const raw = hex.trim().replace(/^#/, '');
+  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return null;
+
+  const r = parseInt(raw.slice(0, 2), 16) / 255;
+  const g = parseInt(raw.slice(2, 4), 16) / 255;
+  const b = parseInt(raw.slice(4, 6), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+
+  let h = 0;
+  let s = 0;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    switch (max) {
+      case r:
+        h = ((g - b) / d) % 6;
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      default:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+
+  return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+function lightenHslChannels(channels: string, deltaL: number): string {
+  const match = channels.match(/^([\d.]+)\s+([\d.]+)%\s+([\d.]+)%$/);
+  if (!match) return channels;
+  const h = match[1];
+  const s = match[2];
+  const l = Math.min(100, Math.max(0, Number(match[3]) + deltaL));
+  return `${h} ${s}% ${Math.round(l)}%`;
+}
+
+/**
  * Tenant Context Interface
  */
 interface TenantContextValue {
@@ -75,7 +123,7 @@ export function TenantProvider({ children, forceTenant }: TenantProviderProps) {
     const root = document.documentElement;
     const theme = tenant.theme;
 
-    // Convert hex to HSL for CSS variables (Tailwind uses HSL)
+    // Variáveis hex específicas do tenant (gradientes / uso direto)
     root.style.setProperty('--tenant-primary', theme.primary);
     root.style.setProperty('--tenant-primary-foreground', theme.primaryForeground);
     root.style.setProperty('--tenant-secondary', theme.secondary);
@@ -85,6 +133,35 @@ export function TenantProvider({ children, forceTenant }: TenantProviderProps) {
     root.style.setProperty('--tenant-gradient-from', theme.gradientFrom);
     root.style.setProperty('--tenant-gradient-via', theme.gradientVia || theme.gradientFrom);
     root.style.setProperty('--tenant-gradient-to', theme.gradientTo);
+
+    // Sobrescreve tokens shadcn/Tailwind (bg-primary, ring, etc.) com a marca do tenant
+    const primaryHsl = hexToHslChannels(theme.primary);
+    const accentHsl = hexToHslChannels(theme.accent) ?? primaryHsl;
+    const primaryFgHsl = hexToHslChannels(theme.primaryForeground) ?? '0 0% 100%';
+
+    if (primaryHsl) {
+      const primaryGlow = lightenHslChannels(primaryHsl, 10);
+      const primaryDark = lightenHslChannels(primaryHsl, -8);
+      root.style.setProperty('--primary', primaryHsl);
+      root.style.setProperty('--primary-foreground', primaryFgHsl);
+      root.style.setProperty('--primary-glow', primaryGlow);
+      root.style.setProperty('--primary-dark', primaryDark);
+      root.style.setProperty('--ring', primaryHsl);
+      root.style.setProperty('--sidebar-primary', primaryHsl);
+      root.style.setProperty('--sidebar-primary-foreground', primaryFgHsl);
+      root.style.setProperty('--sidebar-ring', primaryHsl);
+      root.style.setProperty(
+        '--gradient-primary',
+        `linear-gradient(135deg, hsl(${primaryHsl}), hsl(${primaryGlow}))`
+      );
+    }
+
+    if (accentHsl) {
+      // Mantém --accent como tom suave para hovers; brand fica no --primary
+      root.style.setProperty('--accent', lightenHslChannels(primaryHsl ?? accentHsl, 62));
+      root.style.setProperty('--accent-foreground', primaryHsl ?? '210 100% 32%');
+      root.style.setProperty('--accent-light', lightenHslChannels(primaryHsl ?? accentHsl, 12));
+    }
 
     // Update document title and favicon
     document.title = tenant.branding.companyName;

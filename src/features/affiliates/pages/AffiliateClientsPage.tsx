@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   Activity,
   AlertCircle,
-  ArrowLeft,
   FilterX,
   Loader2,
   Search,
@@ -34,6 +33,7 @@ import { useIsAffiliateUser } from '../hooks/useIsAffiliateUser';
 import { useAffiliateClients } from '../hooks/useAffiliateClients';
 import { useAffiliateCode } from '../hooks/useAffiliateCode';
 import { AffiliateCadastroStatusBanner } from '../components/AffiliateCadastroStatusBanner';
+import { AFFILIATE_PAGE_CLASS, AffiliatePageHeader, AffiliatePageLoading } from '../components/AffiliatePageLayout';
 import {
   formatBillingCycleLabelPt,
   formatClientePlanoLabel,
@@ -187,12 +187,7 @@ export function AffiliateClientsPage() {
     periodFilter !== 'all';
 
   if (loadingAffiliate) {
-    return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-slate-500">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-900" />
-        <p className="text-sm font-medium">Carregando seus clientes…</p>
-      </div>
-    );
+    return <AffiliatePageLoading message="Carregando seus clientes…" />;
   }
 
   if (!isAffiliate) {
@@ -229,28 +224,12 @@ export function AffiliateClientsPage() {
   const list = data ?? [];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 p-4 pb-10">
+    <div className={AFFILIATE_PAGE_CLASS}>
       <AffiliateCadastroStatusBanner
         statusCadastro={affiliateCode?.statusCadastro}
         motivoRejeicao={affiliateCode?.motivoRejeicao}
       />
-      <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-slate-100 p-2">
-              <Users className="h-6 w-6 text-slate-900" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Clientes</h1>
-          </div>
-        </div>
-
-        <Button variant="outline" size="sm" className="shrink-0 gap-2" asChild>
-          <Link to="/app/afiliados">
-            <ArrowLeft className="h-4 w-4" />
-            Voltar ao painel
-          </Link>
-        </Button>
-      </div>
+      <AffiliatePageHeader title="Minhas Indicações" />
 
       {isError && (
         <Alert variant="destructive">

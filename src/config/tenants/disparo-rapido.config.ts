@@ -24,20 +24,20 @@ export const disparorapidoConfig: TenantConfig = {
   },
 
   theme: {
-    // Primary brand colors - Green theme
-    primary: '#25D366', // WhatsApp Green
+    // Primary UI — mesmo azul da sidebar ativa (#0055A4)
+    primary: '#0055A4',
     primaryForeground: '#ffffff',
 
     secondary: '#64748b', // Slate 500
     secondaryForeground: '#ffffff',
 
-    accent: '#0ea5e9', // Sky 500
+    accent: '#003d75', // Azul mais escuro (hover/ênfase)
     accentForeground: '#ffffff',
 
-    // Gradient for hero sections
-    gradientFrom: '#128C7E', // Teal Green
-    gradientVia: '#25D366',  // WhatsApp Green
-    gradientTo: '#DCF8C6',   // Light Green
+    // Gradientes alinhados ao azul institucional
+    gradientFrom: '#003d75',
+    gradientVia: '#0055A4',
+    gradientTo: '#4d8cc4',
   },
 
   features: {
@@ -57,5 +57,6 @@ export const disparorapidoConfig: TenantConfig = {
     defaultLanguage: 'pt-BR',
     timezone: 'America/Sao_Paulo',
     currency: 'BRL',
+    marketingSiteUrl: 'https://disparorapido.com.br',
   },
 };

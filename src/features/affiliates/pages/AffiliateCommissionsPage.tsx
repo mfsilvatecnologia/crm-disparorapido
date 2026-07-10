@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
 import { Pagination } from '@/shared/components/Pagination';
 import { CommissionsTable } from '../components/CommissionsTable';
+import { AFFILIATE_PAGE_CLASS, AffiliatePageHeader } from '../components/AffiliatePageLayout';
 import { useAffiliateCommissions } from '../hooks/useAffiliateCommissions';
 
 export function AffiliateCommissionsPage() {
@@ -36,12 +37,10 @@ export function AffiliateCommissionsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Histórico de Comissões</h1>
-          <p className="text-muted-foreground">Visualize todas as comissões recebidas do programa.</p>
-        </div>
+    <div className={AFFILIATE_PAGE_CLASS}>
+      <AffiliatePageHeader title="Histórico de Comissões" />
+
+      <div className="flex justify-end">
         <Button variant="outline" onClick={() => refetch()}>Atualizar</Button>
       </div>
 

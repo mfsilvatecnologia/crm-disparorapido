@@ -14,6 +14,7 @@ import {
   FileText,
   Plug,
   UserCheck,
+  KeyRound,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -41,6 +42,7 @@ type NavItem = {
   description: string;
   requiredFeature?: string;
   adminTab?: string;
+  end?: boolean;
 };
 
 const homeNavItem: NavItem = {
@@ -48,6 +50,15 @@ const homeNavItem: NavItem = {
   url: '/app',
   icon: Home,
   description: 'Painel inicial',
+};
+
+const leadsNavItem: NavItem = {
+  title: 'Lead Rápido',
+  url: '/app/leads',
+  icon: Users,
+  description: 'Leads de coleta Google Meu Negócio',
+  requiredFeature: 'enableBilling',
+  end: true,
 };
 
 const platformAdminNavItems: NavItem[] = [
@@ -141,7 +152,8 @@ export function AppSidebar() {
   const location = useLocation();
   const { logout, hasRole } = useAuth();
   const queryClient = useQueryClient();
-  const { isAffiliate } = useIsAffiliateUser();
+  const { isAffiliate, code: affiliateCode } = useIsAffiliateUser();
+  const isManualRepasse = affiliateCode?.modoRepasse === 'MANUAL_NF';
   const isPlatformAdmin = hasRole('admin');
 
   type AffiliateNavItem = {
@@ -172,6 +184,22 @@ export function AppSidebar() {
       icon: Wallet,
       description: 'Resumo financeiro',
     },
+    ...(isManualRepasse
+      ? [
+          {
+            title: 'Chave PIX',
+            url: '/app/afiliados/chave-pix',
+            icon: KeyRound,
+            description: 'Dados para pagamento',
+          },
+        ]
+      : []),
+    {
+      title: 'Assinar Disparo Rápido',
+      url: '/app/afiliados/assinatura-ferramenta',
+      icon: CreditCard,
+      description: 'Assinatura da extensão para afiliados',
+    },
     {
       title: 'Notas fiscais',
       url: '/app/afiliados/notas-fiscais',
@@ -195,7 +223,7 @@ export function AppSidebar() {
     return p === url || p.startsWith(`${url}/`);
   };
 
-  const isActive = (path: string, adminTab?: string) => {
+  const isActive = (path: string, adminTab?: string, end?: boolean) => {
     if (adminTab) {
       return location.pathname === '/app/admin' && getActiveAdminTab() === adminTab;
     }
@@ -209,14 +237,17 @@ export function AppSidebar() {
     }
 
     const pathOnly = path.split('?')[0];
+    if (end) {
+      return location.pathname === pathOnly || location.pathname === `${pathOnly}/`;
+    }
     return location.pathname.startsWith(pathOnly);
   };
 
-  const getNavClassName = (path: string, adminTab?: string) => {
-    if (isActive(path, adminTab)) {
-      return 'text-primary-foreground hover:!bg-[#0055A4] hover:!text-primary-foreground';
+  const getNavClassName = (path: string, adminTab?: string, end?: boolean) => {
+    if (isActive(path, adminTab, end)) {
+      return 'bg-primary text-primary-foreground hover:!bg-primary/90 hover:!text-primary-foreground';
     }
-    return 'hover:bg-accent hover:text-accent-foreground';
+    return 'hover:bg-muted hover:text-foreground';
   };
 
   const handleNavClick = () => {
@@ -225,14 +256,13 @@ export function AppSidebar() {
   };
 
   const renderMenuItem = (item: NavItem) => {
-    const active = isActive(item.url, item.adminTab);
     const menuItem = (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton asChild>
           <NavLink
             to={item.url}
-            className={getNavClassName(item.url, item.adminTab)}
-            style={active ? { backgroundColor: '#0055A4' } : undefined}
+            end={item.end}
+            className={getNavClassName(item.url, item.adminTab, item.end)}
             title={!open ? item.description : undefined}
             onClick={handleNavClick}
           >
@@ -258,8 +288,8 @@ export function AppSidebar() {
     const end = Boolean(item.end);
     const active = isAffiliateNavActive(item.url, end);
     const className = active
-      ? 'text-primary-foreground hover:!bg-[#0055A4] hover:!text-primary-foreground'
-      : 'hover:bg-accent hover:text-accent-foreground';
+      ? 'bg-primary text-primary-foreground hover:!bg-primary/90 hover:!text-primary-foreground'
+      : 'hover:bg-muted hover:text-foreground';
     return (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton asChild>
@@ -267,7 +297,6 @@ export function AppSidebar() {
             to={item.url}
             end={end}
             className={className}
-            style={active ? { backgroundColor: '#0055A4' } : undefined}
             title={!open ? item.description : undefined}
             onClick={handleNavClick}
           >
@@ -298,6 +327,7 @@ export function AppSidebar() {
                 : (
                   <>
                     {renderMenuItem(homeNavItem)}
+                    {renderMenuItem(leadsNavItem)}
                     {settingsItems.map(renderMenuItem)}
                     {featureNavigationItems.map(renderMenuItem)}
                   </>

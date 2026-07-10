@@ -3,25 +3,43 @@
  */
 
 import React, { useState } from 'react';
-import { ExternalLink, FileText, Loader2, Receipt } from 'lucide-react';
+import { ChevronDown, ExternalLink, FileText, Loader2, Receipt } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/components/ui/collapsible';
+import { cn } from '@/shared/utils/utils';
 import { affiliatesApi } from '@/features/affiliates/api/affiliatesApi';
 import { useAffiliateRepasses } from '@/features/affiliates/hooks/useAffiliateRepasses';
 import {
   formatMoneyCentavos,
   formatPeriodoReferencia,
   RepasseStatusBadge,
+  RepasseStatusHistoricoTimeline,
   RepasseStatusIcon,
+  resolveMotivoAdminRepasse,
 } from '@/features/affiliates/utils/repasseStatus';
 
 export interface AffiliateRepasseHistoryCardProps {
   affiliateId: string;
 }
 
+function statusHint(status: string): string | null {
+  if (status === 'em_analise' || status === 'nf_enviada') {
+    return 'NF na fila de análise. Pagamento em PIX após aprovação (até 30 dias corridos).';
+  }
+  if (status === 'aprovado') {
+    return 'NF aprovada. O pagamento via PIX será processado em breve.';
+  }
+  if (status === 'pago') {
+    return 'Pagamento concluído.';
+  }
+  return null;
+}
+
 export function AffiliateRepasseHistoryCard({ affiliateId }: AffiliateRepasseHistoryCardProps) {
   const [pixUrlLoadingId, setPixUrlLoadingId] = useState<string | null>(null);
+  const [openHistoricoId, setOpenHistoricoId] = useState<string | null>(null);
   const { data: list = [], isLoading: listLoading, isError } = useAffiliateRepasses(affiliateId);
 
   const openComprovantePix = async (repasseId: string) => {
@@ -69,73 +87,104 @@ export function AffiliateRepasseHistoryCard({ affiliateId }: AffiliateRepasseHis
             </p>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {list.map((repasse) => (
-              <li
-                key={repasse.id}
-                className="rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-sm"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <RepasseStatusIcon status={repasse.status} className="mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-slate-900">{formatMoneyCentavos(repasse.valor_calculado_centavos)}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+          <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 overflow-hidden">
+            {list.map((repasse) => {
+              const motivo = resolveMotivoAdminRepasse({
+                status: repasse.status,
+                adminObservacao: repasse.admin_observacao,
+                historicoStatus: repasse.historico_status,
+              });
+              const hint = statusHint(repasse.status);
+              const historico = repasse.historico_status ?? [];
+              const historicoOpen = openHistoricoId === repasse.id;
+
+              return (
+                <li key={repasse.id} className="bg-white px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <RepasseStatusIcon status={repasse.status} className="shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="truncate font-semibold text-slate-900">
+                          {formatMoneyCentavos(repasse.valor_calculado_centavos)}
+                        </p>
+                        <RepasseStatusBadge status={repasse.status} />
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground capitalize">
                         {formatPeriodoReferencia(repasse.periodo_referencia)}
                       </p>
                     </div>
                   </div>
-                  <RepasseStatusBadge status={repasse.status} />
-                </div>
 
-                {repasse.status === 'em_analise' || repasse.status === 'nf_enviada' ? (
-                  <p className="mt-3 text-xs text-muted-foreground bg-slate-50 rounded-md px-2.5 py-2">
-                    Sua NF está na fila. O pagamento em PIX ocorre após aprovação (até 30 dias corridos).
-                  </p>
-                ) : null}
+                  {repasse.status === 'divergencia' || repasse.status === 'cancelado' ? (
+                    <div className="mt-3 rounded-md bg-red-50 px-3 py-2.5 text-xs leading-relaxed text-red-900">
+                      <p className="font-medium">
+                        {repasse.status === 'divergencia' ? 'Motivo da recusa' : 'Motivo do cancelamento'}
+                      </p>
+                      <p className="mt-1 text-red-800/90">
+                        {motivo ||
+                          (repasse.status === 'divergencia'
+                            ? 'Há uma pendência na sua NF. Corrija o documento e reenvie, ou fale com o suporte.'
+                            : 'Esta solicitação de repasse foi cancelada.')}
+                      </p>
+                      {repasse.status === 'divergencia' ? (
+                        <p className="mt-1.5 text-red-700/70">
+                          Reenvie a NF corrigida em Repasses por mês.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : hint ? (
+                    <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">{hint}</p>
+                  ) : null}
 
-                {repasse.status === 'aprovado' ? (
-                  <p className="mt-3 text-xs text-blue-800 bg-blue-50 border border-blue-100 rounded-md px-2.5 py-2">
-                    NF aprovada. O pagamento via PIX será processado em breve.
-                  </p>
-                ) : null}
+                  {repasse.status === 'pago' && repasse.comprovante_pix_object_key ? (
+                    <div className="mt-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        disabled={pixUrlLoadingId === repasse.id}
+                        onClick={() => void openComprovantePix(repasse.id)}
+                      >
+                        {pixUrlLoadingId === repasse.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Receipt className="h-3 w-3" />
+                        )}
+                        Ver comprovante
+                        <ExternalLink className="h-3 w-3 opacity-50" />
+                      </Button>
+                    </div>
+                  ) : null}
 
-                {repasse.admin_observacao ? (
-                  <p className="mt-3 text-xs text-muted-foreground border-l-2 border-slate-200 pl-2">
-                    <span className="font-medium text-slate-600">Mensagem da equipe:</span> {repasse.admin_observacao}
-                  </p>
-                ) : null}
-
-                {repasse.status === 'pago' && repasse.comprovante_pix_object_key ? (
-                  <div className="mt-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5"
-                      disabled={pixUrlLoadingId === repasse.id}
-                      onClick={() => void openComprovantePix(repasse.id)}
+                  {historico.length > 0 ? (
+                    <Collapsible
+                      open={historicoOpen}
+                      onOpenChange={(open) => setOpenHistoricoId(open ? repasse.id : null)}
+                      className="mt-3"
                     >
-                      {pixUrlLoadingId === repasse.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Receipt className="h-3 w-3" />
-                      )}
-                      Ver comprovante do pagamento
-                      <ExternalLink className="h-3 w-3 opacity-50" />
-                    </Button>
-                  </div>
-                ) : repasse.status === 'pago' ? (
-                  <p className="mt-3 text-xs text-emerald-700">Pagamento concluído.</p>
-                ) : null}
-
-                {repasse.status === 'divergencia' ? (
-                  <p className="mt-3 text-xs text-red-800 bg-red-50 border border-red-100 rounded-md px-2.5 py-2">
-                    Há uma pendência na sua NF. Verifique a observação acima ou entre em contato com o suporte.
-                  </p>
-                ) : null}
-              </li>
-            ))}
+                      <CollapsibleTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900"
+                        >
+                          <ChevronDown
+                            className={cn(
+                              'h-3.5 w-3.5 transition-transform',
+                              historicoOpen && 'rotate-180'
+                            )}
+                          />
+                          {historicoOpen ? 'Ocultar andamento' : 'Ver andamento'}
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2.5">
+                        <RepasseStatusHistoricoTimeline items={historico} title="Andamento" />
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>

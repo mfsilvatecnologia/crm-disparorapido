@@ -271,11 +271,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       apiClient.setAccessToken(accessToken);
       libApiClient.setAccessToken(accessToken); // Sync with lib api client
       const u = response.data.user;
+      const userRoles =
+        Array.isArray((u as { roles?: string[] }).roles) && (u as { roles?: string[] }).roles!.length > 0
+          ? (u as { roles: string[] }).roles
+          : [(u as { role?: string }).role ?? 'usuario'];
       const nextUser: User = {
         id: u.id,
         email: u.email,
         nome: u.nome ?? u.name ?? '',
-        role: (u as { role?: string }).role ?? 'usuario',
+        role: (u as { role?: string }).role ?? userRoles[0] ?? 'usuario',
+        roles: userRoles,
         empresa_id: (u as { empresa_id?: string }).empresa_id ?? response.data.empresa?.id ?? '',
         ativo: (u as { ativo?: boolean }).ativo ?? true,
         created_at: u.createdAt || u.created_at || new Date().toISOString(),
@@ -583,10 +588,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const hasRole = (role: string | string[]): boolean => {
     if (!user) return false;
+    const roles = user.roles?.length ? user.roles : [user.role];
     if (Array.isArray(role)) {
-      return role.includes(user.role);
+      return role.some((r) => roles.includes(r));
     }
-    return user.role === role;
+    return roles.includes(role);
   };
 
   const value: AuthContextType = {

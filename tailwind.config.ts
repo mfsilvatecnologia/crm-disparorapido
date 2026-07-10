@@ -29,15 +29,15 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-				// Design System Colors - LeadsRápido B2B
+				// Brand primary — DEFAULT/ring seguem CSS vars (tenant sobrescreve --primary)
 				primary: {
-					50: '#EEF2FF',
-					100: '#E0E7FF', 
-					DEFAULT: '#6366F1',
-					500: '#6366F1',
-					600: '#4F46E5',
-					700: '#4338CA',
-					900: '#312E81',
+					50: 'hsl(var(--primary) / 0.08)',
+					100: 'hsl(var(--primary) / 0.14)',
+					DEFAULT: 'hsl(var(--primary))',
+					500: 'hsl(var(--primary))',
+					600: 'hsl(var(--primary-dark))',
+					700: 'hsl(var(--primary-dark))',
+					900: 'hsl(var(--primary-dark))',
 					foreground: 'hsl(var(--primary-foreground))',
 					glow: 'hsl(var(--primary-glow))',
 					dark: 'hsl(var(--primary-dark))'

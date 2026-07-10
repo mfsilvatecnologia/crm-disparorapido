@@ -15,12 +15,15 @@ export const affiliateCodeSchema = z.object({
   codigoAfiliado: z.string(),
   /** UUID do afiliado — usar em rotas `/afiliados/:id/...` (codigoAfiliado é o slug público). */
   codigoAfiliadoId: z.string().uuid().optional(),
-  comissaoPadraoTipo: z.enum(['percentual', 'fixo']),
-  comissaoPadraoValor: z.coerce.number(),
+  comissaoMensalCentavos: z.coerce.number().optional(),
+  comissaoAnualCentavos: z.coerce.number().optional(),
+  comissaoPadraoTipo: z.enum(['percentual', 'fixo']).optional(),
+  comissaoPadraoValor: z.coerce.number().optional(),
   ativo: z.boolean(),
   linkIndicacao: z.string().nullable(),
   statusCadastro: statusCadastroAfiliadoSchema.optional(),
   motivoRejeicao: z.string().nullable().optional(),
+  permiteCorrecaoCadastro: z.boolean().nullable().optional(),
   tipoPlano: z.enum(['ISENTO', 'MENSALIDADE']).optional(),
   statusAssinatura: z.enum(['ATIVA', 'INADIMPLENTE', 'ISENTA']).optional(),
   mensalidadePagamentoUrl: z.string().nullable().optional(),
@@ -44,6 +47,20 @@ export const affiliateFinanceiroPainelSchema = z.object({
   faturasAbertas: z.coerce.number(),
   faturasCanceladas: z.coerce.number(),
   faturasExpiradas: z.coerce.number(),
+  periodoReferencia: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+});
+
+export const affiliateSaldoPorMesStatusSchema = z.union([
+  z.literal('disponivel'),
+  z.enum(['aguardando_nf', 'nf_enviada', 'em_analise', 'aprovado', 'pago', 'divergencia', 'cancelado']),
+]);
+
+export const affiliateSaldoPorMesSchema = z.object({
+  periodoReferencia: z.string().regex(/^\d{4}-\d{2}$/),
+  valorCentavos: z.coerce.number(),
+  status: affiliateSaldoPorMesStatusSchema,
+  repasseId: z.string().uuid().optional(),
+  podeEnviarNf: z.boolean(),
 });
 
 export const affiliateStatisticsSchema = z.object({
@@ -61,6 +78,7 @@ export const affiliateStatisticsSchema = z.object({
   modoRepasse: z.enum(['ASAAS_SPLIT', 'MANUAL_NF']).optional(),
   saldoDisponivelCentavos: z.coerce.number().nullable().optional(),
   saldoPendenteRepasseCentavos: z.coerce.number().nullable().optional(),
+  saldosPorMes: z.array(affiliateSaldoPorMesSchema).optional().default([]),
   financeiroPainel: affiliateFinanceiroPainelSchema.optional(),
 });
 
@@ -109,6 +127,70 @@ export const affiliateClienteRowSchema = z.object({
   next_due_date: z.string().nullable().optional(),
 });
 
+export const affiliatePixKeySchema = z.object({
+  id: z.string(),
+  chavePix: z.string(),
+  chavePixTipo: z.string().nullable().optional(),
+  ativa: z.boolean(),
+  createdAt: z.string(),
+});
+
+export const affiliateCadastroSchema = z.object({
+  statusCadastro: statusCadastroAfiliadoSchema,
+  motivoRejeicao: z.string().nullable().optional(),
+  permiteCorrecaoCadastro: z.boolean().nullable().optional(),
+  nome: z.string(),
+  email: z.string(),
+  cnpj: z.string().nullable().optional(),
+  telefone: z.string().nullable().optional(),
+  razao_social: z.string().nullable().optional(),
+  area_atuacao: z.string().nullable().optional(),
+  cep: z.string().nullable().optional(),
+  rua: z.string().nullable().optional(),
+  numero: z.string().nullable().optional(),
+  complemento: z.string().nullable().optional(),
+  bairro: z.string().nullable().optional(),
+  cidade: z.string().nullable().optional(),
+  estado: z.string().nullable().optional(),
+  chave_pix: z.string().nullable().optional(),
+  chave_pix_tipo: z.string().nullable().optional(),
+});
+
+export const affiliateCadastroResubmitResponseSchema = z.object({
+  statusCadastro: statusCadastroAfiliadoSchema,
+  motivoRejeicao: z.string().nullable().optional(),
+  permiteCorrecaoCadastro: z.boolean().nullable().optional(),
+});
+
+export const affiliateSaldoMesClienteDetalheSchema = z.object({
+  empresaId: z.string().nullable(),
+  nomeEmpresa: z.string(),
+  status: z.string(),
+  billingCycle: z.string().nullable(),
+  valorBrutoCentavos: z.coerce.number(),
+  comissaoCentavos: z.coerce.number(),
+  pagamentoEm: z.string().nullable(),
+});
+
+export const affiliateSaldoMesDetalheSchema = z.object({
+  periodoReferencia: z.string(),
+  totalClientes: z.coerce.number(),
+  valorBrutoCentavos: z.coerce.number(),
+  comissaoCentavos: z.coerce.number(),
+  clientes: z.array(affiliateSaldoMesClienteDetalheSchema).default([]),
+});
+
+export const affiliateRepasseHistoricoSchema = z.object({
+  id: z.string(),
+  status_anterior: z.string().nullable(),
+  status_novo: z.string(),
+  observacao: z.string().nullable().optional(),
+  alterado_por_user_id: z.string().nullable().optional(),
+  alterado_por_nome: z.string().nullable().optional(),
+  alterado_por_tipo: z.enum(['admin', 'afiliado', 'sistema']),
+  created_at: z.string(),
+});
+
 export const affiliateRepasseRowSchema = z.object({
   id: z.string(),
   afiliado_id: z.string(),
@@ -130,4 +212,5 @@ export const affiliateRepasseRowSchema = z.object({
   comprovante_pix_uploaded_at: z.string().nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
+  historico_status: z.array(affiliateRepasseHistoricoSchema).optional().default([]),
 });

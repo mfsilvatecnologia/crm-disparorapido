@@ -27,6 +27,7 @@ export interface User {
   telefone?: string
   ativo: boolean
   role: string
+  roles?: string[]
   empresa_id: string
   created_at: string
   updated_at: string

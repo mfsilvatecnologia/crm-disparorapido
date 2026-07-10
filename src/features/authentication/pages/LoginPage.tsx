@@ -4,7 +4,7 @@ import { Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Zap, Eye, EyeOff, LogOut } from 'lucide-react';
+import { Loader2, Zap, Eye, EyeOff, LogOut, ArrowLeft } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -268,6 +268,24 @@ export default function LoginPage() {
 
           <Card className="bg-gradient-card border-0 shadow-xl">
             <CardHeader className="text-center">
+              {tenant.id === 'disparo-rapido' && (
+                <div className="mb-3 flex w-full justify-start">
+                  <Button variant="ghost" size="sm" className="gap-1.5 px-3" asChild>
+                    <a
+                      href={
+                        (typeof tenant.settings?.marketingSiteUrl === 'string' &&
+                          tenant.settings.marketingSiteUrl) ||
+                        'https://disparorapido.com.br'
+                      }
+                      aria-label="Voltar"
+                      title="Voltar"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Voltar
+                    </a>
+                  </Button>
+                </div>
+              )}
               <CardTitle className="text-2xl">Bem-vindo de volta</CardTitle>
               <CardDescription>
                 Faça login para acessar sua conta

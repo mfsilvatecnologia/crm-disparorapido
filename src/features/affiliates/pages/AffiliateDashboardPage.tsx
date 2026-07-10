@@ -1,12 +1,18 @@
 import { AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
 import { ShareLinkCard } from '../components/ShareLinkCard';
 import {
   AffiliateCadastroStatusBanner,
   isAffiliateCadastroApproved,
 } from '../components/AffiliateCadastroStatusBanner';
+import { AffiliateCadastroResubmitSection } from '../components/AffiliateCadastroResubmitSection';
+import { AFFILIATE_PAGE_CLASS, AffiliatePageHeader } from '../components/AffiliatePageLayout';
 import { useAffiliateCode } from '../hooks/useAffiliateCode';
 import { useAffiliateStatistics } from '../hooks/useAffiliateStatistics';
+import { useQuery } from '@tanstack/react-query';
+import { affiliatesApi } from '../api/affiliatesApi';
+import { affiliateKeys } from '../hooks/queryKeys';
 
 export function AffiliateDashboardPage() {
   const {
@@ -19,10 +25,26 @@ export function AffiliateDashboardPage() {
 
   const hasError = isCodeError || isStatsError;
   const cadastroAprovado = isAffiliateCadastroApproved(code?.statusCadastro);
+  const cadastroRejeitadoComCorrecao =
+    code?.statusCadastro === 'REJEITADO' && code?.permiteCorrecaoCadastro !== false;
+
+  const { data: toolStatus } = useQuery({
+    queryKey: affiliateKeys.toolSubscription(),
+    queryFn: affiliatesApi.getAffiliateToolSubscriptionStatus,
+    enabled: cadastroAprovado,
+  });
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Link do Afiliado</h1>
+    <div className={AFFILIATE_PAGE_CLASS}>
+      <AffiliateCadastroStatusBanner
+        statusCadastro={code?.statusCadastro}
+        motivoRejeicao={code?.motivoRejeicao}
+        permiteCorrecaoCadastro={code?.permiteCorrecaoCadastro}
+      />
+
+      {cadastroRejeitadoComCorrecao ? <AffiliateCadastroResubmitSection /> : null}
+
+      <AffiliatePageHeader title="Link do Afiliado" />
 
       {hasError && (
         <Alert variant="destructive">
@@ -34,10 +56,19 @@ export function AffiliateDashboardPage() {
         </Alert>
       )}
 
-      <AffiliateCadastroStatusBanner
-        statusCadastro={code?.statusCadastro}
-        motivoRejeicao={code?.motivoRejeicao}
-      />
+      {cadastroAprovado && toolStatus && !toolStatus.hasActiveAccess ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Quer usar a ferramenta Disparo Rápido?</AlertTitle>
+          <AlertDescription>
+            Afiliados precisam de assinatura da extensão para acessar leads e campanhas.{' '}
+            <Link to="/app/afiliados/assinatura-ferramenta" className="font-medium underline underline-offset-4">
+              Assinar Disparo Rápido
+            </Link>{' '}
+            na mesma conta, sem perder o programa de indicações.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {cadastroAprovado &&
         statistics?.tipoPlano === 'MENSALIDADE' &&
