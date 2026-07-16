@@ -2,7 +2,7 @@ import React from 'react';
 import { User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Badge } from '@/shared/components/ui/badge';
-import type { User as UserType } from '@/shared/services/schemas";
+import type { User as UserType } from '@/shared/services/schemas';
 
 interface UserAvatarProps {
   user: UserType;

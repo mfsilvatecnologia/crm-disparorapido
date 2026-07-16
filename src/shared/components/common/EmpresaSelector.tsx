@@ -6,8 +6,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/utils';
-import { apiClient } from '@/shared/services/client";
-import type { Empresa } from '@/shared/services/schemas";
+import { apiClient } from '@/shared/services/client';
+import type { Empresa } from '@/shared/services/schemas';
 
 interface EmpresaSelectorProps {
   value?: string;

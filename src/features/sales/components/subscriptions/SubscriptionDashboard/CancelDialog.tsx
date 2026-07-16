@@ -130,7 +130,10 @@ export function CancelDialog({
                 ⚠️ Antes de cancelar, considere:
               </h3>
               <ul className="space-y-1 text-sm text-red-700">
-                <li>• Você perderá acesso a todos os recursos do plano</li>
+                <li>
+                  • O acesso permanece até o fim do período já pago (próximo
+                  vencimento). Depois disso, a assinatura deixa de renovar.
+                </li>
                 <li>• Seus dados serão mantidos por 30 dias</li>
                 <li>• Você pode reativar a qualquer momento</li>
               </ul>

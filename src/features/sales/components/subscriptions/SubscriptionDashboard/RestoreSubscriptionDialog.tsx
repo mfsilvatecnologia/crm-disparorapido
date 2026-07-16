@@ -248,7 +248,12 @@ export function RestoreSubscriptionDialog({
                     disabled={isPending}
                     className="w-full rounded-lg border-2 border-emerald-600 bg-emerald-50 px-4 py-3 text-left font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 flex items-center justify-between"
                   >
-                    <span>Reativar com PIX Automático</span>
+                    <span className="flex flex-col gap-0.5">
+                      <span>Reativar com PIX Automático</span>
+                      <span className="text-xs font-normal text-emerald-700">
+                        Gera cobrança imediata na autorização (exigência do PIX Automático)
+                      </span>
+                    </span>
                     <span className="text-emerald-600">→</span>
                   </button>
                 </div>

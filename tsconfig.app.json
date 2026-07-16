@@ -20,9 +20,8 @@
     "noUnusedParameters": false,
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
+    "strictNullChecks": false,
 
-    "baseUrl": ".",
-    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./src/*"]
     }

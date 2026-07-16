@@ -127,8 +127,8 @@ export function MigrateToPixAutomaticDialog({
       : 'Você receberá um QR Code para autorizar débitos automáticos no app do banco. Use o mesmo CPF/CNPJ do cadastro da empresa.';
   const pauseNote =
     flow === 'restore'
-      ? 'A primeira cobrança será feita ao autorizar o PIX no app do banco.'
-      : 'A cobrança no cartão será pausada até você concluir a autorização PIX.';
+      ? 'Ao autorizar o PIX no app do banco, haverá cobrança imediata do valor do plano. O próximo vencimento será daqui a 1 ciclo a partir dessa autorização.'
+      : 'Ao autorizar o PIX no app do banco, haverá cobrança imediata do valor do plano. A cobrança no cartão será pausada e o próximo ciclo passa a contar a partir dessa autorização.';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
