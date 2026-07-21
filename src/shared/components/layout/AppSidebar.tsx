@@ -91,6 +91,13 @@ const platformAdminNavItems: NavItem[] = [
     adminTab: 'financeiro',
   },
   {
+    title: 'Relatórios',
+    url: '/app/admin?tab=relatorios',
+    icon: FileText,
+    description: 'Extrato de novas assinaturas',
+    adminTab: 'relatorios',
+  },
+  {
     title: 'Integrações',
     url: '/app/admin?tab=integracoes',
     icon: Plug,

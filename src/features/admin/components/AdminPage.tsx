@@ -5,8 +5,9 @@ import { AdminClientsTab } from './AdminClientsTab';
 import { AdminFinancialTab } from './AdminFinancialTab';
 import { AdminIntegrationsTab } from './AdminIntegrationsTab';
 import { AdminHomeTab } from './AdminHomeTab';
+import { AdminReportsTab } from './AdminReportsTab';
 
-export const ADMIN_TABS = ['home', 'afiliados', 'clientes', 'financeiro', 'integracoes'] as const;
+export const ADMIN_TABS = ['home', 'afiliados', 'clientes', 'financeiro', 'relatorios', 'integracoes'] as const;
 export type AdminTab = (typeof ADMIN_TABS)[number];
 
 export function isAdminTab(value: string | null): value is AdminTab {
@@ -23,7 +24,7 @@ export function AdminPage() {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <h1 className="text-2xl font-bold text-gray-900">Administração</h1>
         <p className="text-sm text-gray-600 mt-1">
-          Gestão de clientes, financeiro, integrações e afiliados
+          Gestão de clientes, financeiro, relatórios, integrações e afiliados
         </p>
       </div>
 
@@ -40,6 +41,9 @@ export function AdminPage() {
           </TabsContent>
           <TabsContent value="financeiro">
             <AdminFinancialTab />
+          </TabsContent>
+          <TabsContent value="relatorios">
+            <AdminReportsTab />
           </TabsContent>
           <TabsContent value="integracoes">
             <AdminIntegrationsTab />

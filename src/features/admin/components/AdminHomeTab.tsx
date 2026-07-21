@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Link } from 'react-router-dom';
-import { Users, Wallet, Plug, UserCheck } from 'lucide-react';
+import { Users, Wallet, Plug, UserCheck, FileText } from 'lucide-react';
 
 const quickLinks = [
   {
@@ -20,6 +20,12 @@ const quickLinks = [
     description: 'MRR, pagamentos e indicadores',
     tab: 'financeiro',
     icon: Wallet,
+  },
+  {
+    title: 'Relatórios',
+    description: 'Extrato sintético de novas assinaturas',
+    tab: 'relatorios',
+    icon: FileText,
   },
   {
     title: 'Integrações',
