@@ -1,0 +1,116 @@
+.tutorial-paginate {
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+  margin-top: -48px;
+  width: 36px;
+  height: 96px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transform: translate3d(0, 0, 0);
+}
+
+.tutorial-paginate:hover:not([data-state='disabled']) i {
+  background: hsl(var(--primary) / 0.85);
+}
+
+.tutorial-paginate i {
+  position: absolute;
+  top: 50%;
+  left: 5px;
+  width: 26px;
+  height: 3.5px;
+  margin-top: -1.75px;
+  border-radius: 1.75px;
+  background: hsl(var(--primary));
+  transition: all 0.15s ease;
+}
+
+.tutorial-paginate.left {
+  left: 0;
+}
+
+.tutorial-paginate.left i {
+  transform-origin: 0% 50%;
+}
+
+.tutorial-paginate.left i:first-child {
+  transform: translate(0, -1px) rotate(40deg);
+}
+
+.tutorial-paginate.left i:last-child {
+  transform: translate(0, 1px) rotate(-40deg);
+}
+
+.tutorial-paginate.left:hover:not([data-state='disabled']) i:first-child {
+  transform: translate(0, -1px) rotate(30deg);
+}
+
+.tutorial-paginate.left:hover:not([data-state='disabled']) i:last-child {
+  transform: translate(0, 1px) rotate(-30deg);
+}
+
+.tutorial-paginate.left:active:not([data-state='disabled']) i:first-child {
+  transform: translate(1px, -1px) rotate(25deg);
+}
+
+.tutorial-paginate.left:active:not([data-state='disabled']) i:last-child {
+  transform: translate(1px, 1px) rotate(-25deg);
+}
+
+.tutorial-paginate.left[data-state='disabled'] i:first-child,
+.tutorial-paginate.left[data-state='disabled'] i:last-child,
+.tutorial-paginate.left[data-state='disabled']:hover i:first-child,
+.tutorial-paginate.left[data-state='disabled']:hover i:last-child {
+  transform: translate(-4px, 0) rotate(0deg);
+}
+
+.tutorial-paginate.right {
+  right: 0;
+}
+
+.tutorial-paginate.right i {
+  transform-origin: 100% 50%;
+}
+
+.tutorial-paginate.right i:first-child {
+  transform: translate(0, 1px) rotate(40deg);
+}
+
+.tutorial-paginate.right i:last-child {
+  transform: translate(0, -1px) rotate(-40deg);
+}
+
+.tutorial-paginate.right:hover:not([data-state='disabled']) i:first-child {
+  transform: translate(0, 1px) rotate(30deg);
+}
+
+.tutorial-paginate.right:hover:not([data-state='disabled']) i:last-child {
+  transform: translate(0, -1px) rotate(-30deg);
+}
+
+.tutorial-paginate.right:active:not([data-state='disabled']) i:first-child {
+  transform: translate(1px, 1px) rotate(25deg);
+}
+
+.tutorial-paginate.right:active:not([data-state='disabled']) i:last-child {
+  transform: translate(1px, -1px) rotate(-25deg);
+}
+
+.tutorial-paginate.right[data-state='disabled'] i:first-child,
+.tutorial-paginate.right[data-state='disabled'] i:last-child,
+.tutorial-paginate.right[data-state='disabled']:hover i:first-child,
+.tutorial-paginate.right[data-state='disabled']:hover i:last-child {
+  transform: translate(4px, 0) rotate(0deg);
+}
+
+.tutorial-paginate[data-state='disabled'] {
+  opacity: 0.35;
+  cursor: default;
+}

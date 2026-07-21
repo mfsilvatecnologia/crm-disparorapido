@@ -18,7 +18,7 @@ export const disparorapidoConfig: TenantConfig = {
     companyTagline: 'Faça Envios em Massa no WhatsApp com apenas 3 cliques',
     logo: '/logos/disparorapido/logohorizontal.png',
     logoLight: '/logos/disparorapido/logohorizontal.png',
-    favicon: '/logos/disparo-rapido/favicon.ico',
+    favicon: '/favicon.ico',
 
     supportEmail: 'contato@disparorapido.com.br',
   },
