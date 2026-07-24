@@ -1,10 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, startOfMonth, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
+  ChevronRight,
   CreditCard,
   ExternalLink,
+  Info,
   Layers,
   Loader2,
   Package,
@@ -12,14 +14,27 @@ import {
   Receipt,
   Search,
   TrendingUp,
+  Users,
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { adminFinancialApi, AdminPaymentCategory } from '../api/adminFinancialApi';
+import {
+  adminFinancialApi,
+  AdminPaymentCategory,
+  AdminPaymentItem,
+  AdminPaymentStatusSummary,
+} from '../api/adminFinancialApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -43,6 +58,7 @@ import {
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
 import { cn } from '@/shared/utils/utils';
+import { useAdminPrivacy } from '../context/AdminPrivacyContext';
 
 const PAYMENT_CATEGORIES: { value: 'all' | AdminPaymentCategory; label: string; icon: React.ReactNode }[] = [
   { value: 'all', label: 'Todos', icon: <Layers className="h-3.5 w-3.5" /> },
@@ -66,12 +82,8 @@ const CATEGORY_BADGE_CLASS: Record<AdminPaymentCategory, string> = {
   OTHER: 'bg-slate-50 text-slate-700 border-slate-200',
 };
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
-
 function formatDate(value: string | null | undefined) {
-  if (!value) return '—';
+  if (!value) return '-';
   const parsed = new Date(`${value.slice(0, 10)}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return value;
   return format(parsed, 'dd/MM/yyyy', { locale: ptBR });
@@ -117,10 +129,108 @@ function truncateText(text: string, max = 56) {
   return `${text.slice(0, max)}…`;
 }
 
+const STATUS_CARD_STYLES: Record<
+  AdminPaymentStatusSummary['buckets'][number]['status'],
+  {
+    value: string;
+    bar: string;
+    barEmpty: string;
+    row: string;
+    tip: string;
+  }
+> = {
+  RECEIVED: {
+    value: 'text-emerald-600',
+    bar: 'bg-emerald-500',
+    barEmpty: 'bg-[repeating-linear-gradient(-45deg,#d1fae5,#d1fae5_6px,#ecfdf5_6px,#ecfdf5_12px)]',
+    row: 'text-emerald-700',
+    tip: 'Cobranças já creditadas na conta (status RECEIVED do Asaas).',
+  },
+  CONFIRMED: {
+    value: 'text-blue-600',
+    bar: 'bg-blue-500',
+    barEmpty: 'bg-[repeating-linear-gradient(-45deg,#dbeafe,#dbeafe_6px,#eff6ff_6px,#eff6ff_12px)]',
+    row: 'text-blue-700',
+    tip: 'Cobranças confirmadas, aguardando crédito (status CONFIRMED do Asaas).',
+  },
+  PENDING: {
+    value: 'text-amber-600',
+    bar: 'bg-amber-500',
+    barEmpty: 'bg-[repeating-linear-gradient(-45deg,#fef3c7,#fef3c7_6px,#fffbeb_6px,#fffbeb_12px)]',
+    row: 'text-amber-700',
+    tip: 'Cobranças emitidas e ainda sem pagamento (status PENDING do Asaas).',
+  },
+  OVERDUE: {
+    value: 'text-red-600',
+    bar: 'bg-red-500',
+    barEmpty: 'bg-[repeating-linear-gradient(-45deg,#fecaca,#fecaca_6px,#fef2f2_6px,#fef2f2_12px)]',
+    row: 'text-red-700',
+    tip: 'Cobranças vencidas e em atraso (status OVERDUE do Asaas).',
+  },
+};
+
+function pluralize(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  RECEIVED: 'Recebidas',
+  CONFIRMED: 'Confirmadas',
+  PENDING: 'Aguardando pagamento',
+  OVERDUE: 'Vencidas',
+};
+
+function buildAsaasCustomerUrl(customerId: string, invoiceUrl?: string | null): string {
+  const envHint = String(import.meta.env.VITE_ASAAS_ENVIRONMENT ?? '').toLowerCase();
+  const fromInvoice = Boolean(invoiceUrl?.includes('sandbox.asaas.com'));
+  const isSandbox = envHint === 'sandbox' || fromInvoice || (!envHint && import.meta.env.DEV);
+  const host = isSandbox ? 'https://sandbox.asaas.com' : 'https://www.asaas.com';
+  return `${host}/customerAccount/show/${encodeURIComponent(customerId)}`;
+}
+
+type StatusClientRow = {
+  key: string;
+  empresaId: string | null;
+  empresaNome: string | null;
+  customerId: string | null;
+  charges: number;
+  value: number;
+};
+
+function aggregateClientsFromPayments(payments: AdminPaymentItem[]): StatusClientRow[] {
+  const map = new Map<string, StatusClientRow>();
+
+  for (const payment of payments) {
+    const key = payment.empresaId || payment.customerId || payment.id;
+    const existing = map.get(key);
+    if (existing) {
+      existing.charges += 1;
+      existing.value += payment.value;
+      if (!existing.empresaNome && payment.empresaNome) {
+        existing.empresaNome = payment.empresaNome;
+      }
+      continue;
+    }
+
+    map.set(key, {
+      key,
+      empresaId: payment.empresaId ?? null,
+      empresaNome: payment.empresaNome ?? null,
+      customerId: payment.customerId ?? null,
+      charges: 1,
+      value: payment.value,
+    });
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.value - a.value);
+}
+
 export function AdminFinancialTab() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const empresaFromQuery = searchParams.get('empresaId') ?? '';
+  const paymentsSectionRef = useRef<HTMLDivElement>(null);
+  const { hidden: privacyHidden, maskMoney, maskCount } = useAdminPrivacy();
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
@@ -130,6 +240,7 @@ export function AdminFinancialTab() {
   const [paymentCategory, setPaymentCategory] = useState<'all' | AdminPaymentCategory>('all');
   const [descriptionSearch, setDescriptionSearch] = useState('');
   const [paymentOffset, setPaymentOffset] = useState(0);
+  const [clientsDialogStatus, setClientsDialogStatus] = useState<string | null>(null);
   const limit = 15;
 
   const applyPeriodPreset = (days: number | 'month') => {
@@ -147,9 +258,9 @@ export function AdminFinancialTab() {
     }
   }, [empresaFromQuery]);
 
-  const summaryQuery = useQuery({
-    queryKey: ['admin-financial-summary', startDate, endDate],
-    queryFn: () => adminFinancialApi.getSummary({ startDate, endDate }),
+  const statusSummaryQuery = useQuery({
+    queryKey: ['admin-financial-payment-status-summary', startDate, endDate],
+    queryFn: () => adminFinancialApi.getPaymentStatusSummary({ startDate, endDate }),
   });
 
   const paymentsQuery = useQuery({
@@ -174,9 +285,48 @@ export function AdminFinancialTab() {
       }),
   });
 
-  const summary = summaryQuery.data;
+  const clientsDialogQuery = useQuery({
+    queryKey: ['admin-financial-status-clients', clientsDialogStatus, startDate, endDate],
+    enabled: Boolean(clientsDialogStatus),
+    queryFn: async () => {
+      const list = await adminFinancialApi.listPayments({
+        startDate,
+        endDate,
+        status: clientsDialogStatus!,
+        limit: 1000,
+        offset: 0,
+      });
+      return aggregateClientsFromPayments(list.data);
+    },
+  });
+
+  const statusSummary = statusSummaryQuery.data;
   const payments = paymentsQuery.data;
   const pageSummary = payments?.pageSummary;
+
+  const statusBarMax = useMemo(() => {
+    if (!statusSummary?.buckets.length) return 0;
+    return Math.max(...statusSummary.buckets.map((b) => b.value), 0);
+  }, [statusSummary]);
+
+  const scrollToPayments = () => {
+    window.requestAnimationFrame(() => {
+      paymentsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const filterChargesByStatus = (status: string) => {
+    setPaymentStatus(status);
+    setPaymentCategory('all');
+    setEmpresaFilter('');
+    setDescriptionSearch('');
+    setPaymentOffset(0);
+    scrollToPayments();
+  };
+
+  const openClientsForStatus = (status: string) => {
+    setClientsDialogStatus(status);
+  };
 
   const visiblePayments = useMemo(() => {
     const search = descriptionSearch.trim().toLowerCase();
@@ -194,6 +344,22 @@ export function AdminFinancialTab() {
     setPaymentOffset(0);
   };
 
+  const filterPaymentsForClient = (client: StatusClientRow, status: string) => {
+    setPaymentStatus(status);
+    setPaymentCategory('all');
+    setDescriptionSearch('');
+    setPaymentOffset(0);
+    if (client.empresaId) {
+      setEmpresaFilter(client.empresaId);
+      navigate(`/app/admin?tab=financeiro&empresaId=${encodeURIComponent(client.empresaId)}`);
+    } else {
+      setEmpresaFilter('');
+      setDescriptionSearch(client.empresaNome || client.customerId || '');
+    }
+    setClientsDialogStatus(null);
+    scrollToPayments();
+  };
+
   return (
     <TooltipProvider>
       <div className="space-y-6">
@@ -201,8 +367,7 @@ export function AdminFinancialTab() {
           <CardHeader className="pb-3">
             <CardTitle>Período e filtros</CardTitle>
             <CardDescription>
-              Os indicadores de assinatura usam o intervalo abaixo. Pagamentos vêm do Asaas e podem ser
-              filtrados por cliente e categoria.
+              Pagamentos do grupo Disparo Rápido no Asaas. Filtre por período, cliente e categoria.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -264,81 +429,110 @@ export function AdminFinancialTab() {
           </CardContent>
         </Card>
 
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Assinaturas</h2>
-            <p className="text-sm text-muted-foreground">Panorama do SaaS no período selecionado.</p>
-          </div>
-
-          {summaryQuery.isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <section className="space-y-4">
+          {statusSummaryQuery.isLoading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
             </div>
-          ) : summary ? (
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card className="border-blue-100 bg-gradient-to-br from-blue-50/80 to-white">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700">MRR estimado</CardTitle>
-                </CardHeader>
-                <CardContent className="text-2xl font-bold text-blue-900">
-                  {formatMoney(summary.estimatedMrr)}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Assinaturas ativas</CardTitle>
-                </CardHeader>
-                <CardContent className="text-2xl font-bold">{summary.activeSubscriptions}</CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Em trial</CardTitle>
-                </CardHeader>
-                <CardContent className="text-2xl font-bold">{summary.trialingSubscriptions}</CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Inadimplentes</CardTitle>
-                </CardHeader>
-                <CardContent className="text-2xl font-bold text-destructive">
-                  {summary.pastDueSubscriptions}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Venc. 7 dias</CardTitle>
-                </CardHeader>
-                <CardContent className="text-2xl font-bold">{summary.dueNext7Days}</CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Venc. 30 dias</CardTitle>
-                </CardHeader>
-                <CardContent className="text-2xl font-bold">{summary.dueNext30Days}</CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Novas no período</CardTitle>
-                </CardHeader>
-                <CardContent className="text-2xl font-bold">{summary.newSubscriptionsInPeriod}</CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Canceladas</CardTitle>
-                </CardHeader>
-                <CardContent className="text-2xl font-bold">{summary.canceledSubscriptions}</CardContent>
-              </Card>
+          ) : statusSummary ? (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {statusSummary.buckets.map((bucket) => {
+                const styles = STATUS_CARD_STYLES[bucket.status];
+                const fillPct =
+                  statusBarMax > 0 ? Math.max(6, Math.round((bucket.value / statusBarMax) * 100)) : 0;
+                const isActive = paymentStatus === bucket.status;
+                const isEmpty = bucket.value <= 0 && bucket.charges <= 0;
+
+                return (
+                  <Card
+                    key={bucket.status}
+                    className={cn(
+                      'overflow-hidden border-slate-200 shadow-sm transition-shadow',
+                      isActive && 'ring-2 ring-offset-1 ring-slate-300'
+                    )}
+                  >
+                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-slate-700">{bucket.label}</CardTitle>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="rounded-full p-0.5 text-slate-400 hover:text-slate-600"
+                            aria-label={`Sobre ${bucket.label}`}
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs">{styles.tip}</TooltipContent>
+                      </Tooltip>
+                    </CardHeader>
+                    <CardContent className="space-y-3 pt-0">
+                      <div>
+                        <p className={cn('text-2xl font-bold tracking-tight', styles.value)}>
+                          {maskMoney(bucket.value)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {maskMoney(bucket.netValue)} líquido
+                        </p>
+                      </div>
+
+                      <div className="h-2.5 w-full overflow-hidden rounded-sm bg-slate-100">
+                        {isEmpty || privacyHidden ? (
+                          <div className={cn('h-full w-full', styles.barEmpty)} />
+                        ) : (
+                          <div
+                            className={cn('h-full rounded-sm transition-all', styles.bar)}
+                            style={{ width: `${fillPct}%` }}
+                          />
+                        )}
+                      </div>
+
+                      <div className="space-y-0.5 border-t border-slate-100 pt-1">
+                        <button
+                          type="button"
+                          disabled={isEmpty}
+                          onClick={() => openClientsForStatus(bucket.status)}
+                          className={cn(
+                            'flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm font-medium transition-colors',
+                            isEmpty
+                              ? 'cursor-not-allowed text-slate-400'
+                              : cn('hover:bg-slate-50', styles.row)
+                          )}
+                        >
+                          <Users className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                          <span className="flex-1">
+                            {privacyHidden
+                              ? '*** clientes'
+                              : pluralize(bucket.clients, 'cliente', 'clientes')}
+                          </span>
+                          <ChevronRight className="h-3.5 w-3.5 opacity-50" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isEmpty}
+                          onClick={() => filterChargesByStatus(bucket.status)}
+                          className={cn(
+                            'flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm font-medium transition-colors',
+                            isEmpty
+                              ? 'cursor-not-allowed text-slate-400'
+                              : cn('hover:bg-slate-50', styles.row)
+                          )}
+                        >
+                          <Receipt className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                          <span className="flex-1">
+                            {privacyHidden
+                              ? '*** cobranças'
+                              : pluralize(bucket.charges, 'cobrança', 'cobranças')}
+                          </span>
+                          <ChevronRight className="h-3.5 w-3.5 opacity-50" />
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : null}
-        </section>
-
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Pagamentos Asaas</h2>
-            <p className="text-sm text-muted-foreground">
-              Cobranças registradas na conta Asaas, separadas por tipo de produto.
-            </p>
-          </div>
 
           {pageSummary && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -349,8 +543,10 @@ export function AdminFinancialTab() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xl font-bold">{pageSummary.count} pagamentos</p>
-                  <p className="text-sm text-muted-foreground">{formatMoney(pageSummary.totalValue)}</p>
+                  <p className="text-xl font-bold">
+                    {maskCount(pageSummary.count)} pagamentos
+                  </p>
+                  <p className="text-sm text-muted-foreground">{maskMoney(pageSummary.totalValue)}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -361,7 +557,7 @@ export function AdminFinancialTab() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-xl font-bold text-emerald-700">
-                    {formatMoney(pageSummary.confirmedValue)}
+                    {maskMoney(pageSummary.confirmedValue)}
                   </p>
                 </CardContent>
               </Card>
@@ -372,9 +568,9 @@ export function AdminFinancialTab() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xl font-bold">{pageSummary.byCategory.EXTENSION.count}</p>
+                  <p className="text-xl font-bold">{maskCount(pageSummary.byCategory.EXTENSION.count)}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatMoney(pageSummary.byCategory.EXTENSION.value)}
+                    {maskMoney(pageSummary.byCategory.EXTENSION.value)}
                   </p>
                 </CardContent>
               </Card>
@@ -385,16 +581,16 @@ export function AdminFinancialTab() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xl font-bold">{pageSummary.byCategory.LEADS.count}</p>
+                  <p className="text-xl font-bold">{maskCount(pageSummary.byCategory.LEADS.count)}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatMoney(pageSummary.byCategory.LEADS.value)}
+                    {maskMoney(pageSummary.byCategory.LEADS.value)}
                   </p>
                 </CardContent>
               </Card>
             </div>
           )}
 
-          <Card>
+          <Card ref={paymentsSectionRef} id="extrato-pagamentos">
             <CardHeader className="space-y-4 pb-0">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
@@ -403,6 +599,9 @@ export function AdminFinancialTab() {
                     {payments?.totalCount != null
                       ? `${payments.totalCount} registro(s) no filtro atual`
                       : 'Carregando…'}
+                    {paymentStatus !== 'all'
+                      ? ` · status ${STATUS_LABELS[paymentStatus] ?? paymentStatus}`
+                      : ''}
                   </CardDescription>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -527,7 +726,7 @@ export function AdminFinancialTab() {
                               </TooltipContent>
                             </Tooltip>
                           </TableCell>
-                          <TableCell className="text-right font-medium">{formatMoney(payment.value)}</TableCell>
+                          <TableCell className="text-right font-medium">{maskMoney(payment.value)}</TableCell>
                           <TableCell>
                             <Badge variant={statusBadgeVariant(payment.status)}>
                               {formatStatusLabel(payment.status)}
@@ -537,9 +736,14 @@ export function AdminFinancialTab() {
                             {formatBillingType(payment.billingType)}
                           </TableCell>
                           <TableCell>
-                            {payment.invoiceUrl ? (
+                            {payment.customerId ? (
                               <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                <a href={payment.invoiceUrl} target="_blank" rel="noreferrer" title="Abrir fatura">
+                                <a
+                                  href={buildAsaasCustomerUrl(payment.customerId, payment.invoiceUrl)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  title="Abrir cliente no Asaas"
+                                >
                                   <ExternalLink className="h-4 w-4" />
                                 </a>
                               </Button>
@@ -579,6 +783,66 @@ export function AdminFinancialTab() {
             </div>
           </div>
         </section>
+
+        <Dialog
+          open={Boolean(clientsDialogStatus)}
+          onOpenChange={(open) => {
+            if (!open) setClientsDialogStatus(null);
+          }}
+        >
+          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                Clientes · {STATUS_LABELS[clientsDialogStatus ?? ''] ?? clientsDialogStatus}
+              </DialogTitle>
+              <DialogDescription>
+                Clientes do grupo Disparo Rápido com cobranças nesse status no período selecionado.
+              </DialogDescription>
+            </DialogHeader>
+
+            {clientsDialogQuery.isLoading ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (clientsDialogQuery.data?.length ?? 0) === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Nenhum cliente encontrado para este status.
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {clientsDialogQuery.data?.map((client) => (
+                  <button
+                    key={client.key}
+                    type="button"
+                    onClick={() =>
+                      clientsDialogStatus
+                        ? filterPaymentsForClient(client, clientsDialogStatus)
+                        : undefined
+                    }
+                    className="flex w-full items-center gap-3 rounded-md border border-transparent px-3 py-2.5 text-left transition-colors hover:border-slate-200 hover:bg-slate-50"
+                  >
+                    <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-900">
+                        {client.empresaNome ||
+                          (client.customerId ? `Cliente Asaas ${client.customerId}` : 'Cliente sem nome')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {privacyHidden
+                          ? '*** cobranças'
+                          : pluralize(client.charges, 'cobrança', 'cobranças')}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums">
+                      {maskMoney(client.value)}
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );

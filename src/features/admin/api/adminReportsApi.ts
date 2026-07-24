@@ -13,7 +13,12 @@ const reportCategorySchema = z.enum([
   'plano_anual',
   'teste_gratis_mensal',
   'teste_gratis_anual',
-  'assinaturas_canceladas',
+  'teste_expirado_mensal',
+  'teste_expirado_anual',
+  'assinaturas_canceladas_mensal',
+  'assinaturas_canceladas_anual',
+  'estorno_mensal',
+  'estorno_anual',
   'teste_gratis_cancelados',
 ]);
 
@@ -59,6 +64,24 @@ export async function adminGetNewSubscriptionsReport(params?: {
   return newSubscriptionsReportSchema.parse(unwrapData(raw));
 }
 
+const clientsStatusReportSchema = z.object({
+  active: z.number(),
+  delinquent: z.number(),
+  canceled: z.number(),
+  refunded: z.number(),
+  internal: z.number(),
+  total: z.number(),
+  generatedAt: z.string(),
+});
+
+export type AdminClientsStatusReport = z.infer<typeof clientsStatusReportSchema>;
+
+export async function adminGetClientsStatusReport(): Promise<AdminClientsStatusReport> {
+  const raw = await apiClient.get<unknown>('/api/v1/admin/reports/clients-status');
+  return clientsStatusReportSchema.parse(unwrapData(raw));
+}
+
 export const adminReportsApi = {
   getNewSubscriptionsReport: adminGetNewSubscriptionsReport,
+  getClientsStatusReport: adminGetClientsStatusReport,
 };

@@ -59,10 +59,28 @@ const paymentListSchema = z.object({
   pageSummary: pageSummarySchema,
 });
 
+const paymentStatusKeySchema = z.enum(['RECEIVED', 'CONFIRMED', 'PENDING', 'OVERDUE']);
+
+const paymentStatusBucketSchema = z.object({
+  status: paymentStatusKeySchema,
+  label: z.string(),
+  value: z.coerce.number(),
+  netValue: z.coerce.number(),
+  charges: z.number(),
+  clients: z.number(),
+});
+
+const paymentStatusSummarySchema = z.object({
+  period: z.object({ startDate: z.string(), endDate: z.string() }),
+  groupName: z.string(),
+  buckets: z.array(paymentStatusBucketSchema),
+});
+
 export type AdminFinancialSummary = z.infer<typeof financialSummarySchema>;
 export type AdminPaymentList = z.infer<typeof paymentListSchema>;
 export type AdminPaymentCategory = z.infer<typeof paymentCategorySchema>;
 export type AdminPaymentItem = z.infer<typeof paymentItemSchema>;
+export type AdminPaymentStatusSummary = z.infer<typeof paymentStatusSummarySchema>;
 
 export async function adminGetFinancialSummary(params?: {
   startDate?: string;
@@ -70,6 +88,14 @@ export async function adminGetFinancialSummary(params?: {
 }): Promise<AdminFinancialSummary> {
   const raw = await apiClient.get<unknown>('/api/v1/admin/financial/summary', { params });
   return financialSummarySchema.parse(unwrapData(raw));
+}
+
+export async function adminGetPaymentStatusSummary(params?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<AdminPaymentStatusSummary> {
+  const raw = await apiClient.get<unknown>('/api/v1/admin/financial/payments/status-summary', { params });
+  return paymentStatusSummarySchema.parse(unwrapData(raw));
 }
 
 export async function adminListFinancialPayments(params?: {
@@ -87,5 +113,6 @@ export async function adminListFinancialPayments(params?: {
 
 export const adminFinancialApi = {
   getSummary: adminGetFinancialSummary,
+  getPaymentStatusSummary: adminGetPaymentStatusSummary,
   listPayments: adminListFinancialPayments,
 };

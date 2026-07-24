@@ -35,7 +35,7 @@ import {
 } from '@/shared/components/ui/sheet';
 import { useToast } from '@/shared/hooks/use-toast';
 import { Check, Loader2, Mail, MailCheck, Pencil, RefreshCw, Send, UserPlus, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { UpdateAdminClientInput } from '../api/adminClientsApi';
 
 const EVENT_TYPES = [
@@ -94,7 +94,9 @@ function formatAffiliateLabel(item: AdminClientListItem) {
 export function AdminClientsTab() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const empresaIdFromQuery = searchParams.get('empresaId');
   const [filters, setFilters] = useState<AdminClientFilters>({ page: 1, limit: 20 });
   const [draft, setDraft] = useState<AdminClientFilters>({ page: 1, limit: 20 });
   const [selected, setSelected] = useState<AdminClientListItem | null>(null);
@@ -118,6 +120,38 @@ export function AdminClientsTab() {
     queryFn: () => adminClientsApi.getClient(selected!.empresaId),
     enabled: Boolean(selected?.empresaId),
   });
+
+  useEffect(() => {
+    if (!empresaIdFromQuery) return;
+    if (selected?.empresaId === empresaIdFromQuery) return;
+
+    let cancelled = false;
+    adminClientsApi
+      .getClient(empresaIdFromQuery)
+      .then((client) => {
+        if (!cancelled) setSelected(client);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast({
+            title: 'Cliente não encontrado',
+            description: 'Não foi possível abrir o cliente a partir do financeiro.',
+            variant: 'destructive',
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [empresaIdFromQuery, selected?.empresaId, toast]);
+
+  const clearEmpresaIdFromUrl = () => {
+    if (!searchParams.has('empresaId')) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('empresaId');
+    setSearchParams(next, { replace: true });
+  };
 
   const syncFormFromSource = (source: AdminClientListItem) => {
     setEditForm({
@@ -445,6 +479,7 @@ export function AdminClientsTab() {
             setSelected(null);
             setIsEditingCadastro(false);
             setIsSavingCadastro(false);
+            clearEmpresaIdFromUrl();
           }
         }}
       >
