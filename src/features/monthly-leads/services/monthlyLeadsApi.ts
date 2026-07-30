@@ -40,9 +40,12 @@ export const monthlyLeadsApi = {
   },
 
   async claim(quantidade?: number): Promise<ClaimResult> {
-    const response = await apiClient.post<ApiSuccess<ClaimResult>>('/api/v1/monthly-leads/claim', {
-      quantidade,
-    });
+    // Claim may allocate in multiple batches against Leads API; allow longer than the default 30s.
+    const response = await apiClient.post<ApiSuccess<ClaimResult>>(
+      '/api/v1/monthly-leads/claim',
+      { quantidade },
+      { timeout: 180000 }
+    );
     return response.data;
   },
 
