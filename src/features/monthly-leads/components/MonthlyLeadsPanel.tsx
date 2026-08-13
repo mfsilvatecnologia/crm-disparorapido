@@ -2,10 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { monthlyLeadsApi } from '../services/monthlyLeadsApi';
 import type { ClaimResult, LeadAllocationCycle, LeadDeliveryHistoryItem, LeadPreference } from '../types/monthlyLeads.types';
 import {
+  ALL_STATES_VALUE,
+  formatEstadoLabel,
   formatLeadCount,
   getAvailability,
   getSegmentsForState,
   getStatesForSegment,
+  isAllStates,
   type CatalogState,
 } from '../utils/catalogUtils';
 import { MonthlyDeliveredLeadsSection } from './MonthlyDeliveredLeadsSection';
@@ -80,7 +83,7 @@ export function MonthlyLeadsPanel() {
     setSegmento(value);
     setMessage(null);
 
-    if (value && estado) {
+    if (value && estado && !isAllStates(estado)) {
       const states = getStatesForSegment(catalog, value);
       if (!states.some((item) => item.state === estado)) {
         setEstado('');
@@ -198,6 +201,7 @@ export function MonthlyLeadsPanel() {
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                 >
                   <option value="">Selecione a UF</option>
+                  <option value={ALL_STATES_VALUE}>Todos os estados</option>
                   {availableStates.map((entry) => (
                     <option key={entry.state} value={entry.state}>
                       {entry.state}
@@ -231,7 +235,7 @@ export function MonthlyLeadsPanel() {
                 </select>
                 {estado && !segmento && (
                   <p className="mt-1 text-xs text-gray-500">
-                    Mostrando segmentos disponíveis em {estado}.
+                    Mostrando segmentos disponíveis em {formatEstadoLabel(estado)}.
                   </p>
                 )}
               </div>
@@ -240,7 +244,8 @@ export function MonthlyLeadsPanel() {
             {selectedAvailability !== null && (
               <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                 <span className="font-medium">{formatLeadCount(selectedAvailability)} leads</span> disponíveis no catálogo
-                para <span className="font-medium">{segmento}</span> em <span className="font-medium">{estado}</span>.
+                para <span className="font-medium">{segmento}</span> em{' '}
+                <span className="font-medium">{formatEstadoLabel(estado)}</span>.
                 Sua cota mensal pode limitar a quantidade entregue.
               </div>
             )}
@@ -311,7 +316,7 @@ export function MonthlyLeadsPanel() {
                       className={`cursor-pointer ${selectedRequestId === item.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
                     >
                       <td className="px-3 py-2">{new Date(item.createdAt).toLocaleDateString('pt-BR')}</td>
-                      <td className="px-3 py-2">{item.estado}</td>
+                      <td className="px-3 py-2">{formatEstadoLabel(item.estado)}</td>
                       <td className="px-3 py-2">{item.segmento}</td>
                       <td className="px-3 py-2">{item.deliveredQty}/{item.requestedQty}</td>
                     </tr>
