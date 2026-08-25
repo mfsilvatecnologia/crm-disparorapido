@@ -119,7 +119,7 @@ const CLIENT_GAUGES = [
   },
   {
     key: 'delinquent' as const,
-    title: 'Inadimplentes',
+    title: 'Inadimplentes/Testes expirados/Pix Cancelados',
     color: '#d97706',
     track: '#fef3c7',
     soft: 'bg-amber-50/80 border-amber-100',
@@ -163,6 +163,9 @@ function SpeedometerGauge({
   caption: string;
 }) {
   const percent = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  const titleParts = title.split('/').map((part) => part.trim()).filter(Boolean);
+  const isMultilineTitle = titleParts.length > 1;
+  const titleFull = titleParts.join(' / ');
   const radius = 58;
   const stroke = 11;
   const cx = 80;
@@ -173,17 +176,27 @@ function SpeedometerGauge({
 
   return (
     <div className={cn('rounded-xl border px-3 pb-3 pt-3 shadow-sm', soft)}>
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-1.5">
+      <div className="mb-1 flex h-8 items-start justify-between gap-1.5">
+        <div className="flex min-w-0 items-start gap-1.5">
           <span
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+            className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
             style={{ backgroundColor: track, color }}
           >
             <Icon className="h-3.5 w-3.5" />
           </span>
-          <p className="truncate text-sm font-medium text-slate-700">{title}</p>
+          {isMultilineTitle ? (
+            <p
+              className="min-w-0 text-[10px] font-medium leading-[1.15] text-slate-700"
+              title={titleFull}
+            >
+              <span className="block">{titleParts[0]}</span>
+              <span className="block">{titleParts.slice(1).join(' / ')}</span>
+            </p>
+          ) : (
+            <p className="truncate pt-1 text-sm font-medium leading-none text-slate-700">{title}</p>
+          )}
         </div>
-        <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-medium tabular-nums text-slate-500">
+        <span className="mt-0.5 shrink-0 rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-slate-500">
           {percent.toFixed(0)}%
         </span>
       </div>
