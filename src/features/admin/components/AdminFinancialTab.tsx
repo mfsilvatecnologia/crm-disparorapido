@@ -144,28 +144,28 @@ const STATUS_CARD_STYLES: Record<
     bar: 'bg-emerald-500',
     barEmpty: 'bg-[repeating-linear-gradient(-45deg,#d1fae5,#d1fae5_6px,#ecfdf5_6px,#ecfdf5_12px)]',
     row: 'text-emerald-700',
-    tip: 'Cobranças já creditadas na conta (status RECEIVED do Asaas).',
+    tip: 'Cobranças com vencimento no período e já creditadas (status RECEIVED). Inclui renovações, não só o 1º pagamento.',
   },
   CONFIRMED: {
     value: 'text-blue-600',
     bar: 'bg-blue-500',
     barEmpty: 'bg-[repeating-linear-gradient(-45deg,#dbeafe,#dbeafe_6px,#eff6ff_6px,#eff6ff_12px)]',
     row: 'text-blue-700',
-    tip: 'Cobranças confirmadas, aguardando crédito (status CONFIRMED do Asaas).',
+    tip: 'Cobranças com vencimento no período e confirmadas, aguardando crédito (status CONFIRMED).',
   },
   PENDING: {
     value: 'text-amber-600',
     bar: 'bg-amber-500',
     barEmpty: 'bg-[repeating-linear-gradient(-45deg,#fef3c7,#fef3c7_6px,#fffbeb_6px,#fffbeb_12px)]',
     row: 'text-amber-700',
-    tip: 'Cobranças emitidas e ainda sem pagamento (status PENDING do Asaas).',
+    tip: 'Cobranças com vencimento no período ainda sem pagamento (status PENDING).',
   },
   OVERDUE: {
     value: 'text-red-600',
     bar: 'bg-red-500',
     barEmpty: 'bg-[repeating-linear-gradient(-45deg,#fecaca,#fecaca_6px,#fef2f2_6px,#fef2f2_12px)]',
     row: 'text-red-700',
-    tip: 'Cobranças vencidas e em atraso (status OVERDUE do Asaas).',
+    tip: 'Cobranças com vencimento no período que estão em atraso (status OVERDUE).',
   },
 };
 
@@ -293,7 +293,7 @@ export function AdminFinancialTab() {
         startDate,
         endDate,
         status: clientsDialogStatus!,
-        limit: 1000,
+        limit: 5000,
         offset: 0,
       });
       return aggregateClientsFromPayments(list.data);
@@ -367,7 +367,8 @@ export function AdminFinancialTab() {
           <CardHeader className="pb-3">
             <CardTitle>Período e filtros</CardTitle>
             <CardDescription>
-              Pagamentos do grupo Disparo Rápido no Asaas. Filtre por período, cliente e categoria.
+              Pagamentos do grupo Disparo Rápido no Asaas. O período filtra pela data de vencimento;
+              cada cobrança aparece no card do status atual (recebida, confirmada, aguardando ou vencida).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

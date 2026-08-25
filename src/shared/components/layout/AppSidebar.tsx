@@ -84,7 +84,7 @@ const platformAdminNavItems: NavItem[] = [
     adminTab: 'clientes',
   },
   {
-    title: 'Financeiro',
+    title: 'Financeiro (Asaas)',
     url: '/app/admin?tab=financeiro',
     icon: Wallet,
     description: 'Indicadores e pagamentos',
