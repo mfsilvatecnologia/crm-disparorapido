@@ -45,6 +45,8 @@ const adminClientListItemSchema = z.object({
   empresaCreatedAt: z.string(),
   subscription: subscriptionSummarySchema.nullable(),
   affiliateAttribution: affiliateAttributionSchema.default(null),
+  cardLast4: z.string().nullable().optional().default(null),
+  hasCreditCardToken: z.boolean().optional().default(false),
 });
 
 const adminClientListResponseSchema = z.object({
@@ -67,6 +69,23 @@ export type UpdateAdminClientInput = {
   empresaCnpj?: string;
   cpfCnpj?: string;
   telefone?: string | null;
+};
+
+export type AdminRetrySubscriptionChargeInput = {
+  charge: boolean;
+  dueDate?: string;
+};
+
+export type AdminRetrySubscriptionChargeResult = {
+  charge: boolean;
+  dueDate: string;
+  subscriptionId: string;
+  asaasSubscriptionId: string;
+  nextDueDate: string;
+  paymentId: string | null;
+  paymentStatus: string | null;
+  cardLast4: string | null;
+  message: string;
 };
 
 export type AdminClientFilters = {
@@ -139,6 +158,30 @@ export async function adminUpdateClient(
   return adminClientDetailSchema.parse(unwrapData(raw));
 }
 
+export async function adminRetrySubscriptionCharge(
+  empresaId: string,
+  subscriptionId: string,
+  body: AdminRetrySubscriptionChargeInput
+): Promise<AdminRetrySubscriptionChargeResult> {
+  const raw = await apiClient.post<unknown>(
+    `/api/v1/admin/clients/${encodeURIComponent(empresaId)}/subscriptions/${encodeURIComponent(subscriptionId)}/retry-charge`,
+    body
+  );
+  return z
+    .object({
+      charge: z.boolean(),
+      dueDate: z.string(),
+      subscriptionId: z.string(),
+      asaasSubscriptionId: z.string(),
+      nextDueDate: z.string(),
+      paymentId: z.string().nullable(),
+      paymentStatus: z.string().nullable(),
+      cardLast4: z.string().nullable(),
+      message: z.string(),
+    })
+    .parse(unwrapData(raw));
+}
+
 export const adminClientsApi = {
   listClients: adminListClients,
   getClient: adminGetClient,
@@ -146,4 +189,5 @@ export const adminClientsApi = {
   confirmEmail: adminConfirmClientEmail,
   resendConfirmationEmail: adminResendClientConfirmationEmail,
   dispatchWebhook: adminDispatchClientWebhook,
+  retrySubscriptionCharge: adminRetrySubscriptionCharge,
 };

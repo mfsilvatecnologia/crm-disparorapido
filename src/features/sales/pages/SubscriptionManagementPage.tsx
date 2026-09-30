@@ -185,6 +185,11 @@ export function SubscriptionManagementPage() {
                   const isCanceled = status === 'canceled' || status === 'cancelada';
                   const isSuspendedOrPastDue =
                     status === 'suspended' || status === 'suspensa' || status === 'past_due';
+                  // Estado híbrido legado: past_due/suspended com canceledAt (cancelamento + webhook de atraso).
+                  // Sem fatura em aberto no Asaas — deve usar Retomar, não Regularizar.
+                  const isZombieCancel = Boolean(subscription.canceledAt) && isSuspendedOrPastDue;
+                  const canRestore = isCanceled || isZombieCancel;
+                  const canPayOverdue = isSuspendedOrPastDue && !subscription.canceledAt;
 
                   return (
                     <tr key={subscription.id} className="hover:bg-gray-50">
@@ -246,7 +251,7 @@ export function SubscriptionManagementPage() {
                               Cancelar
                             </button>
                           )}
-                          {isCanceled && (
+                          {canRestore && (
                             <button
                               onClick={() => setSubscriptionToRestore(subscription)}
                               className="text-green-600 hover:text-green-900 transition-colors"
@@ -254,7 +259,7 @@ export function SubscriptionManagementPage() {
                               Retomar assinatura
                             </button>
                           )}
-                          {isSuspendedOrPastDue && (
+                          {canPayOverdue && (
                             <>
                               <button
                                 type="button"

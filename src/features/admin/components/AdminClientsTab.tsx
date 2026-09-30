@@ -33,10 +33,34 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/shared/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
 import { useToast } from '@/shared/hooks/use-toast';
-import { Check, Loader2, Mail, MailCheck, Pencil, RefreshCw, Send, UserPlus, X } from 'lucide-react';
+import { Check, CreditCard, Loader2, Mail, MailCheck, Pencil, RefreshCw, Send, UserPlus, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { UpdateAdminClientInput } from '../api/adminClientsApi';
+
+function todayDateInputValue() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function formatDateInputBr(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const [y, m, d] = value.split('-');
+  return `${d}/${m}/${y}`;
+}
 
 const EVENT_TYPES = [
   { value: 'manual.resend', label: 'Reenvio manual' },
@@ -109,6 +133,8 @@ export function AdminClientsTab() {
   });
   const [isEditingCadastro, setIsEditingCadastro] = useState(false);
   const [isSavingCadastro, setIsSavingCadastro] = useState(false);
+  const [retryDueDate, setRetryDueDate] = useState(todayDateInputValue());
+  const [chargeConfirmOpen, setChargeConfirmOpen] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin-clients', filters],
@@ -168,6 +194,15 @@ export function AdminClientsTab() {
     syncFormFromSource(source);
   }, [selected, detailQuery.data, isEditingCadastro]);
 
+  useEffect(() => {
+    const due = detailQuery.data?.subscription?.nextDueDate || selected?.subscription?.nextDueDate;
+    if (due && /^\d{4}-\d{2}-\d{2}/.test(due)) {
+      setRetryDueDate(due.slice(0, 10));
+    } else {
+      setRetryDueDate(todayDateInputValue());
+    }
+  }, [selected?.empresaId, detailQuery.data?.subscription?.nextDueDate, selected?.subscription?.nextDueDate]);
+
   const updateMutation = useMutation({
     mutationFn: (payload: UpdateAdminClientInput) =>
       adminClientsApi.updateClient(selected!.empresaId, payload),
@@ -226,6 +261,36 @@ export function AdminClientsTab() {
       });
     },
     onError: (error: Error) => toast({ title: 'Erro', description: error.message, variant: 'destructive' }),
+  });
+
+  const retryChargeMutation = useMutation({
+    mutationFn: ({ charge }: { charge: boolean }) => {
+      const sub = detailQuery.data?.subscription ?? selected?.subscription;
+      if (!selected?.empresaId || !sub?.id) {
+        return Promise.reject(new Error('Assinatura não encontrada'));
+      }
+      return adminClientsApi.retrySubscriptionCharge(selected.empresaId, sub.id, {
+        charge,
+        dueDate: retryDueDate,
+      });
+    },
+    onSuccess: (result) => {
+      setChargeConfirmOpen(false);
+      toast({
+        title: result.charge ? 'Cobrança enviada' : 'Data atualizada',
+        description: result.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-clients'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-client-detail'] });
+      if (result.nextDueDate) setRetryDueDate(result.nextDueDate.slice(0, 10));
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Falha na regularização',
+        description: error.message || 'Não foi possível concluir a operação.',
+        variant: 'destructive',
+      });
+    },
   });
 
   const totalPages = useMemo(() => {
@@ -644,7 +709,7 @@ export function AdminClientsTab() {
                     </p>
                     <p>
                       <span className="text-muted-foreground">Assinatura:</span>{' '}
-                      {selected.subscription.status} — {formatMoney(selected.subscription.value)}
+                      {selected.subscription.status} - {formatMoney(selected.subscription.value)}
                     </p>
                     <p>
                       <span className="text-muted-foreground">Próximo vencimento:</span>{' '}
@@ -653,6 +718,98 @@ export function AdminClientsTab() {
                   </>
                 )}
               </div>
+
+              {(() => {
+                const sub = detailQuery.data?.subscription ?? selected.subscription;
+                const status = String(sub?.status ?? '').toLowerCase();
+                const showRegularization = Boolean(sub) && status === 'past_due';
+                if (!showRegularization || !sub) return null;
+
+                const billingType = String(sub.billingType ?? '').toUpperCase();
+                const asaasId = String(sub.asaasSubscriptionId ?? '');
+                const isPixAutomatic =
+                  billingType === 'PIX_AUTOMATIC' || asaasId.startsWith('pixauto_');
+                const canChargeCard =
+                  !isPixAutomatic && Boolean((detailQuery.data ?? selected).hasCreditCardToken);
+
+                return (
+                <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium">Regularização / cobrança</Label>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isPixAutomatic ? (
+                      <Badge variant="secondary" className="font-normal">
+                        PIX Automático
+                      </Badge>
+                    ) : (detailQuery.data ?? selected).hasCreditCardToken ? (
+                      <Badge variant="secondary" className="font-normal">
+                        Cartão final {(detailQuery.data ?? selected).cardLast4 || '****'}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="font-normal text-amber-700 border-amber-300">
+                        Sem cartão tokenizado
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="font-normal capitalize">
+                      {sub.status}
+                    </Badge>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {isPixAutomatic
+                      ? 'PIX Automático: nesta tela só é possível alterar a data de vencimento. A cobrança segue pela autorização PIX no Asaas.'
+                      : canChargeCard
+                        ? 'Altere a data alvo e, se quiser, tente cobrar a fatura em aberto com o cartão salvo (mesma regra do Regularizar do cliente).'
+                        : 'Sem cartão salvo: só é possível alterar a data de vencimento no Asaas.'}
+                  </p>
+
+                  <div>
+                    <Label htmlFor="retry-due-date" className="text-xs">
+                      Data alvo
+                    </Label>
+                    <Input
+                      id="retry-due-date"
+                      type="date"
+                      className="mt-1 h-9 bg-background"
+                      value={retryDueDate}
+                      onChange={(e) => setRetryDueDate(e.target.value)}
+                      disabled={retryChargeMutation.isPending}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button
+                      variant={canChargeCard ? 'outline' : 'default'}
+                      className="flex-1"
+                      disabled={retryChargeMutation.isPending || !retryDueDate}
+                      onClick={() => retryChargeMutation.mutate({ charge: false })}
+                    >
+                      {retryChargeMutation.isPending && retryChargeMutation.variables?.charge === false ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      {isPixAutomatic ? 'Alterar data' : 'Só alterar data'}
+                    </Button>
+                    {canChargeCard ? (
+                      <Button
+                        className="flex-1"
+                        disabled={retryChargeMutation.isPending || !retryDueDate}
+                        onClick={() => setChargeConfirmOpen(true)}
+                      >
+                        {retryChargeMutation.isPending && retryChargeMutation.variables?.charge === true ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <CreditCard className="h-4 w-4 mr-2" />
+                        )}
+                        Tentar cobrar agora
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+                );
+              })()}
 
               <div className="flex flex-col gap-2">
                 <Button
@@ -714,7 +871,7 @@ export function AdminClientsTab() {
                   <ul className="text-sm space-y-1">
                     {detailQuery.data.subscriptions.map((sub) => (
                       <li key={sub.id} className="text-muted-foreground">
-                        {sub.status} — {formatDate(sub.createdAt)} — {formatMoney(sub.value)}
+                        {sub.status} - {formatDate(sub.createdAt)} - {formatMoney(sub.value)}
                       </li>
                     ))}
                   </ul>
@@ -724,6 +881,52 @@ export function AdminClientsTab() {
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog
+        open={chargeConfirmOpen}
+        onOpenChange={(open) => {
+          if (retryChargeMutation.isPending) return;
+          setChargeConfirmOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar cobrança com cartão</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  Será enviada uma cobrança real no Asaas com o cartão final{' '}
+                  <span className="font-medium text-foreground">
+                    {(detailQuery.data ?? selected)?.cardLast4 || '****'}
+                  </span>
+                  , na data <span className="font-medium text-foreground">{formatDateInputBr(retryDueDate)}</span>.
+                </p>
+                <p>
+                  Se houver várias faturas vencidas, as antigas só serão perdoadas depois que a cobrança
+                  desta fatura for aprovada (mesma regra do Regularizar na área do cliente).
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={retryChargeMutation.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={retryChargeMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                retryChargeMutation.mutate({ charge: true });
+              }}
+            >
+              {retryChargeMutation.isPending && retryChargeMutation.variables?.charge === true ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <CreditCard className="h-4 w-4 mr-2" />
+              )}
+              Confirmar cobrança
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
