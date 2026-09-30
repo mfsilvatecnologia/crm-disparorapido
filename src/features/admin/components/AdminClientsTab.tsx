@@ -35,7 +35,6 @@ import {
 } from '@/shared/components/ui/sheet';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -275,21 +274,27 @@ export function AdminClientsTab() {
       });
     },
     onSuccess: (result) => {
-      setChargeConfirmOpen(false);
-      toast({
-        title: result.charge ? 'Cobrança enviada' : 'Data atualizada',
-        description: result.message,
-      });
       queryClient.invalidateQueries({ queryKey: ['admin-clients'] });
       queryClient.invalidateQueries({ queryKey: ['admin-client-detail'] });
       if (result.nextDueDate) setRetryDueDate(result.nextDueDate.slice(0, 10));
+      // Fecha o popup antes do toast para não ficar atrás do diálogo/sheet
+      setChargeConfirmOpen(false);
+      window.setTimeout(() => {
+        toast({
+          title: result.charge ? 'Cobrança enviada' : 'Data atualizada',
+          description: result.message,
+        });
+      }, 0);
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Falha na regularização',
-        description: error.message || 'Não foi possível concluir a operação.',
-        variant: 'destructive',
-      });
+      setChargeConfirmOpen(false);
+      window.setTimeout(() => {
+        toast({
+          title: 'Falha na regularização',
+          description: error.message || 'Não foi possível concluir a operação.',
+          variant: 'destructive',
+        });
+      }, 0);
     },
   });
 
@@ -910,12 +915,9 @@ export function AdminClientsTab() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={retryChargeMutation.isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
+            <Button
               disabled={retryChargeMutation.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                retryChargeMutation.mutate({ charge: true });
-              }}
+              onClick={() => retryChargeMutation.mutate({ charge: true })}
             >
               {retryChargeMutation.isPending && retryChargeMutation.variables?.charge === true ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -923,7 +925,7 @@ export function AdminClientsTab() {
                 <CreditCard className="h-4 w-4 mr-2" />
               )}
               Confirmar cobrança
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
