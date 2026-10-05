@@ -4,7 +4,7 @@
  */
 
 import { useState, FormEvent } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -23,7 +23,7 @@ export function LoginForm() {
     }
 
     try {
-      await login(email, password);
+      await login({ email, password });
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     }

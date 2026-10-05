@@ -26,38 +26,6 @@ interface Empresa {
   cnpj: string;
 }
 
-export interface GoogleLoginData {
-  token: string;
-  refresh_token?: string;
-  user: {
-    id: string;
-    email: string;
-    empresa_id: string | null;
-    roles: string[];
-    user_metadata?: {
-      full_name?: string;
-      role?: string;
-      oauth_provider?: string;
-    };
-  };
-  empresa: {
-    id: string;
-    nome: string;
-    cnpj: string;
-  } | null;
-  session?: {
-    id: string;
-    device_id: string;
-    expires_at: string;
-  };
-  subscription?: {
-    id: string;
-    status: string;
-    isActive: boolean;
-  } | null;
-  is_new_user: boolean;
-}
-
 interface AuthContextType {
   user: User | null;
   empresa: Empresa | null;
@@ -69,7 +37,6 @@ interface AuthContextType {
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string | string[]) => boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
-  loginWithGoogle: (data: GoogleLoginData) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   refreshPermissions: () => Promise<void>;
@@ -377,93 +344,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setSessionLimitError(null);
   };
 
-  const loginWithGoogle = async (data: GoogleLoginData) => {
-    setIsLoading(true);
-
-    try {
-      // Store tokens
-      const accessToken = data.token;
-      localStorage.setItem(TOKEN_KEY, accessToken);
-
-      if (data.refresh_token) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
-        setRefreshToken(data.refresh_token);
-      }
-
-      if (data.session?.id) {
-        localStorage.setItem('session_id', data.session.id);
-      }
-
-      // Store empresa data if available
-      if (data.empresa) {
-        localStorage.setItem(EMPRESA_KEY, JSON.stringify(data.empresa));
-        setEmpresa({
-          id: data.empresa.id,
-          nome: data.empresa.nome,
-          cnpj: data.empresa.cnpj,
-        });
-      }
-
-      // Update API client and state - CRITICAL: Must be set before createTrialSubscription
-      apiClient.setAccessToken(accessToken);
-      libApiClient.setAccessToken(accessToken); // Sync with lib api client
-
-      // Convert backend user data to User type
-      const userData = {
-        id: data.user.id,
-        email: data.user.email,
-        nome: data.user.user_metadata?.full_name,
-        role: data.user.roles[0] || data.user.user_metadata?.role || 'usuario',
-        empresa_id: data.user.empresa_id || data.empresa?.id || '',
-        ativo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as User;
-
-      setUser(userData);
-      setToken(accessToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(userData));
-
-      setPermissions(derivePermissionsFromUser(userData));
-      // Note: The backend response should include subscription info
-      // If no subscription or invalid subscription, create a free trial
-      const hasValidSubscription = data.subscription && data.subscription.isActive;
-
-      if (!hasValidSubscription) {
-        console.log('[Auth] No valid subscription found. Creating free trial subscription...');
-
-        try {
-          // Get the default free trial product ID from environment
-          const defaultProductId = import.meta.env.VITE_DEFAULT_FREE_TRIAL_PRODUCT_ID;
-
-          if (!defaultProductId) {
-            console.error('[Auth] VITE_DEFAULT_FREE_TRIAL_PRODUCT_ID not configured');
-            // Continue without subscription - user can activate later
-          } else {
-            // Create trial subscription with the default product
-            const trialSubscription = await createTrialSubscription({
-              productId: defaultProductId,
-            });
-
-            console.log('[Auth] Free trial subscription created successfully:', trialSubscription);
-
-            // Optionally, you can update the user state or show a notification
-            // that the trial was created automatically
-          }
-        } catch (subscriptionError) {
-          // Log error but don't fail the login process
-          console.error('[Auth] Failed to create free trial subscription:', subscriptionError);
-          // User is still logged in, they can activate subscription later
-        }
-      }
-    } catch (error) {
-      console.error('Google login error:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const logout = async () => {
     try {
       await apiClient.logout();
@@ -606,7 +486,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     hasPermission,
     hasRole,
     login,
-    loginWithGoogle,
     logout,
     refreshAuth,
     refreshPermissions,

@@ -3,7 +3,7 @@
 
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '@/shared/contexts/AuthContext'
 // COMENTADO: Sistema de permissões será implementado no backend
 // import { usePermissions } from '../hooks/usePermissions'
 

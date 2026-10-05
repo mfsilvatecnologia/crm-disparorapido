@@ -13,7 +13,6 @@ import { leadsTour } from "./features/leads/tours/leadsTour";
 // Feature imports
 import { Index } from "./features/landing";
 import { LoginPage, ResetPasswordPage, NewPasswordPage, UserProfilePage } from "./features/authentication";
-import AuthCallbackPage from "./features/authentication/pages/AuthCallbackPage";
 import SessionManagementPage from "./features/authentication/pages/SessionManagementPage";
 import { Dashboard } from "./features/dashboard";
 import { LeadsPage } from "./features/leads";
@@ -28,7 +27,6 @@ import { ProjetosIndexPage } from "./features/resolucao-problemas/pages/Projetos
 import { ProjetoDetalhesPage } from "./features/resolucao-problemas/pages/ProjetoDetalhesPage";
 // import { WorkerMonitorPage } from "./features/scraping"; // Removido - workers agora são automáticos
 import { MessagesPage, VinculacoesPendentesPage } from "./features/disparorapido/pages";
-import { UsersPage } from "./features/user-management";
 import { EmpresasPage, CadastroEmpresaPage } from "./features/companies";
 import { SegmentosPage } from "./features/segments";
 import { CampanhasPage } from "./features/campaigns";
@@ -146,7 +144,6 @@ function AppRoutes() {
         <Route path="/recuperar-senha" element={<RedirectRecuperarSenha />} />
         <Route path="/reset-password" element={<RedirectResetPasswordLegacy />} />
         <Route path="/nova-senha" element={<NewPasswordPage />} />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
         {/* Public Sales Routes (checkout transparente no site; sem página de planos no CRM) */}
         <Route path="/checkout" element={<CheckoutPage />} />
@@ -223,7 +220,6 @@ function AppRoutes() {
           <Route path="profile" element={<UserProfilePage />} />
           <Route path="tutorial" element={<TutorialPage />} />
           <Route path="sessions" element={<SessionManagementPage />} />
-          <Route path="users" element={<UsersPage />} />
           <Route path="settings/campaign-stages" element={<StageConfigPage />} />
           <Route path="features-demo" element={<FeatureDemoPage />} />
           <Route path="admin" element={<AdminPage />} />

@@ -9,7 +9,7 @@ import { isTokenExpiringSoon } from '@/shared/utils/token';
 import { authStorage } from '@/shared/utils/storage';
 import { getOrCreateDeviceId, generateDeviceFingerprint } from '@/shared/utils/device';
 import type { RefreshTokenRequest, RefreshTokenResponse } from '../contracts/auth-contracts';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 /**
  * Hook to automatically refresh access tokens
@@ -27,7 +27,7 @@ import { useAuth } from './useAuth';
  * ```
  */
 export function useTokenRefresh(thresholdMinutes: number = 5): void {
-  const { logout, refreshUser } = useAuth();
+  const { logout, refreshAuth } = useAuth();
   const isRefreshing = useRef(false);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export function useTokenRefresh(thresholdMinutes: number = 5): void {
         authStorage.updateLastActivity();
 
         // Refresh user data from new token
-        await refreshUser();
+        await refreshAuth();
 
         console.debug('Token refreshed successfully');
       } catch (error) {
@@ -123,5 +123,5 @@ export function useTokenRefresh(thresholdMinutes: number = 5): void {
     return () => {
       clearInterval(interval);
     };
-  }, [thresholdMinutes, logout, refreshUser]);
+  }, [thresholdMinutes, logout, refreshAuth]);
 }

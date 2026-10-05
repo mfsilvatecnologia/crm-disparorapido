@@ -6,7 +6,7 @@
 
 import { useCallback } from 'react';
 import { authStorage } from '@/shared/utils/storage';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 /**
  * Hook to create an authenticated fetch function

@@ -4,12 +4,8 @@ export { default as ResetPasswordPage } from './pages/ResetPasswordPage';
 export { default as NewPasswordPage } from './pages/NewPasswordPage';
 export { default as UserProfilePage } from './pages/UserProfilePage';
 
-// Context & Providers
-export { AuthProvider, AuthContext } from './contexts/AuthContext';
-export type { AuthContextType } from './contexts/AuthContext';
-
 // Hooks
-export { useAuth } from './hooks/useAuth';
+export { useAuth } from '@/shared/contexts/AuthContext';
 export { useTokenRefresh } from './hooks/useTokenRefresh';
 export { useActivityMonitor } from './hooks/useActivityMonitor';
 export { useAuthenticatedFetch } from './hooks/useAuthenticatedFetch';
