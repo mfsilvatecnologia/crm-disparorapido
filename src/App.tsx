@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./shared/contexts/AuthContext";
+import { isPlatformAdminUser } from "./shared/auth/platformAdmin";
 import { OrganizationProvider } from "./shared/contexts/OrganizationContext";
 import { TenantProvider } from "./shared/contexts/TenantContext";
 import { AppLayout } from "./shared/components/layout/AppLayout";
@@ -87,6 +88,24 @@ const queryClient = new QueryClient({
   },
 });
 
+function AppHome() {
+  const { user } = useAuth();
+  if (isPlatformAdminUser(user)) {
+    return <Navigate to="/app/admin?tab=home" replace />;
+  }
+  return <Dashboard />;
+}
+
+function PlatformAdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+
+  if (!isPlatformAdminUser(user)) {
+    return <Navigate to="/app" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -156,7 +175,7 @@ function AppRoutes() {
             </OrganizationProvider>
           </PrivateRoute>
         }>
-          <Route index element={<Dashboard />} />
+          <Route index element={<AppHome />} />
           <Route path="crm" element={withErrorBoundary(<CRMPage />)} />
           <Route path="leads/novo" element={<LeadCreatePage />} />
           <Route path="leads/:id/edit" element={<LeadEditPage />} />
@@ -222,7 +241,7 @@ function AppRoutes() {
           <Route path="sessions" element={<SessionManagementPage />} />
           <Route path="settings/campaign-stages" element={<StageConfigPage />} />
           <Route path="features-demo" element={<FeatureDemoPage />} />
-          <Route path="admin" element={<AdminPage />} />
+          <Route path="admin" element={<PlatformAdminRoute><AdminPage /></PlatformAdminRoute>} />
           <Route path="empresas/cadastro" element={<CadastroEmpresaPage />} />
         </Route>
 

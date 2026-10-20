@@ -17,6 +17,7 @@ import { ConnectionStatus } from '@/shared/components/common/ConnectionStatus';
 import { useConnectivity } from '@/shared/hooks/useConnectivity';
 import { ActiveSessionsManager } from '../components/ActiveSessionsManager';
 import { affiliatesApi } from '@/features/affiliates/api/affiliatesApi';
+import { isPlatformAdminUser } from '@/shared/auth/platformAdmin';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -45,7 +46,7 @@ function readAffiliateOnlyUserFromStorage(): boolean {
 }
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoading, sessionLimitError, clearSessionLimitError } = useAuth();
+  const { login, isAuthenticated, isLoading, sessionLimitError, clearSessionLimitError, user } = useAuth();
   const { tenant } = useTenant();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -147,6 +148,11 @@ export default function LoginPage() {
         return <Navigate to={postLogin} replace />;
       }
     }
+    const defaultAppTarget =
+      redirectUrl === '/app' || redirectUrl === '/app/' || redirectUrl === '';
+    if (defaultAppTarget && isPlatformAdminUser(user)) {
+      return <Navigate to="/app/admin?tab=home" replace />;
+    }
     return <Navigate to={redirectUrl} replace />;
   }
 
@@ -172,13 +178,23 @@ export default function LoginPage() {
       const defaultAppTarget =
         redirectUrl === '/app' || redirectUrl === '/app/' || redirectUrl === '';
       if (defaultAppTarget) {
+        let storedPlatformAdmin = false;
         try {
-          await affiliatesApi.getAffiliateCode();
-          if (readAffiliateOnlyUserFromStorage()) {
-            sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, '/app/afiliados');
-          }
+          storedPlatformAdmin = isPlatformAdminUser(JSON.parse(localStorage.getItem('user') || 'null'));
         } catch {
-          /* não é afiliado ou falha de rede — segue fluxo normal */
+          storedPlatformAdmin = false;
+        }
+        if (storedPlatformAdmin) {
+          sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, '/app/admin?tab=home');
+        } else {
+          try {
+            await affiliatesApi.getAffiliateCode();
+            if (readAffiliateOnlyUserFromStorage()) {
+              sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, '/app/afiliados');
+            }
+          } catch {
+            /* não é afiliado ou falha de rede — segue fluxo normal */
+          }
         }
       }
 

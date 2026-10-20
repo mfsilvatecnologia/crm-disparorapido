@@ -342,11 +342,12 @@ class ApiClient {
     if (!res.ok) {
       throw new ApiError(res.status, res.statusText, raw.message || raw.error || 'Falha no login', raw);
     }
-    if (!raw.success || !raw.token) {
-      throw new ApiError(401, 'Unauthorized', raw.message || 'Email ou senha incorretos', raw);
+    const payload = raw?.data?.token ? raw.data : raw;
+    if (!raw.success || !payload?.token) {
+      throw new ApiError(401, 'Unauthorized', raw.message || payload?.message || 'Email ou senha incorretos', raw);
     }
-    const user = raw.user || {};
-    const empresa = raw.empresa || (raw.empresa_id ? { id: raw.empresa_id, nome: '', cnpj: '' } : { id: '', nome: '', cnpj: '' });
+    const user = payload.user || {};
+    const empresa = payload.empresa || (payload.empresa_id ? { id: payload.empresa_id, nome: '', cnpj: '' } : { id: '', nome: '', cnpj: '' });
     const empresaIdFromUser = typeof user.empresa_id === 'string' ? user.empresa_id : empresa.id;
     const roleFromUser =
       typeof user.role === 'string' && user.role.trim()
@@ -357,7 +358,7 @@ class ApiClient {
     const mapped: AuthResponse = {
       success: true,
       data: {
-        token: raw.token,
+        token: payload.token,
         user: {
           id: user.id,
           email: user.email,
@@ -369,15 +370,17 @@ class ApiClient {
           updated_at: user.updated_at,
           empresa_id: empresaIdFromUser,
           role: roleFromUser,
+          roles: Array.isArray(user.roles) ? user.roles.filter((role: unknown) => typeof role === 'string') : undefined,
+          platformAdmin: user.platformAdmin === true,
           ativo: user.ativo !== false,
         },
         empresa: { id: empresa.id, nome: empresa.nome || '', cnpj: empresa.cnpj || '' },
-        session: raw.session_id
-          ? { id: raw.session_id, device_id: credentials.device_id, expires_at: raw.expires_at || '' }
+        session: payload.session_id
+          ? { id: payload.session_id, device_id: credentials.device_id, expires_at: payload.expires_at || '' }
           : null,
         subscription: undefined,
       },
-      message: raw.message || 'Login realizado com sucesso',
+      message: payload.message || raw.message || 'Login realizado com sucesso',
       timestamp: new Date().toISOString(),
     };
     return AuthResponseSchema.parse(mapped);

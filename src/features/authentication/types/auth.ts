@@ -28,6 +28,8 @@ export interface User {
   ativo: boolean
   role: string
   roles?: string[]
+  /** Vem do login. true só se users_disparo_rapido.is_platform_admin estiver ligado. */
+  platformAdmin?: boolean
   empresa_id: string
   created_at: string
   updated_at: string

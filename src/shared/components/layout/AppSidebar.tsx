@@ -34,6 +34,7 @@ import { leadKeys } from '@/features/leads/hooks/useLeads';
 import { FeatureGuard } from '@/shared/components/features/FeatureGuard';
 import { TenantLogo } from '@/shared/components/branding/TenantLogo';
 import { isAdminTab } from '@/features/admin/components/AdminPage';
+import { isPlatformAdminUser } from '@/shared/auth/platformAdmin';
 
 type NavItem = {
   title: string;
@@ -157,11 +158,11 @@ const settingsItems: NavItem[] = [
 export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
-  const { logout, hasRole } = useAuth();
+  const { logout, user } = useAuth();
   const queryClient = useQueryClient();
   const { isAffiliate, code: affiliateCode } = useIsAffiliateUser();
   const isManualRepasse = affiliateCode?.modoRepasse === 'MANUAL_NF';
-  const isPlatformAdmin = hasRole('admin');
+  const isPlatformAdmin = isPlatformAdminUser(user);
 
   type AffiliateNavItem = {
     title: string;

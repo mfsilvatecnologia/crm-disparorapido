@@ -97,6 +97,7 @@ export const UserSchema = z.object({
   updated_at: z.string().optional(), // Suporta snake_case
   empresa_id: z.string().optional(), // Opcional - não vem em /users/me
   roles: z.array(z.string()).optional(), // Opcional - não vem em todos os endpoints
+  platformAdmin: z.boolean().optional(),
   role: z.union([
     z.enum(['admin', 'org_admin', 'agent', 'viewer', 'user', 'usuario']),
     z.string() // Permite qualquer string para ser mais flexível
