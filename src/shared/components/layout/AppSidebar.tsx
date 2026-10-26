@@ -33,6 +33,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { leadKeys } from '@/features/leads/hooks/useLeads';
 import { FeatureGuard } from '@/shared/components/features/FeatureGuard';
 import { TenantLogo } from '@/shared/components/branding/TenantLogo';
+import { useTenant } from '@/shared/contexts/TenantContext';
 import { isAdminTab } from '@/features/admin/components/AdminPage';
 import { isPlatformAdminUser } from '@/shared/auth/platformAdmin';
 
@@ -157,6 +158,7 @@ const settingsItems: NavItem[] = [
 
 export function AppSidebar() {
   const { open } = useSidebar();
+  const { tenant } = useTenant();
   const location = useLocation();
   const { logout, user } = useAuth();
   const queryClient = useQueryClient();
@@ -319,13 +321,15 @@ export function AppSidebar() {
   return (
     <Sidebar className={!open ? 'w-16' : 'w-64'} collapsible="icon">
       <SidebarContent className="bg-sidebar">
-        <div className="p-4 border-b border-sidebar-border">
-          {open ? (
-            <TenantLogo size="lg" className="h-10 w-auto" />
-          ) : (
-            <TenantLogo size="md" className="h-8 w-auto mx-auto" />
-          )}
-        </div>
+        {tenant.branding.logo ? (
+          <div className="p-4 border-b border-sidebar-border">
+            {open ? (
+              <TenantLogo size="lg" className="h-10 w-auto" />
+            ) : (
+              <TenantLogo size="md" className="h-8 w-auto mx-auto" />
+            )}
+          </div>
+        ) : null}
 
         <SidebarGroup>
           <SidebarGroupContent>

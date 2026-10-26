@@ -271,16 +271,18 @@ export default function LoginPage() {
       {/* Login Form centralizado e sem logo */}
       <div className="flex items-center justify-center p-8 bg-background w-full">
         <div className="w-full max-w-md">
-          <div className="text-center mb-6">
-            <div className="w-full max-w-[300px] mx-auto">
-              <img
-                src={tenant.branding.logo}
-                alt={tenant.branding.companyName}
-                className="w-full h-auto object-contain"
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-              />
+          {tenant.branding.logo ? (
+            <div className="text-center mb-6">
+              <div className="w-full max-w-[300px] mx-auto">
+                <img
+                  src={tenant.branding.logo}
+                  alt={tenant.branding.companyName}
+                  className="w-full h-auto object-contain"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <Card className="bg-gradient-card border-0 shadow-xl">
             <CardHeader className="text-center">

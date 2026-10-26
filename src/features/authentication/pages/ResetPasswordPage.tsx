@@ -344,17 +344,18 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-background" style={{ position: 'relative' }}>
       <div className="w-full max-w-md">
-        {/* Header com logo (mesmo do login) */}
-        <div className="text-center mb-6">
-          <div className="w-full max-w-[300px] mx-auto">
-            <img
-              src={tenant.branding.logo}
-              alt={tenant.branding.companyName}
-              className="w-full h-auto object-contain"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
+        {tenant.branding.logo ? (
+          <div className="text-center mb-6">
+            <div className="w-full max-w-[300px] mx-auto">
+              <img
+                src={tenant.branding.logo}
+                alt={tenant.branding.companyName}
+                className="w-full h-auto object-contain"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* Formulário baseado na presença do token */}
         {token ? (

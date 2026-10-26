@@ -51,6 +51,8 @@ export function TenantLogo({
     ? tenant.branding.logoLight 
     : tenant.branding.logo;
 
+  if (!logoSrc) return null;
+
   // Generate alt text if not provided
   const logoAlt = alt || `${tenant.branding.companyName} Logo`;
 
